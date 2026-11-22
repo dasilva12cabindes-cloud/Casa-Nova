@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar - Casa Nova</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .caixa { max-width: 400px; margin: 24px auto; background: #fff; padding: 20px;
+      border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .caixa h2 { margin-bottom: 14px; }
+    .caixa input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #cfd5df;
+      border-radius: 8px; font-size: 1rem; }
+    .caixa .btn { width: 100%; }
+    .troca { display: block; text-align: center; margin-top: 14px; color: #0b5ed7; cursor: pointer; }
+    #msg { margin-top: 10px; color: #c0392b; font-size: .95rem; }
+  </style>
+</head>
+<body>
+  <header class="topo">
+    <a href="index.html" class="logo">Casa Nova</a>
+  </header>
+
+  <div class="caixa">
+    <h2 id="titulo">Entrar</h2>
+    <input type="text" id="nome" placeholder="O seu nome" style="display:none">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="senha" placeholder="Senha (mínimo 6 caracteres)">
+    <button class="btn" id="enviar">Entrar</button>
+    <span class="troca" id="troca">Não tem conta? Criar conta</span>
+    <p id="msg"></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    var modoCadastro = false;
+    var $ = function (id) { return document.getElementById(id); };
+
+    $("troca").onclick = function () {
+      modoCadastro = !modoCadastro;
+      $("titulo").textContent = modoCadastro ? "Criar conta" : "Entrar";
+      $("enviar").textContent = modoCadastro ? "Criar conta" : "Entrar";
+      $("nome").style.display = modoCadastro ? "block" : "none";
+      $("troca").textContent = modoCadastro ? "Já tem conta? Entrar" : "Não tem conta? Criar conta";
+      $("msg").textContent = "";
+    };
+
+    $("enviar").onclick = async function () {
+      var email = $("email").value.trim();
+      var senha = $("senha").value;
+      $("msg").textContent = "A processar...";
+      var r;
+      if (modoCadastro) {
+        r = await db.auth.signUp({
+          email: email, password: senha,
+          options: { data: { nome: $("nome").value.trim() } }
+        });
+      } else {
+        r = await db.auth.signInWithPassword({ email: email, password: senha });
+      }
+      if (r.error) { $("msg").textContent = r.error.message; return; }
+      if (modoCadastro && !r.data.session) {
+        $("msg").style.color = "#1e7e34";
+        $("msg").textContent = "Conta criada! Confirme o email e depois entre.";
+        return;
+      }
+      location.href = "index.html";
+    };
+  </script>
+</body>
+</html>

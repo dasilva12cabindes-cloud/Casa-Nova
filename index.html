@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Casa Nova - Eletrodomésticos</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topo">
+    <a href="index.html" class="logo">Casa Nova</a>
+    <nav>
+      <span id="auth-links"></span>
+      <a href="carrinho.html">🛒 <b id="cart-count">0</b></a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <input type="search" id="busca" placeholder="Pesquisar produto...">
+    <div id="categorias" class="categorias"></div>
+    <div id="produtos" class="grade"><p class="aviso">A carregar...</p></div>
+    <p id="teste" style="padding:16px;font-size:16px"></p>
+  </main>
+
+  <script>
+    window.onerror = function (msg, src, linha) {
+      document.getElementById("teste").innerHTML +=
+        "ERRO: " + msg + " (" + String(src || "").split("/").pop() + ":" + linha + ")<br>";
+    };
+    window.addEventListener("unhandledrejection", function (e) {
+      document.getElementById("teste").innerHTML +=
+        "FALHA: " + ((e.reason && e.reason.message) || e.reason) + "<br>";
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

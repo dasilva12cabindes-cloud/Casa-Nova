@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carrinho - Casa Nova</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topo">
+  <a href="index.html" class="logo">Casa Nova</a>
+</header>
+
+<main class="container">
+  <h2>Meu Carrinho</h2>
+
+  <div id="lista"></div>
+
+  <h3 id="total">Total: 0 Kz</h3>
+
+  <button class="btn" onclick="finalizar()">
+    Finalizar Pedido
+  </button>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+
+<script>
+
+function carregarCarrinho() {
+
+  const itens = lerCarrinho();
+
+  const lista = document.getElementById("lista");
+
+  if (!itens.length) {
+    lista.innerHTML = "<p>Carrinho vazio.</p>";
+    return;
+  }
+
+  let total = 0;
+
+  lista.innerHTML = itens.map(function(item){
+
+    const subtotal = item.preco * item.qtd;
+    total += subtotal;
+
+    return `
+      <div class="card">
+        <h3>${item.nome}</h3>
+        <p>Quantidade: ${item.qtd}</p>
+        <p>${kz(subtotal)}</p>
+      </div>
+    `;
+
+  }).join("");
+
+  document.getElementById("total").textContent =
+    "Total: " + kz(total);
+}
+
+function finalizar(){
+  alert("Pedido registado com sucesso!");
+}
+
+carregarCarrinho();
+
+</script>
+
+</body>
+</html>

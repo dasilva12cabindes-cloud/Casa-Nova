@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Produto</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topo">
+  <a href="index.html" class="logo">Casa Nova</a>
+</header>
+
+<main class="container">
+
+  <div id="produto">
+    <p>A carregar...</p>
+  </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+
+<script>
+
+async function carregarProduto(){
+
+  const params =
+    new URLSearchParams(location.search);
+
+  const id = params.get("id");
+
+  const r = await db
+    .from("produtos")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if(!r.data){
+    document.getElementById("produto").innerHTML =
+      "<p>Produto não encontrado.</p>";
+    return;
+  }
+
+  const p = r.data;
+
+  document.getElementById("produto").innerHTML = `
+    <img src="${p.imagem_url}" style="width:100%;max-width:400px">
+
+    <h2>${p.nome}</h2>
+
+    <p class="preco">${kz(p.preco)}</p>
+
+    <p>${p.descricao || ""}</p>
+
+    <p>Stock: ${p.stock}</p>
+
+    <button id="comprar" class="btn">
+      Adicionar ao carrinho
+    </button>
+  `;
+
+  document
+    .getElementById("comprar")
+    .onclick = function(){
+
+      adicionarAoCarrinho(p);
+
+      alert("Adicionado ao carrinho");
+
+    };
+}
+
+carregarProduto();
+
+</script>
+
+</body>
+</html>

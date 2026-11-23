@@ -21,31 +21,32 @@
 <header class="topo"><div style="display:flex;align-items:center;gap:8px"><img id="logoTopo" class="logo-img" style="display:none"><b id="nomeTopo">Casa Nova</b></div><a href="carrinho.html">🛒 Carrinho (<span id="qtd">0</span>)</a></header>
 <img id="bannerTopo" class="banner">
 <div class="publicidade"><span id="pubTexto">🔥 PROMOÇÃO CASA NOVA - Entrega rápida em Luanda 🔥</span></div>
-
 <div class="sobre"><h3>🏪 <span id="nomeSobre">Sobre a Casa Nova</span></h3><p id="textoSobre">A carregar...</p>
 <a id="btnWpp" href="https://wa.me/244972370499" target="_blank"><button class="btn">💬 Falar no WhatsApp</button></a></div>
-
 <main class="container"><h3>🛍️ Produtos</h3><div class="grid" id="lista">A carregar...</div></main>
-
 <script>
 function lerCarrinho(){try{return JSON.parse(localStorage.getItem('carrinho')||'[]')}catch(e){return[]}}
-function atualizarQtd(){qtd.textContent=lerCarrinho().reduce((s,i)=>s+(i.qtd||1),0)}
+function atualizarQtd(){document.getElementById('qtd').textContent=lerCarrinho().reduce((s,i)=>s+(i.qtd||1),0)}
+function foto(p){return p.imagem||p.foto||p.imagem_url||p.foto_url||p.image_url||p.image||p.url||'https://via.placeholder.com/300'}
 async function carregar(){
-  const {data:cfg}=await db.from('loja_config').select('*').eq('id',1).single();
-  if(cfg){
-    nomeTopo.textContent=cfg.nome_loja||'Casa Nova';
-    nomeSobre.textContent='Sobre a '+(cfg.nome_loja||'Casa Nova');
-    textoSobre.textContent=cfg.sobre||'';
-    if(cfg.logo_url){logoTopo.src=cfg.logo_url;logoTopo.style.display='block'}
-    if(cfg.banner_url){bannerTopo.src=cfg.banner_url;bannerTopo.style.display='block'}
-    if(cfg.whatsapp) btnWpp.href='https://wa.me/'+cfg.whatsapp;
-  }
-  const {data:prod}=await db.from('produtos').select('*').order('id',{ascending:false});
-  if(!prod||!prod.length){lista.innerHTML='Nenhum produto ainda.';return}
-  // Publicidade = 3 primeiros produtos a passar
-  pubTexto.textContent='🔥 '+prod.slice(0,3).map(p=>p.nome+' - '+Number(p.preco).toLocaleString()+' Kz').join('  |  ')+' 🔥';
-  <img src="${p.imagem||p.foto||p.imagem_url||p.foto_url||p.image_url||p.image||p.url||''}"
-  window._prod=prod;
+  try{
+    const cfgR=await db.from('loja_config').select('*').eq('id',1).maybeSingle();
+    const cfg=cfgR.data;
+    if(cfg){
+      document.getElementById('nomeTopo').textContent=cfg.nome_loja||'Casa Nova';
+      document.getElementById('nomeSobre').textContent='Sobre a '+(cfg.nome_loja||'Casa Nova');
+      document.getElementById('textoSobre').textContent=cfg.sobre||'';
+      if(cfg.logo_url){var l=document.getElementById('logoTopo');l.src=cfg.logo_url;l.style.display='block'}
+      if(cfg.banner_url){var b=document.getElementById('bannerTopo');b.src=cfg.banner_url;b.style.display='block'}
+      if(cfg.whatsapp) document.getElementById('btnWpp').href='https://wa.me/'+cfg.whatsapp;
+    }
+    const prodR=await db.from('produtos').select('*').order('id',{ascending:false});
+    const prod=prodR.data||[];
+    if(!prod.length){document.getElementById('lista').innerHTML='Nenhum produto ainda.';return}
+    document.getElementById('pubTexto').textContent='🔥 '+prod.slice(0,3).map(p=>p.nome+' - '+Number(p.preco).toLocaleString()+' Kz').join('  |  ')+' 🔥';
+    document.getElementById('lista').innerHTML=prod.map(p=>'<div class="card"><img src="'+foto(p)+'"><b>'+p.nome+'</b><br>'+Number(p.preco).toLocaleString()+' Kz<br><br><button class="btn" onclick="add('+p.id+')">Adicionar</button></div>').join('');
+    window._prod=prod;
+  }catch(e){document.getElementById('lista').innerHTML='Erro: '+e.message}
 }
 function add(id){
   const p=window._prod.find(x=>x.id==id); let c=lerCarrinho();

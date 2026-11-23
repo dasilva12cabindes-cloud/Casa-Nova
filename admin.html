@@ -1,61 +1,84 @@
 <!DOCTYPE html>
-<html lang="pt">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin - Casa Nova</title>
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    .caixa { background: #fff; padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-    .caixa h2 { font-size: 1.1rem; margin-bottom: 10px; }
-    .caixa input, .caixa select, .caixa textarea { width: 100%; padding: 11px; margin-bottom: 8px; border: 1px solid #cfd5df; border-radius: 8px; font-size: 1rem; font-family: inherit; }
-    .linha { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 0; border-top: 1px solid #eef0f4; font-size: .95rem; }
-    .linha img { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; }
-    .linha .info { flex: 1; }
-    .mini { border: 0; padding: 8px 10px; border-radius: 6px; font-size: .85rem; cursor: pointer; background: #eef0f4; }
-    .mini.vermelho { background: #fde2e0; color: #c0392b; }
-    #msg { margin: 8px 0; font-weight: 600; }
-    .links { display: flex; gap: 12px; margin-bottom: 14px; }
-    .links a { color: #0b5ed7; font-weight: 600; }
-  </style>
-</head>
+<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin - Casa Nova</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
+h1{margin:5px 0} .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}
+.card{background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 2px 8px #0001}
+.card b{font-size:26px;display:block}.card span{color:#666;font-size:13px}
+.pendente b{color:#f59e0b}.aceite b{color:#16a34a}.recusado b{color:#ef4444}.hoje b{color:#2563eb}
+.box{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px #0001}
+input,textarea{width:100%;padding:10px;margin:6px 0;border:1px solid #ddd;border-radius:8px}
+button{padding:10px 14px;border:0;border-radius:8px;font-weight:700;cursor:pointer}
+.btn{background:#16a34a;color:#fff;width:100%}.btn2{background:#2563eb;color:#fff}
+.ok{background:#16a34a;color:#fff}.no{background:#ef4444;color:#fff}.small{padding:6px 10px;font-size:13px}
+.pedido{border-bottom:1px solid #eee;padding:10px 0}.pedido:last-child{border:0}
+.badge{padding:3px 8px;border-radius:20px;font-size:12px;color:#fff}
+.b-pendente{background:#f59e0b}.b-aceite{background:#16a34a}.b-recusado{background:#ef4444}
+a{color:#2563eb}</style></head>
 <body>
-  <header class="topo">
-    <a href="index.html" class="logo">Casa Nova</a>
-    <nav><a href="index.html">Loja</a></nav>
-  </header>
+<h1>📊 Painel Casa Nova</h1>
+<p><a href="index.html">👀 Ver Loja do Cliente</a> | <a href="admin-produtos.html">📦 Produtos</a></p>
 
-  <main class="container">
-    <div class="links"><a href="admin-pedidos.html">Ver pedidos</a></div>
-    <p id="msg"></p>
+<div class="grid">
+  <div class="card hoje"><b id="sHoje">0</b><span>Pedidos Hoje</span></div>
+  <div class="card"><b id="sClientes">0</b><span>Clientes Cadastrados</span></div>
+  <div class="card pendente"><b id="sPend">0</b><span>Pendentes</span></div>
+  <div class="card aceite"><b id="sAceite">0</b><span>Aceites</span></div>
+  <div class="card recusado"><b id="sRecus">0</b><span>Recusados</span></div>
+  <div class="card"><b id="sTotal">0</b><span>Total Pedidos</span></div>
+</div>
 
-    <div class="caixa">
-      <h2>Categorias</h2>
-      <input type="text" id="cat-nome" placeholder="Nome da categoria (ex: Televisores)">
-      <button class="btn" id="cat-add" style="width:100%">Adicionar categoria</button>
-      <div id="cat-lista"></div>
-    </div>
+<div class="box">
+  <h3>🏪 Sobre a Loja / Logo / Banner</h3>
+  <input id="nomeLoja" placeholder="Nome da loja - ex: Casa Nova">
+  <textarea id="sobre" rows="3" placeholder="Escreve sobre a tua loja..."></textarea>
+  <input id="logo" placeholder="Link do Logotipo (cola link da imagem)">
+  <input id="banner" placeholder="Link do Banner (cola link da imagem)">
+  <input id="wpp" placeholder="WhatsApp - ex: 244972370499">
+  <button class="btn" onclick="salvarConfig()">💾 Guardar Informações da Loja</button>
+  <p style="font-size:12px;color:#666">Dica: Sobe logo/banner no postimages.org ou imgur e cola o link aqui.</p>
+</div>
 
-    <div class="caixa">
-      <h2>Novo produto</h2>
-      <input type="text" id="p-nome" placeholder="Nome do produto">
-      <input type="number" id="p-preco" placeholder="Preço (Kz)" inputmode="decimal">
-      <input type="number" id="p-stock" placeholder="Quantidade em stock" inputmode="numeric">
-      <select id="p-cat"></select>
-      <textarea id="p-desc" rows="3" placeholder="Descrição"></textarea>
-      <input type="text" id="p-foto" placeholder="Link da foto (cola o link da imagem)">
-      <button class="btn" id="p-add" style="width:100%">Guardar produto</button>
-    </div>
+<div class="box">
+  <h3>🧾 Pedidos Recebidos</h3>
+  <div id="lista">A carregar...</div>
+</div>
 
-    <div class="caixa">
-      <h2>Produtos</h2>
-      <div id="p-lista"></div>
-    </div>
-  </main>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js"></script>
-  <script src="js/supabase.js"></script>
-  <script src="js/admin.js"></script>
-</body>
-</html>
+<script>
+async function carregar(){
+  const {data:ped}=await db.from('pedidos').select('*').order('created_at',{ascending:false});
+  const {data:cli}=await db.from('clientes').select('*');
+  const {data:cfg}=await db.from('loja_config').select('*').eq('id',1).single();
+  if(cfg){ nomeLoja.value=cfg.nome_loja||''; sobre.value=cfg.sobre||''; logo.value=cfg.logo_url||''; banner.value=cfg.banner_url||''; wpp.value=cfg.whatsapp||''; }
+  const hoje=new Date().toISOString().slice(0,10);
+  sHoje.textContent=ped.filter(p=>(p.created_at||'').slice(0,10)===hoje).length;
+  sPend.textContent=ped.filter(p=>(p.status||'pendente')==='pendente').length;
+  sAceite.textContent=ped.filter(p=>p.status==='aceite').length;
+  sRecus.textContent=ped.filter(p=>p.status==='recusado').length;
+  sTotal.textContent=ped.length;
+  sClientes.textContent=cli.length;
+  lista.innerHTML=ped.length?'':'Nenhum pedido ainda.';
+  lista.innerHTML=ped.map(p=>{
+    const st=p.status||'pendente';
+    const cls=st==='aceite'?'b-aceite':st==='recusado'?'b-recusado':'b-pendente';
+    const itens=(p.itens||[]).map(i=>`${i.nome} x ${i.qtd} - ${Number(i.preco*i.qtd).toLocaleString()} Kz`).join('<br>');
+    return `<div class="pedido"><b>${p.nome}</b> - ${p.telefone} <span class="badge ${cls}">${st.toUpperCase()}</span><br>
+    <small>${new Date(p.created_at).toLocaleString('pt-PT')} | ${p.morada||''}</small><br>${itens}<br>
+    <b>Total: ${Number(p.total).toLocaleString()} Kz</b><br><br>
+    <button class="small ok" onclick="mudar(${p.id},'aceite')">✅ Aceitar</button>
+    <button class="small no" onclick="mudar(${p.id},'recusado')">❌ Recusar</button>
+    <a href="https://wa.me/${p.telefone.replace(/\D/g,'')}" target="_blank"><button class="small btn2">💬 WhatsApp</button></a></div>`;
+  }).join('');
+}
+async function mudar(id,status){
+  await db.from('pedidos').update({status}).eq('id',id);
+  carregar();
+}
+async function salvarConfig(){
+  const {error}=await db.from('loja_config').update({nome_loja:nomeLoja.value,sobre:sobre.value,logo_url:logo.value,banner_url:banner.value,whatsapp:wpp.value}).eq('id',1);
+  if(error) alert(error.message); else alert('✅ Guardado! Já aparece na loja do cliente.');
+}
+carregar();
+</script></body></html>

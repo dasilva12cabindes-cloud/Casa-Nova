@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pedidos - Casa Nova</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.caixa{background:#fff;padding:16px;border-radius:12px;margin-bottom:12px}
+.caixa b{font-size:1.05rem}
+.caixa small{color:#666}
+.linha{padding:6px 0;border-top:1px solid #eef0f4}
+</style>
+</head>
+<body>
+<header class="topo"><a href="index.html" class="logo">Casa Nova</a><nav><a href="admin.html">Admin</a></nav></header>
+<main class="container">
+<h2 style="margin:12px 0">Pedidos Recebidos</h2>
+<p id="msg">A carregar...</p>
+<div id="lista"></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<script>
+async function carregar(){
+  var r = await db.from("pedidos").select("*").order("criado_em", {ascending:false});
+  if(r.error){ document.getElementById("msg").textContent = "Erro: " + r.error.message; return; }
+  if(!r.data.length){ document.getElementById("msg").textContent = "Ainda nenhum pedido."; return; }
+  document.getElementById("msg").textContent = "";
+  document.getElementById("lista").innerHTML = r.data.map(function(p){
+    var itens = "";
+    try{
+      var arr = typeof p.itens === "string" ? JSON.parse(p.itens) : p.itens;
+      itens = (arr||[]).map(function(i){ return "<div class='linha'>"+(i.nome||i.name)+" x "+i.qtd+" - "+kz(i.preco*i.qtd)+"</div>"; }).join("");
+    }catch(e){ itens = "<div>"+JSON.stringify(p.itens)+"</div>"; }
+    return "<div class='caixa'><b>"+(p.nome||"Cliente")+"</b> <small>"+new Date(p.criado_em).toLocaleString("pt-AO")+"</small><br>📞 "+(p.telefone||"")+"<br>📍 "+(p.morada||"")+"<br><br>"+itens+"<br><b>Total: "+kz(p.total)+"</b></div>";
+  }).join("");
+}
+carregar();
+</script>
+</body>
+</html>

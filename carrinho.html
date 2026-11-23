@@ -4,55 +4,116 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Carrinho - Casa Nova</title>
+
 <link rel="stylesheet" href="css/style.css">
+
+<style>
+.card{
+  background:#fff;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:10px;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);
+}
+
+.acoes{
+  display:flex;
+  gap:8px;
+  margin-top:8px;
+}
+
+.acoes button{
+  padding:6px 12px;
+}
+</style>
+
 </head>
 <body>
 
 <header class="topo">
   <a href="index.html" class="logo">Casa Nova</a>
+
+  <nav>
+    <span id="auth-links"></span>
+    <a href="index.html">Loja</a>
+  </nav>
 </header>
 
 <main class="container">
+
   <h2>Meu Carrinho</h2>
 
   <div id="lista"></div>
 
   <h3 id="total">Total: 0 Kz</h3>
 
+  <br>
+
   <button class="btn" onclick="finalizar()">
     Finalizar Pedido
   </button>
+
+  <button class="btn"
+          style="background:#dc3545;margin-top:8px"
+          onclick="limparCarrinho()">
+    Limpar Carrinho
+  </button>
+
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
 
 <script>
 
-function carregarCarrinho() {
+function carregarCarrinho(){
 
   const itens = lerCarrinho();
 
   const lista = document.getElementById("lista");
 
-  if (!itens.length) {
+  if(!itens.length){
     lista.innerHTML = "<p>Carrinho vazio.</p>";
+    document.getElementById("total").textContent =
+      "Total: 0 Kz";
     return;
   }
 
   let total = 0;
 
-  lista.innerHTML = itens.map(function(item){
+  lista.innerHTML = itens.map(function(item,index){
 
     const subtotal = item.preco * item.qtd;
+
     total += subtotal;
 
     return `
       <div class="card">
+
         <h3>${item.nome}</h3>
+
         <p>Quantidade: ${item.qtd}</p>
+
         <p>${kz(subtotal)}</p>
+
+        <div class="acoes">
+
+          <button onclick="aumentar(${index})">
+            +
+          </button>
+
+          <button onclick="diminuir(${index})">
+            -
+          </button>
+
+          <button onclick="remover(${index})">
+            Remover
+          </button>
+
+        </div>
+
       </div>
     `;
 
@@ -62,13 +123,96 @@ function carregarCarrinho() {
     "Total: " + kz(total);
 }
 
-function finalizar(){
-  alert("Pedido registado com sucesso!");
+function aumentar(index){
+
+  const c = lerCarrinho();
+
+  c[index].qtd++;
+
+  gravarCarrinho(c);
+
+  carregarCarrinho();
 }
 
-carregarCarrinho();
+function diminuir(index){
 
-</script>
+  const c = lerCarrinho();
 
-</body>
-</html>
+  c[index].qtd--;
+
+  if(c[index].qtd <= 0){
+    c.splice(index,1);
+  }
+
+  gravarCarrinho(c);
+
+  carregarCarrinho();
+}
+
+function remover(index){
+
+  const c = lerCarrinho();
+
+  c.splice(index,1);
+
+  gravarCarrinho(c);
+
+  carregarCarrinho();
+}
+
+function limparCarrinho(){
+
+  localStorage.removeItem("carrinho");
+
+  carregarCarrinho();
+}
+
+async function finalizar(){
+
+  const sessao = await db.auth.getSession();
+
+  if(!sessao.data.session){
+
+    alert("Faça login primeiro.");
+
+    location.href="login.html";
+
+    return;
+  }
+
+  const cliente =
+    sessao.data.session.user.id;
+
+  const carrinho =
+    lerCarrinho();
+
+  if(!carrinho.length){
+
+    alert("Carrinho vazio.");
+
+    return;
+  }
+
+  let total = 0;
+
+  carrinho.forEach(function(item){
+
+    total += item.preco * item.qtd;
+
+  });
+
+  const pedido = await db
+    .from("pedidos")
+    .insert({
+      cliente_id: cliente,
+      total: total,
+      estado: "pendente"
+    })
+    .select()
+    .single();
+
+  if(pedido.error){
+
+    console.log(pedido.error);
+
+    alert("Erro ao criar pedido.");

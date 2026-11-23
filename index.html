@@ -44,7 +44,7 @@ async function carregar(){
   if(!prod||!prod.length){lista.innerHTML='Nenhum produto ainda.';return}
   // Publicidade = 3 primeiros produtos a passar
   pubTexto.textContent='🔥 '+prod.slice(0,3).map(p=>p.nome+' - '+Number(p.preco).toLocaleString()+' Kz').join('  |  ')+' 🔥';
-  lista.innerHTML=prod.map(p=>`<div class="card"><img src="${p.imagem||p.foto||''}" onerror="this.src='https://via.placeholder.com/300'"><b>${p.nome}</b><br>${Number(p.preco).toLocaleString()} Kz<br><br><button class="btn" onclick="add(${p.id})">Adicionar</button></div>`).join('');
+  <img src="${p.imagem||p.foto||p.imagem_url||p.foto_url||p.image_url||p.image||p.url||''}"
   window._prod=prod;
 }
 function add(id){

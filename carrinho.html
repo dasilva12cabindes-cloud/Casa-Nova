@@ -48,18 +48,33 @@ function mudar(i, d){
   gravarCarrinho(c); mostrar();
 }
 function remover(i){ var c = lerCarrinho(); c.splice(i,1); gravarCarrinho(c); mostrar(); }
-document.getElementById("finalizar").onclick = function(){
+document.getElementById("finalizar").onclick = async function(){
   var c = lerCarrinho();
   if(c.length === 0) return alert("Carrinho vazio");
   var nome = document.getElementById("nome").value.trim();
   var tel = document.getElementById("telefone").value.trim();
   var morada = document.getElementById("morada").value.trim();
+  var pagamento = document.getElementById("pagamento").value;
   if(!nome || !tel) return alert("Preenche nome e telefone");
   var total = 0; var msg = "NOVO PEDIDO - CASA NOVA%0A%0A";
   c.forEach(function(it){ total += it.preco * it.qtd; msg += "- " + it.nome + " x " + it.qtd + " = " + kz(it.preco*it.qtd) + "%0A"; });
-  msg += "%0ATotal: " + kz(total) + "%0ANome: " + nome + "%0ATelefone: " + tel + "%0AMorada: " + morada;
+  msg += "%0ATotal: " + kz(total) + "%0ANome: " + nome + "%0ATelefone: " + tel + "%0AMorada: " + morada + "%0APagamento: " + pagamento;
+
+  // 1. GRAVAR NO SUPABASE - aparece em admin-pedidos.html
+  var itensSalvar = c.map(function(it){ return { nome: it.nome, preco: it.preco, qtd: it.qtd }; });
+  var r = await db.from("pedidos").insert([{
+    nome: nome,
+    telefone: tel,
+    morada: morada + " | Pagamento: " + pagamento,
+    itens: itensSalvar,
+    total: total
+  }]);
+  if(r.error){ alert("Erro ao gravar pedido: " + r.error.message); return; }
+
+  // 2. LIMPAR E ABRIR WHATSAPP CERTO
   localStorage.removeItem("carrinho");
-  window.open("https://wa.me/244900000000?text=" + msg, "_blank");
+  window.open("https://wa.me/244972370499?text=" + msg, "_blank");
+  setTimeout(function(){ window.location.href = "index.html"; }, 1000);
 };
 mostrar();
 </script>

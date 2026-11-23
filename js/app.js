@@ -1,7 +1,16 @@
 var todos = [];
 var categoriaAtual = null;
 
+function atualizarContador(){
+  var c = lerCarrinho();
+  var totalQtd = 0;
+  c.forEach(function(i){ totalQtd += i.qtd; });
+  var el = document.getElementById("contador");
+  if(el) el.textContent = totalQtd;
+}
+
 async function carregar() {
+  atualizarContador();
   var box = document.getElementById("produtos");
   if(box) box.innerHTML = '<p class="aviso">A carregar...</p>';
   var cats = await db.from("categorias").select("*").order("nome");
@@ -47,6 +56,7 @@ document.addEventListener("click", function (e) {
   if (!id) return;
   var p = todos.find(function (x) { return x.id === Number(id); });
   adicionarAoCarrinho(p);
+  atualizarContador();
   e.target.textContent = "Adicionado ✓";
   setTimeout(function () { e.target.textContent = "Adicionar"; }, 1200);
 });

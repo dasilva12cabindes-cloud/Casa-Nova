@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Carrinho - Casa Nova</title>
 
 <link rel="stylesheet" href="css/style.css">
@@ -41,23 +42,24 @@
 
 <main class="container">
 
-  <h2>Meu Carrinho</h2>
+<h2>Meu Carrinho</h2>
 
-  <div id="lista"></div>
+<div id="lista"></div>
 
-  <h3 id="total">Total: 0 Kz</h3>
+<h3 id="total">Total: 0 Kz</h3>
 
-  <br>
+<br>
 
-  <button class="btn" onclick="finalizar()">
-    Finalizar Pedido
-  </button>
+<button class="btn" onclick="finalizar()">
+  Finalizar Pedido
+</button>
 
-  <button class="btn"
-          style="background:#dc3545;margin-top:8px"
-          onclick="limparCarrinho()">
-    Limpar Carrinho
-  </button>
+<button
+  class="btn"
+  style="background:#dc3545;margin-top:10px"
+  onclick="limparCarrinho()">
+  Limpar Carrinho
+</button>
 
 </main>
 
@@ -75,9 +77,13 @@ function carregarCarrinho(){
   const lista = document.getElementById("lista");
 
   if(!itens.length){
-    lista.innerHTML = "<p>Carrinho vazio.</p>";
+
+    lista.innerHTML =
+      "<p>Carrinho vazio.</p>";
+
     document.getElementById("total").textContent =
       "Total: 0 Kz";
+
     return;
   }
 
@@ -85,7 +91,8 @@ function carregarCarrinho(){
 
   lista.innerHTML = itens.map(function(item,index){
 
-    const subtotal = item.preco * item.qtd;
+    const subtotal =
+      item.preco * item.qtd;
 
     total += subtotal;
 
@@ -116,7 +123,6 @@ function carregarCarrinho(){
 
       </div>
     `;
-
   }).join("");
 
   document.getElementById("total").textContent =
@@ -169,19 +175,17 @@ function limparCarrinho(){
 
 async function finalizar(){
 
-  const sessao = await db.auth.getSession();
+  const sessao =
+    await db.auth.getSession();
 
   if(!sessao.data.session){
 
     alert("Faça login primeiro.");
 
-    location.href="login.html";
+    location.href = "login.html";
 
     return;
   }
-
-  const cliente =
-    sessao.data.session.user.id;
 
   const carrinho =
     lerCarrinho();
@@ -193,20 +197,20 @@ async function finalizar(){
     return;
   }
 
-  let total = 0;
-
-  carrinho.forEach(function(item){
-
-    total += item.preco * item.qtd;
-
-  });
-
   const pedido = await db
     .from("pedidos")
     .insert({
-      cliente_id: cliente,
-      total: total,
-      estado: "pendente"
+      user_id:
+        sessao.data.session.user.id,
+
+      nome_cliente:
+        "Cliente",
+
+      telefone:
+        "",
+
+      tipo_entrega:
+        "Loja"
     })
     .select()
     .single();
@@ -215,4 +219,64 @@ async function finalizar(){
 
     console.log(pedido.error);
 
-    alert("Erro ao criar pedido.");
+    alert(
+      "Erro ao criar pedido."
+    );
+
+    return;
+  }
+
+  const itens = carrinho.map(function(item){
+
+    return {
+
+      pedido_id:
+        pedido.data.id,
+
+      produto_id:
+        item.id,
+
+      nome_produto:
+        item.nome,
+
+      preco_unitario:
+        item.preco,
+
+      quantidade:
+        item.qtd
+
+    };
+
+  });
+
+  const salvarItens =
+    await db
+      .from("itens_pedido")
+      .insert(itens);
+
+  if(salvarItens.error){
+
+    console.log(salvarItens.error);
+
+    alert(
+      "Erro ao guardar itens."
+    );
+
+    return;
+  }
+
+  localStorage.removeItem("carrinho");
+
+  alert(
+    "Pedido realizado com sucesso!"
+  );
+
+  location.href = "index.html";
+}
+
+carregarCarrinho();
+
+</script>
+
+</body>
+</html>

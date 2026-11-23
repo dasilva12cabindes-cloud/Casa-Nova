@@ -6,17 +6,13 @@
   <title>Admin - Casa Nova</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    .caixa { background: #fff; padding: 16px; border-radius: 12px; margin-bottom: 16px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .caixa { background: #fff; padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
     .caixa h2 { font-size: 1.1rem; margin-bottom: 10px; }
-    .caixa input, .caixa select, .caixa textarea { width: 100%; padding: 11px; margin-bottom: 8px;
-      border: 1px solid #cfd5df; border-radius: 8px; font-size: 1rem; font-family: inherit; }
-    .linha { display: flex; justify-content: space-between; align-items: center; gap: 8px;
-      padding: 10px 0; border-top: 1px solid #eef0f4; font-size: .95rem; }
+    .caixa input, .caixa select, .caixa textarea { width: 100%; padding: 11px; margin-bottom: 8px; border: 1px solid #cfd5df; border-radius: 8px; font-size: 1rem; font-family: inherit; }
+    .linha { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 0; border-top: 1px solid #eef0f4; font-size: .95rem; }
     .linha img { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; }
     .linha .info { flex: 1; }
-    .mini { border: 0; padding: 8px 10px; border-radius: 6px; font-size: .85rem; cursor: pointer;
-      background: #eef0f4; }
+    .mini { border: 0; padding: 8px 10px; border-radius: 6px; font-size: .85rem; cursor: pointer; background: #eef0f4; }
     .mini.vermelho { background: #fde2e0; color: #c0392b; }
     #msg { margin: 8px 0; font-weight: 600; }
     .links { display: flex; gap: 12px; margin-bottom: 14px; }
@@ -47,7 +43,7 @@
       <input type="number" id="p-stock" placeholder="Quantidade em stock" inputmode="numeric">
       <select id="p-cat"></select>
       <textarea id="p-desc" rows="3" placeholder="Descrição"></textarea>
-      <input type="file" id="p-foto" accept="image/*">
+      <input type="text" id="p-foto" placeholder="Link da foto (cola o link da imagem)">
       <button class="btn" id="p-add" style="width:100%">Guardar produto</button>
     </div>
 
@@ -57,7 +53,7 @@
     </div>
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/admin.js"></script>

@@ -1,34 +1,67 @@
-async function finalizar(){
-  const sessao = await db.auth.getSession();
-  if(!sessao.data.session){
-    alert("Faça login primeiro.");
-    location.href = "login.html";
-    return;
-  }
-  const carrinho = lerCarrinho();
-  if(!carrinho.length){ alert("Carrinho vazio."); return; }
-
-  let total = 0;
-  carrinho.forEach(function(i){ total += i.preco * i.qtd; });
-
-  const pedido = await db.from("pedidos").insert({
-    user_id: sessao.data.session.user.id,
-    nome_cliente: sessao.data.session.user.email,
-    telefone: "",
-    tipo_entrega: "Loja",
-    total: total
-  }).select().single();
-
-  if(pedido.error){ alert("Erro: " + pedido.error.message); return; }
-
-  const itens = carrinho.map(function(item){
-    return { pedido_id: pedido.data.id, produto_id: item.id, nome_produto: item.nome, preco_unitario: item.preco, quantidade: item.qtd };
-  });
-
-  const salvarItens = await db.from("itens_pedido").insert(itens);
-  if(salvarItens.error){ alert("Erro itens: " + salvarItens.error.message); return; }
-
-  localStorage.removeItem("carrinho");
-  alert("Pedido realizado com sucesso! Nº " + pedido.data.id);
-  location.href = "index.html";
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carrinho - Casa Nova</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.caixa{background:#fff;padding:16px;border-radius:12px;margin-bottom:12px}
+.linha{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-top:1px solid #eef0f4}
+.btn2{border:0;padding:8px 12px;border-radius:8px;background:#eef0f4;cursor:pointer}
+input,textarea,select{width:100%;padding:11px;margin-bottom:8px;border:1px solid #cfd5df;border-radius:8px;font-size:1rem}
+</style>
+</head>
+<body>
+<header class="topo"><a href="index.html" class="logo">Casa Nova</a><nav><a href="index.html">Loja</a></nav></header>
+<main class="container">
+<h2 style="margin:12px 0">Meu Carrinho</h2>
+<div id="lista"></div>
+<div class="caixa">
+<h3>Dados de Entrega</h3>
+<input id="nome" placeholder="Teu nome completo">
+<input id="telefone" placeholder="Teu telefone / WhatsApp">
+<textarea id="morada" rows="2" placeholder="Morada de entrega"></textarea>
+<select id="pagamento"><option>Multicaixa Express</option><option>Dinheiro na entrega</option><option>Transferência</option></select>
+<p id="total" style="font-weight:700;font-size:1.2rem"></p>
+<button class="btn" id="finalizar" style="width:100%">Finalizar Pedido no WhatsApp</button>
+</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<script>
+function mostrar(){
+  var c = lerCarrinho();
+  var div = document.getElementById("lista");
+  if(c.length === 0){ div.innerHTML = "<div class='caixa'>Carrinho vazio. Volta à loja.</div>"; document.getElementById("total").textContent=""; return; }
+  var total = 0;
+  div.innerHTML = c.map(function(it, i){
+    total += it.preco * it.qtd;
+    return "<div class='caixa linha'><div><b>"+it.nome+"</b><br>"+kz(it.preco)+" x "+it.qtd+"</div><div><button class='btn2' onclick='mudar("+i+",1)'>+</button> <button class='btn2' onclick='mudar("+i+",-1)'>-</button> <button class='btn2' onclick='remover("+i+")'>X</button></div></div>";
+  }).join("");
+  document.getElementById("total").textContent = "Total: " + kz(total);
 }
+function mudar(i, d){
+  var c = lerCarrinho(); c[i].qtd += d;
+  if(c[i].qtd <= 0) c.splice(i,1);
+  gravarCarrinho(c); mostrar();
+}
+function remover(i){ var c = lerCarrinho(); c.splice(i,1); gravarCarrinho(c); mostrar(); }
+document.getElementById("finalizar").onclick = function(){
+  var c = lerCarrinho();
+  if(c.length === 0) return alert("Carrinho vazio");
+  var nome = document.getElementById("nome").value.trim();
+  var tel = document.getElementById("telefone").value.trim();
+  var morada = document.getElementById("morada").value.trim();
+  if(!nome || !tel) return alert("Preenche nome e telefone");
+  var total = 0; var msg = "NOVO PEDIDO - CASA NOVA%0A%0A";
+  c.forEach(function(it){ total += it.preco * it.qtd; msg += "- " + it.nome + " x " + it.qtd + " = " + kz(it.preco*it.qtd) + "%0A"; });
+  msg += "%0ATotal: " + kz(total) + "%0ANome: " + nome + "%0ATelefone: " + tel + "%0AMorada: " + morada;
+  localStorage.removeItem("carrinho");
+  window.open("https://wa.me/244900000000?text=" + msg, "_blank");
+};
+mostrar();
+</script>
+</body>
+</html>

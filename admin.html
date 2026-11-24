@@ -23,14 +23,37 @@
 .card-pagamento{border:2px solid #0b5ed7}
 .card-verificar{border:2px solid #16a34a;background:#f0fdf4}
 .card-verificar b{color:#166534}
+.btn-sair{background:#dc2626;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer;font-size:14px}
+.btn-sair2{background:#eee;border:0;padding:12px;border-radius:10px;width:100%;margin-top:10px;cursor:pointer;font-weight:700}
+/* LOGIN */
+#telaLogin{position:fixed;inset:0;background:#0b5ed7;z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
+#telaLogin.aberto{display:flex}
+.login-box{background:#fff;width:100%;max-width:340px;border-radius:20px;padding:24px;text-align:center}
+.login-box input{width:100%;padding:14px;border:1px solid #cfd5df;border-radius:10px;margin-top:12px;font-size:16px;text-align:center}
+.login-box button{background:#0b5ed7;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;margin-top:12px;cursor:pointer}
 </style></head>
 <body>
+
+<!-- TELA DE LOGIN - só aparece a 1ª vez -->
+<div id="telaLogin"><div class="login-box">
+  <div style="font-size:40px">🔒</div>
+  <h2 style="margin:8px 0">Admin Casa Nova</h2>
+  <p style="color:#666;font-size:13px">Escreve a tua senha para entrar.<br>Depois ficas logado até tu saíres.</p>
+  <input id="senhaAdmin" type="password" placeholder="Senha do Admin" onkeydown="if(event.key==='Enter') entrarAdmin()">
+  <button onclick="entrarAdmin()">Entrar</button>
+  <p id="erroLogin" style="color:#dc2626;font-size:13px;display:none;margin-top:8px">Senha errada!</p>
+  <a href="index.html" style="display:block;margin-top:14px;color:#0b5ed7;font-weight:700;font-size:14px">← Voltar à Loja</a>
+</div></div>
+
 <div class="topo" id="topoSite">
   <div class="logo">
     <img id="logoTopo" class="logo-img" src="">
     <span class="logo-text"><b>🏠 Casa Nova - Admin</b></span>
   </div>
-  <a href="index.html">Ver Loja →</a>
+  <div style="display:flex;gap:8px;align-items:center">
+    <a href="index.html">Ver Loja →</a>
+    <button class="btn-sair" onclick="sairAdmin()">🚪 Sair</button>
+  </div>
 </div>
 <div class="titulo">Painel do Administrador</div>
 <div class="sub">Escolhe o que queres gerir:</div>
@@ -45,10 +68,45 @@
   <a class="card" href="admin-vendas.html"><span>💰</span><b>Vendas</b><small>Relatório de venda diária</small></a>
   <a class="card" href="admin-clientes.html"><span>👥</span><b>Clientes Cadastrados</b><small>Ver todos os clientes</small></a>
   <a class="card card-pagamento" href="admin-pagamento.html"><span>💳</span><b>Sistema de Pagamento</b><small>Multicaixa Express, PayPay, IBAN + WhatsApp</small></a>
-  <!-- BOTÃO WHATSAPP RETIRADO - já está dentro do Sistema de Pagamento -->
 </div>
 
 <script>
+// ===== FICA LOGADO ATÉ TU SAÍRES =====
+// Guarda onde estás - se atualizares, ficas na mesma página
+localStorage.setItem('ultima_pagina_admin', location.pathname);
+
+const SENHA_ADMIN = '1234'; // <-- MUDA AQUI A TUA SENHA
+
+function mostrarLogin(){
+  document.getElementById('telaLogin').classList.add('aberto');
+}
+function esconderLogin(){
+  document.getElementById('telaLogin').classList.remove('aberto');
+}
+function entrarAdmin(){
+  let s = document.getElementById('senhaAdmin').value.trim();
+  if(s === SENHA_ADMIN){
+    // FICA GUARDADO - mesmo que atualizes, não pede de novo
+    localStorage.setItem('admin_logado', 'sim');
+    esconderLogin();
+  } else {
+    document.getElementById('erroLogin').style.display = 'block';
+  }
+}
+function sairAdmin(){
+  if(!confirm('Queres mesmo sair do Admin?')) return;
+  // SÓ SAI QUANDO TU CLICAS EM SAIR
+  localStorage.removeItem('admin_logado');
+  location.href = 'index.html';
+}
+
+// AO ABRIR A PÁGINA: se já estava logado, entra direto
+if(localStorage.getItem('admin_logado') === 'sim'){
+  esconderLogin();
+} else {
+  mostrarLogin();
+}
+
 async function carregarLogoTopo(){
   try{
     let r = await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();

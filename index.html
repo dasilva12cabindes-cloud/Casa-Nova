@@ -7,11 +7,11 @@
 <style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6}
 .topo{background:#2563eb;color:#fff;padding:12px;display:flex;justify-content:space-between;align-items:center}
 .topo a{color:#fff;text-decoration:none;font-weight:700}.logo-img{height:38px;border-radius:6px}
-.banner-wrap{position:relative;width:100%;height:220px;overflow:hidden;background:#2563eb;display:none}
-.banner-wrap img{position:absolute;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s}
-.banner-wrap img.ativo{opacity:1}
+.banner-wrap{position:relative;width:100%;height:auto;overflow:hidden;background:#fff;display:none}
+.banner-wrap img{position:relative;width:100%;height:auto;max-height:420px;object-fit:contain;display:none}
+.banner-wrap img.ativo{display:block;opacity:1}
 .pontos{position:absolute;bottom:10px;left:0;right:0;text-align:center;z-index:2}
-.pontos span{display:inline-block;width:9px;height:9px;background:#fff;opacity:.5;border-radius:50%;margin:0 3px}
+.pontos span{display:inline-block;width:9px;height:9px;background:#fff;opacity:.5;border-radius:50%;margin:0 3px;box-shadow:0 0 3px #000}
 .pontos span.ativo{opacity:1;background:#2563eb}
 .publicidade{background:#ffcc00;padding:10px;overflow:hidden;white-space:nowrap}
 .publicidade span{display:inline-block;animation:passar 18s linear infinite;font-weight:700}
@@ -47,8 +47,8 @@ function iniciarBanner(fotos){
   const pontos=document.getElementById('pontos');
   if(!fotos.length){wrap.style.display='none';return}
   wrap.style.display='block';
-  // Só cria img se carregar mesmo - se falhar, apaga
   div.innerHTML=''; pontos.innerHTML='';
+  if(bannerTimer){clearInterval(bannerTimer); bannerTimer=null}
   fotos.forEach((f,i)=>{
     const im=new Image();
     im.onload=()=>{
@@ -60,6 +60,7 @@ function iniciarBanner(fotos){
       pontos.appendChild(s);
       if(div.children.length>1 && !bannerTimer) bannerTimer=setInterval(()=>mostrarBanner(bannerAtual+1),4000);
     };
+    im.onerror=()=>{};
     im.src=f;
   });
 }
@@ -80,14 +81,13 @@ async function carregar(){
     const prodR=await db.from('produtos').select('*').order('id',{ascending:false});
     const prod=prodR.data||[];
     let fotosBanner=[];
-try{
-  let b=cfg?.banners;
-  if(typeof b==='string') b=JSON.parse(b||'[]');
-  if(Array.isArray(b) && b.length) fotosBanner=b;
-  else if(cfg?.banner_url) fotosBanner=[cfg.banner_url];
-}catch(e){}
-if(!fotosBanner.length) prod.forEach(p=>{let f=foto(p); if(f && !f.includes('placeholder')) fotosBanner.push(f)});
-iniciarBanner(fotosBanner);
+    try{
+      let b=cfg?.banners;
+      if(typeof b==='string') b=JSON.parse(b||'[]');
+      if(Array.isArray(b) && b.length) fotosBanner=b;
+      else if(cfg?.banner_url) fotosBanner=[cfg.banner_url];
+    }catch(e){}
+    if(!fotosBanner.length) prod.forEach(p=>{let f=foto(p); if(f && !f.includes('placeholder')) fotosBanner.push(f)});
     iniciarBanner(fotosBanner);
     if(!prod.length){document.getElementById('lista').innerHTML='Nenhum produto ainda.';return}
     document.getElementById('pubTexto').textContent='🔥 '+prod.slice(0,3).map(p=>p.nome+' - '+Number(p.preco).toLocaleString()+' Kz').join('  |  ')+' 🔥';

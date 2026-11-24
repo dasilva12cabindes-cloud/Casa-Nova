@@ -6,29 +6,42 @@
 <script src="js/supabase.js"></script>
 <style>
 body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
-.topo{background:#0b5ed7;color:#fff;padding:14px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
+.topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}
+.topo .logo{display:flex;align-items:center;gap:8px}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
+.topo.tem-logo .logo-text{display:none}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
+/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
+@keyframes logoZoom{
+  0%{transform:scale(0.7) translateY(0) rotate(0deg)}
+  25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
+  40%{transform:scale(1.45) translateY(0) rotate(0deg)}
+  48%{transform:scale(1.45) translateY(0) rotate(-6deg)}
+  56%{transform:scale(1.45) translateY(0) rotate(6deg)}
+  64%{transform:scale(1.45) translateY(0) rotate(-5deg)}
+  72%{transform:scale(1.45) translateY(0) rotate(4deg)}
+  80%{transform:scale(1.25) translateY(4px) rotate(0deg)}
+  88%{transform:scale(1.08) translateY(-3px) rotate(0deg)}
+  94%{transform:scale(0.96) translateY(2px) rotate(0deg)}
+  100%{transform:scale(1) translateY(0) rotate(0deg)}
+}
 .caixa{background:#fff;padding:16px;border-radius:12px;margin-top:12px}
+.caixa h3{background:#eff6ff;border:2px solid #0b5ed7;border-radius:999px;padding:10px 14px;text-align:center;margin:0 0 8px}
 .btn-sair{background:#dc2626;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer}
 .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-top:10px;line-height:1.7;font-size:14px}
 </style></head>
 <body>
-<div class="topo"><b>🔖 Meus Códigos</b><div style="display:flex;gap:8px"><a href="index.html">Loja →</a><button class="btn-sair" onclick="sairCliente()">🚪 Sair</button></div></div>
-
-<!-- NÃO MOSTRA MAIS "LOGADO COMO" - RETIRADO -->
+<div class="topo" id="topoSite"><div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>🔖 Meus Códigos</b></span></div><div style="display:flex;gap:8px"><a href="index.html">Loja →</a><button class="btn-sair" onclick="sairCliente()">🚪 Sair</button></div></div>
 
 <div class="caixa">
-  <h3 style="margin:0">Os teus códigos ficam aqui 5 minutos</h3>
-  <p style="color:#666;font-size:13px">Depois de 5 minutos o código some sozinho.<br>Aponta o código antes.</p>
+  <h3>Os teus códigos ficam aqui 5 minutos</h3>
+  <p style="color:#666;font-size:13px;text-align:center">Depois de 5 minutos o código some sozinho.<br>Aponta o código antes.</p>
   <div id="listaCodigos"></div>
 </div>
 
 <script>
-// RETIFICADO: RETIRA A INFORMAÇÃO DO CLIENTE SE ATUALIZAR A PÁGINA
-// Se for atualização (refresh), apaga só o nome/e-mail/telefone, NÃO apaga o código
 if(performance.getEntriesByType('navigation')[0]?.type === 'reload'){
   localStorage.removeItem('cliente_casa_nova');
-  // O código continua até fazer 5 minutos
 }
 
 function sairCliente(){
@@ -39,16 +52,15 @@ function sairCliente(){
 }
 
 function renderizar(){
-  // VOLTA COMO ESTAVA ANTES: código some depois de 5 MINUTOS
   let meus = [];
   try{ meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]'); }catch(e){}
   let agora = Date.now();
-  meus = meus.filter(m => (agora - (m.criado_em||0)) < 5*60*1000); // 5 minutos
+  meus = meus.filter(m => (agora - (m.criado_em||0)) < 5*60*1000);
   localStorage.setItem('meus_codigos', JSON.stringify(meus));
 
   let div = document.getElementById('listaCodigos');
   if(!meus.length){
-    div.innerHTML = `<p style="color:#666">Nenhum código.<br>Os códigos somem depois de 5 minutos.<br><a href="index.html" style="color:#0b5ed7;font-weight:700">Fazer um pedido →</a></p>`;
+    div.innerHTML = `<p style="color:#666;text-align:center">Nenhum código.<br>Os códigos somem depois de 5 minutos.<br><a href="index.html" style="color:#0b5ed7;font-weight:700">Fazer um pedido →</a></p>`;
     return;
   }
   div.innerHTML = meus.map(m => `
@@ -58,5 +70,9 @@ function renderizar(){
     </div>
   `).join('');
 }
+async function carregarLogoTopo(){
+  try{ let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle(); let logo=r.data?.logo_url; if(logo){ let img=document.getElementById('logoTopo'); img.src=logo; img.style.display='block'; document.getElementById('topoSite').classList.add('tem-logo'); } }catch(e){}
+}
+carregarLogoTopo();
 renderizar();
 </script></body></html>

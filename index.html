@@ -55,6 +55,9 @@ a { color: inherit; text-decoration: none; }
 .linha-cli{padding:10px 0;border-bottom:1px solid #eee;font-size:15px;text-align:left}
 .btn-sair{background:#dc2626;color:#fff;border:0;padding:13px;border-radius:10px;width:100%;font-weight:700;font-size:15px;cursor:pointer;margin-top:14px}
 .btn-fechar-cliente{background:#e5e7eb;border:0;padding:13px;border-radius:10px;width:100%;font-weight:700;margin-top:8px;cursor:pointer}
+#modalSair{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1100;display:none;align-items:center;justify-content:center;padding:20px}
+#modalSair.aberto{display:flex}
+.modal-sair-box{background:#fff;width:100%;max-width:350px;border-radius:20px;padding:22px;text-align:center}
 </style>
 </head>
 <body>
@@ -96,8 +99,17 @@ a { color: inherit; text-decoration: none; }
     <h2 id="saudacaoCliente" style="margin:0"></h2>
     <p id="subSaudacao" style="color:#16a34a;font-weight:700;margin:6px 0 14px">✅ Já estás conectado na Casa Nova</p>
     <div id="dadosCliente"></div>
-    <button class="btn-sair" onclick="sairCliente()">🚪 Sair da Loja</button>
+    <button class="btn-sair" onclick="abrirConfirmarSair()">🚪 Sair da Loja</button>
     <button class="btn-fechar-cliente" onclick="fecharCliente()">Continuar a Comprar</button>
+  </div>
+</div>
+<div id="modalSair" onclick="if(event.target.id==='modalSair') fecharConfirmarSair()">
+  <div class="modal-sair-box">
+    <div style="font-size:40px">👋</div>
+    <h3 style="margin:8px 0">Queres mesmo sair?</h3>
+    <p style="color:#666;font-size:14px;margin-bottom:16px">Vais sair da tua conta na Casa Nova.</p>
+    <button class="btn-sair" onclick="confirmarSair()">Sim, Sair</button>
+    <button class="btn-fechar-cliente" onclick="fecharConfirmarSair()">Cancelar</button>
   </div>
 </div>
 <script>
@@ -149,13 +161,7 @@ function adicionarCarrinho(id, event){
     achou.preco = Number(p.preco);
     achou.imagem = p.imagem || p.imagem_url || '';
   } else {
-    carrinho.push({
-      id: p.id,
-      nome: p.nome,
-      preco: Number(p.preco),
-      imagem: p.imagem || p.imagem_url || '',
-      qtd: 1
-    });
+    carrinho.push({ id: p.id, nome: p.nome, preco: Number(p.preco), imagem: p.imagem || p.imagem_url || '', qtd: 1 });
   }
   localStorage.setItem('carrinho', JSON.stringify(carrinho));
   atualizarCarrinho();
@@ -221,10 +227,12 @@ function abrirCliente(){
   document.getElementById('modalCliente').classList.add('aberto');
 }
 function fecharCliente(){ document.getElementById('modalCliente').classList.remove('aberto'); }
-function sairCliente(){
-  if(!confirm('Queres mesmo sair da tua conta?')) return;
+function abrirConfirmarSair(){ document.getElementById('modalSair').classList.add('aberto'); }
+function fecharConfirmarSair(){ document.getElementById('modalSair').classList.remove('aberto'); }
+function confirmarSair(){
   localStorage.removeItem('cliente_casa_nova');
   localStorage.removeItem('carrinho');
+  fecharConfirmarSair();
   fecharCliente();
   mostrarToast('👋 Saíste da tua conta. Até já!');
   document.querySelector('.btn-cadastro-flutuante small').textContent = 'Cadastrar';

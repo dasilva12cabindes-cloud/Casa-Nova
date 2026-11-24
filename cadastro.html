@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cadastrar - Casa Nova</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
+.topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}
+.topo .logo{display:flex;align-items:center;gap:8px}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none}
+.topo.tem-logo .logo-text{display:none}
+.topo a{color:#fff;text-decoration:none;font-weight:700}
+.caixa{background:#fff;padding:18px;border-radius:14px;margin-top:12px}
+.caixa h3{margin:0 0 4px}
+.caixa p{color:#666;font-size:13px;margin:0 0 12px}
+label{font-size:13px;font-weight:700;display:block;margin:12px 0 4px}
+input{width:100%;padding:12px;border:1px solid #cfd5df;border-radius:8px;font-size:15px}
+.btn{border:0;padding:13px;border-radius:8px;width:100%;font-weight:700;cursor:pointer;font-size:15px;margin-top:16px}
+.btn-verde{background:#16a34a;color:#fff}
+.btn-cinza{background:#e5e7eb;color:#111}
+#toast{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:14px 18px;border-radius:14px;z-index:9999;font-weight:700;max-width:92%;text-align:center;transition:.35s;opacity:0;pointer-events:none}
+#toast.mostrar{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.sucesso{background:#16a34a}
+#toast.erro{background:#dc2626}
+</style></head>
+<body>
+<div id="toast"></div>
+<div class="topo" id="topoSite"><div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>Casa Nova</b></span></div><a href="index.html">← Voltar</a></div>
+
+<div class="caixa">
+<h3>👤 Cadastrar Cliente</h3>
+<p>Cria a tua conta para comprar mais rápido na Casa Nova.</p>
+
+<label>👤 Nome Completo *</label>
+<input id="nome" placeholder="Ex: João Silva">
+
+<label>📞 Telefone / WhatsApp *</label>
+<input id="telefone" placeholder="Ex: 923 000 000" type="tel">
+
+<label>📍 Morada / Bairro</label>
+<input id="morada" placeholder="Ex: Viana, Luanda">
+
+<label>📧 Email (opcional)</label>
+<input id="email" placeholder="Ex: joao@gmail.com" type="email">
+
+<button class="btn btn-verde" onclick="cadastrar()">✅ Cadastrar</button>
+<button class="btn btn-cinza" onclick="location.href='index.html'">Cancelar</button>
+</div>
+
+<script>
+let toastTimer;
+function aviso(msg,tipo){let t=document.getElementById('toast');t.textContent=msg;t.className='mostrar '+(tipo||'sucesso');clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='';},3000);}
+async function carregarLogoTopo(){
+  try{let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();let logo=r.data?.logo_url;if(logo){let img=document.getElementById('logoTopo');img.src=logo;img.style.display='block';document.getElementById('topoSite').classList.add('tem-logo');}}catch(e){}
+}
+async function cadastrar(){
+  let nome=document.getElementById('nome').value.trim();
+  let telefone=document.getElementById('telefone').value.trim();
+  let morada=document.getElementById('morada').value.trim();
+  let email=document.getElementById('email').value.trim();
+  if(!nome||!telefone) return aviso('⚠️ Preenche nome e telefone','erro');
+  // Guarda no telemóvel para o carrinho usar depois
+  localStorage.setItem('cliente_casa_nova', JSON.stringify({nome,telefone,morada,email}));
+  // Tenta guardar também no Supabase se existir tabela clientes
+  try{ await db.from('clientes').insert([{nome_cliente:nome,telefone:telefone,morada:morada,email:email}]); }catch(e){}
+  aviso('✅ Bem-vindo, '+nome+'! Cadastro feito.');
+  setTimeout(()=>location.href='index.html',1500);
+}
+carregarLogoTopo();
+</script></body></html>

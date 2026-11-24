@@ -11,44 +11,42 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: system-ui, -apple-system, Arial, sans-serif; background: #f5f6f8; color: #1d2330; }
 a { color: inherit; text-decoration: none; }
-
-/* TOPO - SÓ LOGOTIPO */
-.topo { position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between;
-  align-items: center; padding: 8px 16px; background: #0b5ed7; color: #fff; height: 72px; }
+.topo { position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; background: #0b5ed7; color: #fff; height: 72px; }
 .topo .logo { display: flex; align-items: center; }
-.topo .logo-img { height: 56px; width: auto; max-width: 200px; object-fit: contain; display: block; background: transparent; }
+.topo .logo-img { height: 56px; width: auto; max-width: 200px; object-fit: contain; display: block; }
 .topo .logo-text { font-size: 1.3rem; font-weight: 700; }
 .topo.tem-logo .logo-text { display: none; }
 .topo nav { display: flex; gap: 16px; align-items: center; }
 .topo nav a, #auth-links { display: inline-flex; gap: 12px; }
-
-/* BANNERS / PUBLICIDADE */
 .banners { width: 100%; max-width: 1100px; margin: 12px auto 0; padding: 0 16px; display: none; }
 .banners img { width: 100%; height: 180px; object-fit: cover; display: block; border-radius: 12px; background: #eef0f4; }
 @media (max-width: 700px){ .banners img{ height: 140px; } }
-
 .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
-#busca { width: 100%; padding: 12px 14px; border: 1px solid #cfd5df; border-radius: 10px;
-  font-size: 1rem; margin-bottom: 12px; }
-
+#busca { width: 100%; padding: 12px 14px; border: 1px solid #cfd5df; border-radius: 10px; font-size: 1rem; margin-bottom: 12px; }
 .categorias { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; }
-.chip { border: 1px solid #cfd5df; background: #fff; padding: 8px 14px; border-radius: 20px;
-  font-size: .9rem; white-space: nowrap; cursor: pointer; }
+.chip { border: 1px solid #cfd5df; background: #fff; padding: 8px 14px; border-radius: 20px; font-size: .9rem; white-space: nowrap; cursor: pointer; }
 .chip.ativo { background: #0b5ed7; color: #fff; border-color: #0b5ed7; }
-
 .grade { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 @media (min-width: 700px) { .grade { grid-template-columns: repeat(4, 1fr); } }
-
-.card { background: #fff; border-radius: 12px; padding: 10px; display: flex; flex-direction: column;
-  gap: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.card { background: #fff; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.08); cursor: pointer; }
 .card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: #eef0f4; }
 .card h3 { font-size: .95rem; font-weight: 600; }
 .preco { font-weight: 700; color: #0b5ed7; }
-
-.btn { background: #0b5ed7; color: #fff; border: 0; padding: 11px; border-radius: 8px;
-  font-size: .95rem; cursor: pointer; margin-top: auto; }
-.btn:disabled { background: #aab1bd; }
+.btn { background: #0b5ed7; color: #fff; border: 0; padding: 11px; border-radius: 8px; font-size: .95rem; cursor: pointer; margin-top: auto; }
 .aviso { grid-column: 1 / -1; text-align: center; padding: 30px 0; color: #667085; }
+/* AVISO BONITO SEM E-MAIL - substitui o alert() */
+#toast { position: fixed; top: 82px; left: 50%; transform: translateX(-50%) translateY(-20px); background: #111; color: #fff; padding: 12px 18px; border-radius: 30px; font-size: .9rem; z-index: 100; opacity: 0; pointer-events: none; transition: .3s; box-shadow: 0 4px 16px rgba(0,0,0,.25); white-space: nowrap; }
+#toast.mostrar { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* JANELA DE DETALHES */
+#modal { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 99; display: none; align-items: flex-end; justify-content: center; }
+#modal.aberto { display: flex; }
+.modal-box { background: #fff; width: 100%; max-width: 500px; border-radius: 18px 18px 0 0; padding: 16px; max-height: 88vh; overflow-y: auto; }
+.modal-box img { width: 100%; border-radius: 12px; aspect-ratio: 1; object-fit: cover; background: #eef0f4; }
+.modal-box h2 { margin: 12px 0 4px; font-size: 1.2rem; }
+.modal-cat { color: #667085; font-size: .85rem; }
+.modal-preco { color: #0b5ed7; font-weight: 800; font-size: 1.3rem; margin: 10px 0; }
+.modal-desc { color: #333; font-size: .95rem; line-height: 1.5; margin-bottom: 14px; }
+.fechar { float: right; font-size: 1.4rem; border: 0; background: #f0f0f0; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -64,32 +62,51 @@ a { color: inherit; text-decoration: none; }
   </nav>
 </div>
 
-<!-- BANNERS -->
+<div id="toast">✅ Adicionado ao carrinho!</div>
+
 <div class="banners" id="banners"><img src="" id="bannerImg" alt="Publicidade"></div>
 
 <div class="container">
   <input id="busca" placeholder="🔍 Pesquisar produto..." oninput="filtrar()">
-
   <div class="categorias" id="categorias">
     <button class="chip ativo" onclick="filtrarCategoria('Todas',this)">Todas</button>
   </div>
-
   <div class="grade" id="grade"><div class="aviso">A carregar produtos...</div></div>
+</div>
+
+<!-- DETALHES DO PRODUTO -->
+<div id="modal" onclick="if(event.target.id==='modal') fecharDetalhe()">
+  <div class="modal-box">
+    <button class="fechar" onclick="fecharDetalhe()">✕</button>
+    <img id="dImg" src="">
+    <h2 id="dNome"></h2>
+    <div class="modal-cat" id="dCat"></div>
+    <div class="modal-preco" id="dPreco"></div>
+    <div class="modal-desc" id="dDesc"></div>
+    <button class="btn" style="width:100%" id="dBtn">Adicionar ao Carrinho</button>
+  </div>
 </div>
 
 <script>
 let todosProdutos = [];
 let categoriaAtual = 'Todas';
 
-// CATEGORIA AUTOMATICA PELO NOME - resolve o problema do "Outros"
 function categoriaAuto(p){
   if(p.categoria && p.categoria !== 'Outros' && p.categoria.trim() !== '') return p.categoria;
   let n = (p.nome||'').toLowerCase();
   if(n.includes('samsung') || n.includes('galaxy') || n.includes('iphone') || n.includes('telemovel') || n.includes('telemóvel') || n.includes('telefone') || n.includes('smartphone')) return 'Telemóveis';
-  if(n.includes('arca') || n.includes('geleira') || n.includes('frigorifico') || n.includes('frigorífico') || n.includes('fogao') || n.includes('fogão') || n.includes('microondas') || n.includes('micro-ondas') || n.includes('maquina') || n.includes('máquina') || n.includes('liquidificadora') || n.includes('fritadeira') || n.includes('ventilador') || n.includes('ar condicionado') || n.includes('ferro') || n.includes('chaleira')) return 'Eletrodomésticos';
-  if(n.includes('tv') || n.includes('televisao') || n.includes('televisão') || n.includes('coluna') || n.includes('som') || n.includes('smart tv')) return 'TV e Som';
-  if(n.includes('computador') || n.includes('portatil') || n.includes('portátil') || n.includes('tablet') || n.includes('laptop')) return 'Informática';
+  if(n.includes('arca') || n.includes('geleira') || n.includes('frigorifico') || n.includes('frigorífico') || n.includes('fogao') || n.includes('fogão') || n.includes('microondas') || n.includes('maquina') || n.includes('máquina') || n.includes('liquidificadora') || n.includes('fritadeira') || n.includes('ventilador') || n.includes('ar condicionado') || n.includes('ferro') || n.includes('chaleira')) return 'Eletrodomésticos';
+  if(n.includes('tv') || n.includes('televisao') || n.includes('televisão') || n.includes('coluna') || n.includes('som')) return 'TV e Som';
+  if(n.includes('computador') || n.includes('portatil') || n.includes('portátil') || n.includes('tablet')) return 'Informática';
   return 'Outros';
+}
+
+// SEM ALERT - SEM E-MAIL
+function mostrarToast(msg){
+  let t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('mostrar');
+  setTimeout(()=>t.classList.remove('mostrar'), 2000);
 }
 
 function atualizarCarrinho(){
@@ -98,15 +115,29 @@ function atualizarCarrinho(){
   document.getElementById('qtdCarrinho').textContent = qtd;
 }
 
-function adicionarCarrinho(id){
+function adicionarCarrinho(id, event){
+  if(event) event.stopPropagation();
   let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
   let achou = carrinho.find(i=>i.id==id);
   if(achou) achou.qtd = (achou.qtd||1)+1;
   else carrinho.push({id:id, qtd:1});
   localStorage.setItem('carrinho', JSON.stringify(carrinho));
   atualizarCarrinho();
-  alert('✅ Adicionado ao carrinho!');
+  mostrarToast('✅ Adicionado ao carrinho!');
 }
+
+function abrirDetalhe(id){
+  let p = todosProdutos.find(x=>x.id==id);
+  if(!p) return;
+  document.getElementById('dImg').src = p.imagem || p.imagem_url || 'https://via.placeholder.com/300';
+  document.getElementById('dNome').textContent = p.nome;
+  document.getElementById('dCat').textContent = categoriaAuto(p);
+  document.getElementById('dPreco').textContent = Number(p.preco).toLocaleString() + ' Kz';
+  document.getElementById('dDesc').textContent = p.descricao || p.detalhes || 'Produto de qualidade da Casa Nova. Disponível para entrega em Luanda. Para mais informações, fala connosco no WhatsApp.';
+  document.getElementById('dBtn').onclick = (e)=>{ adicionarCarrinho(p.id, e); fecharDetalhe(); };
+  document.getElementById('modal').classList.add('aberto');
+}
+function fecharDetalhe(){ document.getElementById('modal').classList.remove('aberto'); }
 
 function filtrarCategoria(cat, btn){
   categoriaAtual = cat;
@@ -114,7 +145,6 @@ function filtrarCategoria(cat, btn){
   if(btn) btn.classList.add('ativo');
   filtrar();
 }
-
 function filtrar(){
   let termo = document.getElementById('busca').value.toLowerCase().trim();
   let lista = todosProdutos.filter(p=>{
@@ -124,54 +154,38 @@ function filtrar(){
   });
   mostrarProdutos(lista);
 }
-
 function mostrarProdutos(lista){
   let grade = document.getElementById('grade');
   if(!lista.length){ grade.innerHTML='<div class="aviso">Nenhum produto encontrado.</div>'; return; }
   grade.innerHTML = lista.map(p=>`
-    <div class="card">
+    <div class="card" onclick="abrirDetalhe(${p.id})">
       <img src="${p.imagem || p.imagem_url || ''}" onerror="this.src='https://via.placeholder.com/300'">
       <h3>${p.nome}</h3>
       <div class="preco">${Number(p.preco).toLocaleString()} Kz</div>
-      <button class="btn" onclick="adicionarCarrinho(${p.id})">Adicionar</button>
+      <button class="btn" onclick="adicionarCarrinho(${p.id}, event)">Adicionar</button>
     </div>
   `).join('');
 }
 
 async function carregarLoja(){
   let cfg = {};
-  // 1. LOGOTIPO + BANNERS
   try{
     const r = await db.from('loja_config').select('*').eq('id',1).maybeSingle();
     cfg = r.data || {};
     if(cfg.logo_url){
       const logo = document.getElementById('logoTopo');
-      logo.src = cfg.logo_url;
-      logo.style.display = 'block';
+      logo.src = cfg.logo_url; logo.style.display = 'block';
       document.getElementById('topoSite').classList.add('tem-logo');
-    } else {
-      document.getElementById('logoTopo').style.display = 'none';
-      document.getElementById('topoSite').classList.remove('tem-logo');
     }
     let banners = [];
-    try{
-      if(typeof cfg.banners === 'string') banners = JSON.parse(cfg.banners || '[]');
-      else banners = cfg.banners || [];
-    }catch(e){ banners = []; }
+    try{ if(typeof cfg.banners === 'string') banners = JSON.parse(cfg.banners || '[]'); else banners = cfg.banners || []; }catch(e){ banners = []; }
     if(!banners.length && cfg.banner_url) banners = [cfg.banner_url];
     if(banners.length){
-      let i = 0;
-      let img = document.getElementById('bannerImg');
-      document.getElementById('banners').style.display = 'block';
-      img.src = banners[0];
-      setInterval(()=>{
-        i = (i+1) % banners.length;
-        img.src = banners[i];
-      }, 3000);
+      let i = 0; let img = document.getElementById('bannerImg');
+      document.getElementById('banners').style.display = 'block'; img.src = banners[0];
+      setInterval(()=>{ i = (i+1) % banners.length; img.src = banners[i]; }, 3000);
     }
   }catch(e){ console.log(e); }
-
-  // 2. PRODUTOS + CATEGORIAS AUTOMATICAS
   try{
     const r2 = await db.from('produtos').select('*').order('id',{ascending:false});
     todosProdutos = r2.data || [];
@@ -181,12 +195,9 @@ async function carregarLoja(){
       `<button class="chip ativo" onclick="filtrarCategoria('Todas',this)">Todas</button>` +
       cats.map(c=>`<button class="chip" onclick="filtrarCategoria('${c}',this)">${c}</button>`).join('');
     mostrarProdutos(todosProdutos);
-  }catch(e){
-    document.getElementById('grade').innerHTML='<div class="aviso">Erro a carregar produtos.</div>';
-  }
+  }catch(e){ document.getElementById('grade').innerHTML='<div class="aviso">Erro a carregar produtos.</div>'; }
   atualizarCarrinho();
 }
-
 carregarLoja();
 </script>
 </body>

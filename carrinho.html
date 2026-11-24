@@ -12,12 +12,26 @@
 body{font-family:system-ui,Arial,sans-serif;background:#f5f6f8;color:#1d2330;overflow-x:hidden}
 .topo{display:flex;justify-content:space-between;align-items:center;padding:8px 16px;background:#0b5ed7;color:#fff;height:72px}
 .topo .logo{display:flex;align-items:center}
-.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:block}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:block;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
 .topo .logo-text{font-size:1.3rem;font-weight:700}
 .topo.tem-logo .logo-text{display:none}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
+/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
+@keyframes logoZoom{
+  0%{transform:scale(0.7) translateY(0) rotate(0deg)}
+  25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
+  40%{transform:scale(1.45) translateY(0) rotate(0deg)}
+  48%{transform:scale(1.45) translateY(0) rotate(-6deg)}
+  56%{transform:scale(1.45) translateY(0) rotate(6deg)}
+  64%{transform:scale(1.45) translateY(0) rotate(-5deg)}
+  72%{transform:scale(1.45) translateY(0) rotate(4deg)}
+  80%{transform:scale(1.25) translateY(4px) rotate(0deg)}
+  88%{transform:scale(1.08) translateY(-3px) rotate(0deg)}
+  94%{transform:scale(0.96) translateY(2px) rotate(0deg)}
+  100%{transform:scale(1) translateY(0) rotate(0deg)}
+}
 .container{max-width:600px;margin:0 auto;padding:16px;overflow:hidden}
-h1{font-size:1.4rem;margin-bottom:12px}
+h1{background:#fff;border:2px solid #0b5ed7;border-radius:999px;padding:14px 20px;font-size:1.4rem;margin-bottom:12px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.08)}
 .cliente-box{background:#e0f2fe;border:1px solid #93c5fd;padding:12px;border-radius:12px;margin-bottom:12px;font-size:14px;word-break:break-word}
 .aviso-login{background:#fef3c7;border:1px solid #fbbf24;padding:12px;border-radius:12px;margin-bottom:12px;font-size:14px}
 .item{background:#fff;border-radius:14px;padding:12px;margin-bottom:10px;display:flex;gap:10px;align-items:center;overflow:hidden}
@@ -29,7 +43,7 @@ h1{font-size:1.4rem;margin-bottom:12px}
 .qtd button{width:32px;height:32px;border:0;border-radius:8px;background:#eef2ff;font-size:18px;cursor:pointer}
 .qtd .remover{background:#fee2e2;color:#dc2626}
 .form{background:#fff;border-radius:16px;padding:16px;margin-top:10px;overflow:hidden}
-.form h3{margin-bottom:12px}
+.form h3{background:#eff6ff;border:2px solid #0b5ed7;border-radius:999px;padding:10px 14px;text-align:center;margin-bottom:12px}
 .form input,.form select,.form textarea{width:100%;padding:12px;border:1px solid #cfd5df;border-radius:10px;margin-bottom:10px;font-size:15px}
 .form label{font-weight:700;font-size:14px;display:block;margin:12px 0 6px}
 .total{font-size:1.2rem;font-weight:800;margin:12px 0}
@@ -72,7 +86,7 @@ h1{font-size:1.4rem;margin-bottom:12px}
   <a href="meus-pedidos.html">🔖 Meus Códigos</a>
 </div>
 <div class="container">
-<h1>Meu Carrinho</h1>
+<h1>🛒 Meu Carrinho</h1>
 <div id="infoCliente" class="cliente-box" style="display:none"></div>
 <div id="avisoLogin" class="aviso-login" style="display:none">👋 Já tens conta? <a href="cadastro.html?aba=entrar" style="color:#0b5ed7;font-weight:800">Entra aqui</a> para preencher os teus dados sozinho. Ou preenche em baixo para fazer o pedido.</div>
 <div id="lista"></div>

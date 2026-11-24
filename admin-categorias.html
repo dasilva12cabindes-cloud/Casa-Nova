@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Categorias & Produtos - Casa Nova</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
+.topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}
+.topo .logo{display:flex;align-items:center;gap:8px}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:#fff;border-radius:8px;padding:2px;display:none}
+.topo.tem-logo .logo-text{display:none}
+.topo a{color:#fff;text-decoration:none;font-weight:700}
+.caixa{background:#fff;padding:14px;border-radius:12px;margin-top:12px}
+input,select,textarea{width:100%;padding:11px;margin-bottom:8px;border:1px solid #cfd5df;border-radius:8px;font-size:15px}
+.btn{background:#0b5ed7;color:#fff;border:0;padding:11px;border-radius:8px;width:100%;font-weight:700;cursor:pointer}
+.btn-verde{background:#16a34a;color:#fff;border:0;padding:10px;border-radius:8px;font-weight:700;cursor:pointer}
+.btn-vermelho{background:#dc2626;color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
+.card-prod{background:#fff;padding:12px;border-radius:12px;margin-top:10px;display:flex;gap:10px;align-items:center}
+.card-prod img{width:70px;height:70px;object-fit:cover;border-radius:8px}
+#toast{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:14px 18px;border-radius:14px;z-index:9999;font-weight:700;max-width:92%;text-align:center;transition:.35s;opacity:0;pointer-events:none}
+#toast.mostrar{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.sucesso{background:#16a34a}
+#toast.erro{background:#dc2626}
+#toast.aviso{background:#f59e0b;color:#111}
+</style></head>
+<body>
+<div id="toast"></div>
+<div class="topo" id="topoSite"><div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>Casa Nova</b></span></div><a href="admin.html">← Voltar</a></div>
+
+<div class="caixa"><h3>📂 Adicionar Categoria</h3>
+<input id="novaCategoria" placeholder="Ex: Arca, TV e Som, Telemóveis...">
+<button class="btn" onclick="adicionarCategoria()">+ Adicionar Categoria</button>
+<div id="listaCategorias" style="margin-top:10px"></div>
+</div>
+
+<div class="caixa"><h3>➕ Adicionar / Editar Produto</h3>
+<input type="hidden" id="editId">
+<input id="pNome" placeholder="Nome do produto">
+<input id="pPreco" type="number" placeholder="Preço em Kz">
+<select id="pCategoria"><option value="">Escolhe a categoria...</option></select>
+<textarea id="pDesc" placeholder="Descrição do produto" rows="3"></textarea>
+<input id="pImagem" placeholder="Link da imagem (opcional)">
+<input type="file" id="pFile" accept="image/*">
+<button class="btn-verde" onclick="salvarProduto()">💾 Guardar Produto</button>
+<button class="btn" onclick="limparForm()" style="margin-top:8px;background:#6b7280">Limpar</button>
+</div>
+
+<div class="caixa"><h3>🔍 Produtos para Editar</h3>
+<input id="buscaProd" placeholder="Pesquisar produto para editar..." oninput="carregarProdutos()">
+<div id="listaProdutos"></div>
+</div>
+
+<script>
+let toastTimer;
+function aviso(msg,tipo){let t=document.getElementById('toast');t.textContent=msg;t.className='mostrar '+(tipo||'sucesso');clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='';},3000);}
+async function carregarLogoTopo(){
+  try{let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();let logo=r.data?.logo_url;if(logo){let img=document.getElementById('logoTopo');img.src=logo;img.style.display='block';document.getElementById('topoSite').classList.add('tem-logo');}}catch(e){}
+}
+let categorias=[];
+async function carregarCategorias(){
+  let r=await db.from('produtos').select('categoria');
+  let cats=[...new Set((r.data||[]).map(p=>p.categoria).filter(Boolean))];
+  categorias=cats;
+  document.getElementById('pCategoria').innerHTML='<option value="">Escolhe a categoria...</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  document.getElementById('listaCategorias').innerHTML=cats.length?cats.map(c=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee"><b>${c}</b><button class="btn-vermelho" onclick="apagarCategoria('${c}')">Apagar</button></div>`).join(''):'<p style="color:#888">Nenhuma categoria ainda. As categorias aparecem quando adicionas produtos.</p>';
+}
+async function adicionarCategoria(){
+  let v=document.getElementById('novaCategoria').value.trim();
+  if(!v) return aviso('⚠️ Escreve o nome da categoria','aviso');
+  if(categorias.includes(v)) return aviso('⚠️ Categoria já existe','aviso');
+  categorias.push(v);
+  document.getElementById('pCategoria').innerHTML='<option value="">Escolhe a categoria...</option>'+categorias.map(c=>`<option value="${c}">${c}</option>`).join('');
+  document.getElementById('novaCategoria').value='';
+  aviso('✅ Categoria adicionada! Agora adiciona um produto nesta categoria.');
+}
+async function apagarCategoria(c){
+  if(!confirm('Apagar categoria '+c+'? Os produtos ficam sem categoria.')) return;
+  await db.from('produtos').update({categoria:'Outros'}).eq('categoria',c);
+  aviso('✅ Categoria apagada'); carregarCategorias(); carregarProdutos();
+}
+async function carregarProdutos(){
+  let termo=document.getElementById('buscaProd').value.toLowerCase();
+  let r=await db.from('produtos').select('*').order('id',{ascending:false});
+  let lista=(r.data||[]).filter(p=>(p.nome||'').toLowerCase().includes(termo));
+  document.getElementById('listaProdutos').innerHTML=lista.length?lista.map(p=>`<div class="card-prod"><img src="${p.imagem||p.imagem_url||'https://via.placeholder.com/100'}"><div style="flex:1"><b>${p.nome}</b><br><span style="color:#0b5ed7;font-weight:700">${Number(p.preco).toLocaleString()} Kz</span><br><small>${p.categoria||'Sem categoria'}</small></div><button class="btn-verde" onclick="editarProduto(${p.id})">Editar</button></div>`).join(''):'<p>Nenhum produto.</p>';
+}
+async function editarProduto(id){
+  let r=await db.from('produtos').select('*').eq('id',id).maybeSingle();
+  let p=r.data; if(!p) return;
+  document.getElementById('editId').value=p.id;
+  document.getElementById('pNome').value=p.nome||'';
+  document.getElementById('pPreco').value=p.preco||'';
+  document.getElementById('pCategoria').value=p.categoria||'';
+  document.getElementById('pDesc').value=p.descricao||p.detalhes||'';
+  document.getElementById('pImagem').value=p.imagem||p.imagem_url||'';
+  window.scrollTo({top:0,behavior:'smooth'});
+  aviso('✏️ A editar: '+p.nome);
+}
+function limparForm(){document.getElementById('editId').value='';document.getElementById('pNome').value='';document.getElementById('pPreco').value='';document.getElementById('pCategoria').value='';document.getElementById('pDesc').value='';document.getElementById('pImagem').value='';}
+async function salvarProduto(){
+  let id=document.getElementById('editId').value;
+  let nome=document.getElementById('pNome').value.trim();
+  let preco=document.getElementById('pPreco').value;
+  let categoria=document.getElementById('pCategoria').value;
+  let desc=document.getElementById('pDesc').value.trim();
+  let imagem=document.getElementById('pImagem').value.trim();
+  if(!nome||!preco) return aviso('⚠️ Nome e preço são obrigatórios','aviso');
+  let f=document.getElementById('pFile').files[0];
+  if(f){
+    let nomeF='prod_'+Date.now()+'_'+f.name.replace(/\s/g,'_');
+    let up=await db.storage.from('produtos').upload(nomeF,f,{upsert:true});
+    if(up.error) return aviso('❌ Erro imagem: '+up.error.message,'erro');
+    imagem=db.storage.from('produtos').getPublicUrl(nomeF).data.publicUrl;
+  }
+  let dados={nome:nome,preco:Number(preco),categoria:categoria||'Outros',descricao:desc,imagem:imagem,imagem_url:imagem};
+  let r;
+  if(id) r=await db.from('produtos').update(dados).eq('id',id);
+  else r=await db.from('produtos').insert([dados]);
+  if(r.error) return aviso('❌ '+r.error.message,'erro');
+  aviso('✅ Produto guardado!'); limparForm(); carregarCategorias(); carregarProdutos();
+}
+carregarLogoTopo(); carregarCategorias(); carregarProdutos();
+</script></body></html>

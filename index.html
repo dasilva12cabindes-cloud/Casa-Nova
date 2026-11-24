@@ -125,7 +125,6 @@ input,select,textarea{font-size:16px !important}
 .sobre-detalhe b{color:#0b5ed7}
 #telaVerificar{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1300;display:none;align-items:center;justify-content:center;padding:16px}
 #telaVerificar.aberto{display:flex}
-/* BOAS-VINDAS - CORES A COMBINAR: FUNDO AZUL DEGRADE + CARTAO BRANCO */
 #telaBoasVindas{position:fixed;inset:0;background:linear-gradient(180deg,#0b5ed7 0%,#084bb0 55%,#063a8a 100%);z-index:2000;display:none;align-items:center;justify-content:center;padding:16px}
 #telaBoasVindas.aberto{display:flex}
 .boasvindas-box{background:#fff;width:100%;max-width:380px;border-radius:26px;padding:22px;text-align:center;color:#1d2330;box-shadow:0 20px 40px rgba(0,0,0,.35)}
@@ -154,21 +153,12 @@ input,select,textarea{font-size:16px !important}
   <div class="barra-processo"><div id="barraProcesso"></div></div>
   <p id="percentProcesso" style="font-size:13px;margin-top:8px;color:#00aaff;font-weight:800">0%</p>
 </div>
-
 <div class="topo" id="topoSite">
   <div class="lado-esq">
-    <button class="btn-menu" onclick="abrirMenu()" aria-label="Menu">
-      <span></span><span></span><span></span><span></span>
-    </button>
-    <a class="logo" href="index.html">
-      <img id="logoTopo" class="logo-img" src="" alt="Casa Nova" style="display:none">
-      <span class="logo-text" id="nomeTopo">Casa Nova</span>
-    </a>
+    <button class="btn-menu" onclick="abrirMenu()" aria-label="Menu"><span></span><span></span><span></span><span></span></button>
+    <a class="logo" href="index.html"><img id="logoTopo" class="logo-img" src="" alt="Casa Nova" style="display:none"><span class="logo-text" id="nomeTopo">Casa Nova</span></a>
   </div>
-  <nav>
-    <div id="auth-links"></div>
-    <a href="carrinho.html">🛒 Carrinho (<span id="qtdCarrinho">0</span>)</a>
-  </nav>
+  <nav><div id="auth-links"></div><a href="carrinho.html">🛒 Carrinho (<span id="qtdCarrinho">0</span>)</a></nav>
 </div>
 <div id="toast">✅ Adicionado ao carrinho!</div>
 <div class="banners" id="banners"><img src="" id="bannerImg" alt="Publicidade"></div>
@@ -185,7 +175,6 @@ input,select,textarea{font-size:16px !important}
   </div>
   <div class="grade" id="grade"><div class="aviso">A carregar produtos...</div></div>
 </div>
-
 <div id="telaBoasVindas">
   <div class="boasvindas-box">
     <img id="logoBoasVindas" class="boasvindas-logo" src="" alt="Casa Nova" style="display:none">
@@ -197,7 +186,6 @@ input,select,textarea{font-size:16px !important}
     <p style="font-size:12px;color:#94a3b8;margin-top:12px">🔒 A tua conta fica só no teu telefone.<br>Ninguém vê a tua conta pelo link.</p>
   </div>
 </div>
-
 <div id="modal" onclick="if(event.target.id==='modal') fecharDetalhe()">
   <div class="modal-box">
     <button class="fechar" onclick="fecharDetalhe()">✕</button>
@@ -232,10 +220,7 @@ input,select,textarea{font-size:16px !important}
 </div>
 <div class="fundo-menu" id="fundoMenu" onclick="fecharMenu()"></div>
 <div class="menu-lateral" id="menuLateral">
-  <div class="menu-topo">
-    <div><b>🏠 CASA NOVA</b><br><small>Eletrodomésticos</small></div>
-    <button onclick="fecharMenu()">✕</button>
-  </div>
+  <div class="menu-topo"><div><b>🏠 CASA NOVA</b><br><small>Eletrodomésticos</small></div><button onclick="fecharMenu()">✕</button></div>
   <div class="menu-secao">Minha Conta</div>
   <div id="menuContaArea"></div>
   <a class="menu-item" href="#" onclick="fecharMenu();partilharLoja();return false" style="background:#f0fdf4;border:2px solid #16a34a;border-radius:12px;margin:10px 16px"><span>🔗</span><span><b>Partilhar Loja</b><br><small style="color:#16a34a;font-weight:800">Partilha sem mostrar a tua conta</small></span></a>
@@ -245,12 +230,7 @@ input,select,textarea{font-size:16px !important}
   <div class="menu-secao">Área Detalhes</div>
   <a class="menu-item" href="#" onclick="abrirSobre();return false"><span>🏪</span> Sobre a Nossa Loja</a>
   <a class="menu-item" href="carrinho.html"><span>💳</span> Formas de Pagamento</a>
-  <div class="menu-detalhe" id="menuDetalhe">
-    <b>🔒 Segurança</b><br>
-    A tua segurança é a nossa prioridade. Os teus dados são protegidos e nunca são partilhados.<br><br>
-    <b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br>
-    <b>📞 Contacto</b><br>WhatsApp: +244 972 370 499
-  </div>
+  <div class="menu-detalhe" id="menuDetalhe"><b>🔒 Segurança</b><br>A tua segurança é a nossa prioridade.<br><br><b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br><b>📞 Contacto</b><br>WhatsApp: +244 972 370 499</div>
   <div class="menu-secao">Ajuda</div>
   <a class="menu-item" href="#" onclick="falarWhatsApp();return false"><span>💬</span> Falar no WhatsApp</a>
   <a class="menu-item" href="#" onclick="fecharMenu();abrirTelaVerificar();return false" style="background:#fff7ed;border:2px solid #f97316;border-radius:12px;margin:10px 16px;padding:14px"><span>🔍</span><span><b>Se o teu pedido ainda não foi respondido</b><br><small style="color:#0b5ed7;font-weight:800">👆 Clica aqui para verificar</small></span></a>
@@ -261,30 +241,13 @@ input,select,textarea{font-size:16px !important}
     <div style="text-align:center;font-size:48px">🏠</div>
     <h2>CASA NOVA</h2>
     <p style="text-align:center;color:#666;font-size:14px">Eletrodomésticos de qualidade em Cabinda</p>
-    <div class="sobre-detalhe" id="sobreDetalhe">
-      <b>🏪 Quem Somos</b><br>
-      A Casa Nova é a tua loja de confiança em Cabinda. Vendemos eletrodomésticos de qualidade: arcas, geleiras, ar condicionado, máquinas de lavar, fogões, TVs, telemóveis e muito mais.<br><br>
-      <b>🎯 Nossa Visão</b><br>
-      Levar qualidade e preço justo a todas as casas de Cabinda e Angola, com entrega rápida e pagamento fácil.<br><br>
-      <b>🔒 Política de Segurança da Nossa Loja</b><br>
-      A tua segurança é a nossa prioridade. Os teus dados são protegidos e nunca são partilhados. Todos os pagamentos são verificados antes da entrega.<br><br>
-      <b>💳 Pagamento</b><br>
-      📱 Multicaixa Express<br>
-      💸 PayPay - Ref: 10116<br>
-      🏦 IBAN<br><br>
-      <b>📞 Contacto</b><br>
-      WhatsApp: +244 972 370 499
-    </div>
+    <div class="sobre-detalhe" id="sobreDetalhe"><b>🏪 Quem Somos</b><br>A Casa Nova é a tua loja de confiança em Cabinda.<br><br><b>🎯 Nossa Visão</b><br>Levar qualidade e preço justo a todas as casas de Cabinda e Angola.<br><br><b>🔒 Política de Segurança</b><br>A tua segurança é a nossa prioridade.<br><br><b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br><b>📞 Contacto</b><br>WhatsApp: +244 972 370 499</div>
     <button class="btn" style="width:100%;margin-top:14px" onclick="fecharSobre();falarWhatsApp()">💬 Falar no WhatsApp</button>
   </div>
 </div>
 <div id="telaVerificar" onclick="if(event.target.id==='telaVerificar') fecharTelaVerificar()">
   <div style="background:#fff;width:100%;max-width:380px;border-radius:20px;overflow:hidden;max-height:92vh;overflow-y:auto">
-    <div style="background:#0b5ed7;color:#fff;padding:18px;text-align:center">
-      <div style="font-size:36px">🔍</div>
-      <h3 style="margin:4px 0">Verificar Meu Pedido</h3>
-      <p style="margin:0;font-size:13px;opacity:.9">Preenche para entrares em contato</p>
-    </div>
+    <div style="background:#0b5ed7;color:#fff;padding:18px;text-align:center"><div style="font-size:36px">🔍</div><h3 style="margin:4px 0">Verificar Meu Pedido</h3><p style="margin:0;font-size:13px;opacity:.9">Preenche para entrares em contato</p></div>
     <div style="padding:18px">
       <label style="font-size:13px;font-weight:700">👤 Teu nome completo:</label>
       <input id="vNome" placeholder="Ex: Cosme Bento" style="width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;margin:6px 0 12px;box-sizing:border-box;font-size:16px">
@@ -299,7 +262,6 @@ input,select,textarea{font-size:16px !important}
     </div>
   </div>
 </div>
-
 <script>
 (function limparLinkPerigoso(){
   try{
@@ -359,6 +321,7 @@ function verificarNovoUsuario(){
 let todosProdutos = [];
 let categoriaAtual = 'Todas';
 let lojaCfgGlobal = {};
+// 🔥 NOVO: PROMOÇÃO COM DATA - SE PASSOU, NÃO MOSTRA
 function dadosPromo(p){
   let precoNovo = Number(p.preco||0);
   let precoAntigo = Number(p.preco_antigo||p.preco_antes||p.preco_original||p.preco_normal||0);
@@ -367,14 +330,26 @@ function dadosPromo(p){
     precoAntigo = Math.round(precoNovo / (1 - descDireto/100));
   }
   if(!precoAntigo || precoAntigo <= precoNovo) return null;
+  // SE TEM DATA E JÁ PASSOU -> NÃO É PROMOÇÃO
+  if(p.promo_fim){
+    let hoje=new Date(); hoje.setHours(0,0,0,0);
+    let fim=new Date(p.promo_fim);
+    if(fim < hoje) return null;
+    let dias=Math.ceil((fim-hoje)/(1000*60*60*24));
+    let dataBonita=new Date(p.promo_fim).toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit'});
+    let perc = Math.round((1 - precoNovo / precoAntigo) * 100);
+    if(perc <= 0) return null;
+    return {antigo: precoAntigo, novo: precoNovo, perc, diasFaltam:dias, dataBonita};
+  }
   let perc = Math.round((1 - precoNovo / precoAntigo) * 100);
   if(perc <= 0) return null;
-  return {antigo: precoAntigo, novo: precoNovo, perc};
+  return {antigo: precoAntigo, novo: precoNovo, perc, diasFaltam:null, dataBonita:''};
 }
 function htmlPreco(p){
   let promo = dadosPromo(p);
   if(!promo) return `<div class="preco">${Number(p.preco).toLocaleString()} Kz</div>`;
-  return `<div><span class="preco-antigo">${promo.antigo.toLocaleString()} Kz</span> <span class="desconto">-${promo.perc}%</span><div class="preco">${promo.novo.toLocaleString()} Kz</div></div>`;
+  let tempo = promo.diasFaltam!==null ? `<div style="font-size:11px;font-weight:800;color:#dc2626">⏰ Termina dia ${promo.dataBonita} - Faltam ${promo.diasFaltam} dia(s)</div>` : '';
+  return `<div><span class="preco-antigo">${promo.antigo.toLocaleString()} Kz</span> <span class="desconto">-${promo.perc}%</span><div class="preco">${promo.novo.toLocaleString()} Kz</div>${tempo}</div>`;
 }
 function categoriaAuto(p){
   if(p.categoria && p.categoria.trim() !== '' && p.categoria !== 'Outros' && p.categoria !== 'Eletrodomésticos') return p.categoria.trim();
@@ -487,15 +462,23 @@ function adicionarCarrinho(id, event){
   if(!exigirCadastro()) return;
   let p = todosProdutos.find(x=>x.id==id);
   if(!p) return;
+  // 🔥 SE A PROMOÇÃO JÁ TERMINOU, O PREÇO QUE VAI PARA O CARRINHO É O NORMAL
+  let promo = dadosPromo(p);
+  let precoFinal = promo ? promo.novo : (promo===null && p.preco_antigo ? Number(p.preco_antigo) : Number(p.preco));
+  // Se expirou, usa o preço antigo como preço normal
+  if(!promo && p.preco_antigo && p.promo_fim){
+    let hoje=new Date(); hoje.setHours(0,0,0,0);
+    if(new Date(p.promo_fim) < hoje) precoFinal = Number(p.preco_antigo);
+  }
   let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
   let achou = carrinho.find(i=>i.id==id);
   if(achou){
     achou.qtd = (achou.qtd||1)+1;
     achou.nome = p.nome;
-    achou.preco = Number(p.preco);
+    achou.preco = precoFinal;
     achou.imagem = p.imagem || p.imagem_url || '';
   } else {
-    carrinho.push({ id: p.id, nome: p.nome, preco: Number(p.preco), imagem: p.imagem || p.imagem_url || '', qtd: 1 });
+    carrinho.push({ id: p.id, nome: p.nome, preco: precoFinal, imagem: p.imagem || p.imagem_url || '', qtd: 1 });
   }
   localStorage.setItem('carrinho', JSON.stringify(carrinho));
   atualizarCarrinho();
@@ -509,11 +492,18 @@ function abrirDetalhe(id){
   document.getElementById('dCat').textContent = categoriaAuto(p);
   let promo = dadosPromo(p);
   if(promo){
-    document.getElementById('dPromo').innerHTML = `<span class="selo-promo">🔥 PROMOÇÃO -${promo.perc}%</span><br><span class="preco-antigo" style="font-size:14px">${promo.antigo.toLocaleString()} Kz</span> <span class="desconto">-${promo.perc}%</span>`;
+    let tempo = promo.diasFaltam!==null ? `<div style="font-size:13px;font-weight:800;color:#dc2626">⏰ Termina dia ${promo.dataBonita} - Faltam ${promo.diasFaltam} dia(s)</div>` : '';
+    document.getElementById('dPromo').innerHTML = `<span class="selo-promo">🔥 PROMOÇÃO -${promo.perc}%</span><br><span class="preco-antigo" style="font-size:14px">${promo.antigo.toLocaleString()} Kz</span> <span class="desconto">-${promo.perc}%</span>${tempo}`;
     document.getElementById('dPreco').textContent = promo.novo.toLocaleString() + ' Kz';
   } else {
+    // SE EXPIROU, MOSTRA O PREÇO NORMAL (O ANTIGO)
+    let precoMostrar = Number(p.preco);
+    if(p.preco_antigo && p.promo_fim){
+      let hoje=new Date(); hoje.setHours(0,0,0,0);
+      if(new Date(p.promo_fim) < hoje) precoMostrar = Number(p.preco_antigo);
+    }
     document.getElementById('dPromo').innerHTML = '';
-    document.getElementById('dPreco').textContent = Number(p.preco).toLocaleString() + ' Kz';
+    document.getElementById('dPreco').textContent = precoMostrar.toLocaleString() + ' Kz';
   }
   document.getElementById('dDesc').textContent = p.descricao || p.detalhes || 'Produto de qualidade da Casa Nova. Disponível para entrega em Luanda. Para mais informações, fala connosco no WhatsApp.';
   document.getElementById('dBtn').onclick = (e)=>{ adicionarCarrinho(p.id, e); fecharDetalhe(); };
@@ -540,12 +530,23 @@ function mostrarProdutos(lista){
   if(!lista.length){ grade.innerHTML = categoriaAtual==='Promoção' ? '<div class="aviso">🔥 Nenhuma promoção agora.<br>Volta mais tarde!</div>' : '<div class="aviso">Nenhum produto encontrado.</div>'; return; }
   grade.innerHTML = lista.map(p=>{
     let promo = dadosPromo(p);
+    // SE EXPIROU, MOSTRA PREÇO NORMAL NO CARD
+    let precoCard = '';
+    if(promo) precoCard = htmlPreco(p);
+    else {
+      let precoMostrar = Number(p.preco);
+      if(p.preco_antigo && p.promo_fim){
+        let hoje=new Date(); hoje.setHours(0,0,0,0);
+        if(new Date(p.promo_fim) < hoje) precoMostrar = Number(p.preco_antigo);
+      }
+      precoCard = `<div class="preco">${precoMostrar.toLocaleString()} Kz</div>`;
+    }
     return `
     <div class="card ${promo ? 'promo' : ''}" onclick="abrirDetalhe(${p.id})">
       <img src="${p.imagem || p.imagem_url || ''}" onerror="this.src='https://via.placeholder.com/300'">
       ${promo ? `<div><span class="selo-promo">🔥 -${promo.perc}%</span></div>` : ''}
       <h3>${p.nome}</h3>
-      ${htmlPreco(p)}
+      ${precoCard}
       <button class="btn" onclick="adicionarCarrinho(${p.id}, event)">Adicionar</button>
     </div>
   `}).join('');
@@ -584,10 +585,10 @@ function confirmarSair(){
   document.getElementById('telaBoasVindas').classList.add('aberto');
 }
 function atualizarSobre(cfg){
-  let sobre = cfg.sobre || 'A Casa Nova é a tua loja de confiança em Cabinda. Vendemos eletrodomésticos de qualidade: arcas, geleiras, ar condicionado, máquinas de lavar, fogões, TVs, telemóveis e muito mais.';
+  let sobre = cfg.sobre || 'A Casa Nova é a tua loja de confiança em Cabinda.';
   let visao = cfg.visao || 'Levar qualidade e preço justo a todas as casas de Cabinda e Angola, com entrega rápida e pagamento fácil.';
   let missao = cfg.missao || '';
-  let politica = cfg.politica_seguranca || cfg.politica || cfg.seguranca || 'A tua segurança é a nossa prioridade. Os teus dados são protegidos e nunca são partilhados. Todos os pagamentos são verificados antes da entrega.';
+  let politica = cfg.politica_seguranca || cfg.politica || cfg.seguranca || 'A tua segurança é a nossa prioridade. Os teus dados são protegidos e nunca são partilhados.';
   let whats = cfg.whatsapp || localStorage.getItem('whatsapp_loja') || '244972370499';
   let html = `<b>🏪 Quem Somos</b><br>${sobre}<br><br><b>👁️ Nossa Visão</b><br>${visao}<br><br>`;
   if(missao) html += `<b>🎯 Nossa Missão</b><br>${missao}<br><br>`;
@@ -617,11 +618,11 @@ async function carregarMaisVendidos(){
     let lista = Object.values(vendas).sort((a,b)=> b.qtd - a.qtd).slice(0,5);
     lista = lista.map(v=>{
       let real = todosProdutos.find(p=> (p.nome||'').toLowerCase() === v.nome.toLowerCase());
-      if(real) return {...v, id: real.id, img: real.imagem||real.imagem_url||v.img, preco: Number(real.preco)||v.preco, preco_antigo: Number(real.preco_antigo||real.preco_antes||0)};
+      if(real) return {...v, id: real.id, img: real.imagem||real.imagem_url||v.img, preco: Number(real.preco)||v.preco, preco_antigo: Number(real.preco_antigo||real.preco_antes||0), promo_fim: real.promo_fim};
       return v;
     });
     if(!lista.length){
-      lista = todosProdutos.slice(0,5).map(p=>({nome:p.nome, qtd:0, preco:Number(p.preco), preco_antigo:Number(p.preco_antigo||0), img:p.imagem||p.imagem_url||'', id:p.id}));
+      lista = todosProdutos.slice(0,5).map(p=>({nome:p.nome, qtd:0, preco:Number(p.preco), preco_antigo:Number(p.preco_antigo||0), promo_fim:p.promo_fim, img:p.imagem||p.imagem_url||'', id:p.id}));
     }
     if(!lista.length) return;
     let track = document.getElementById('bannerTrack');
@@ -629,7 +630,7 @@ async function carregarMaisVendidos(){
     if(!track) return;
     track.innerHTML = lista.map((v,i)=>{
       let promo = dadosPromo(v);
-      let precoHtml = promo ? `<span style="text-decoration:line-through;color:#ddd;font-size:12px">${promo.antigo.toLocaleString()} Kz</span> <span style="color:#ff6b6b;font-size:11px;font-weight:800">-${promo.perc}%</span><div class="preco">${promo.novo.toLocaleString()} Kz</div>` : `<div class="preco">${Number(v.preco||0).toLocaleString()} Kz</div>`;
+      let precoHtml = promo ? `<span style="text-decoration:line-through;color:#ddd;font-size:12px">${promo.antigo.toLocaleString()} Kz</span> <span style="color:#ff6b6b;font-size:11px;font-weight:800">-${promo.perc}%</span><div class="preco">${promo.novo.toLocaleString()} Kz</div>${promo.diasFaltam!==null?`<div style="font-size:11px;color:#fbbf24;font-weight:800">⏰ Termina dia ${promo.dataBonita} - Faltam ${promo.diasFaltam} dia(s)</div>`:''}` : `<div class="preco">${Number(v.preco||0).toLocaleString()} Kz</div>`;
       return `
       <div class="banner-slide">
         <img src="${v.img||'https://via.placeholder.com/90'}" onerror="this.src='https://via.placeholder.com/90'">

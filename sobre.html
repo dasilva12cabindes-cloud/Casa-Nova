@@ -5,16 +5,30 @@
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
 <style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:0}
-.topo{background:#2563eb;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+.topo{background:#2563eb;color:#fff;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;height:72px}
 .topo a{color:#fff;text-decoration:none;font-weight:700;font-size:14px}
-.logo-topo{height:42px;max-width:160px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none}
+.logo-topo{height:56px;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
 .logo-texto{font-weight:800;font-size:18px}
+/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
+@keyframes logoZoom{
+  0%{transform:scale(0.7) translateY(0) rotate(0deg)}
+  25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
+  40%{transform:scale(1.45) translateY(0) rotate(0deg)}
+  48%{transform:scale(1.45) translateY(0) rotate(-6deg)}
+  56%{transform:scale(1.45) translateY(0) rotate(6deg)}
+  64%{transform:scale(1.45) translateY(0) rotate(-5deg)}
+  72%{transform:scale(1.45) translateY(0) rotate(4deg)}
+  80%{transform:scale(1.25) translateY(4px) rotate(0deg)}
+  88%{transform:scale(1.08) translateY(-3px) rotate(0deg)}
+  94%{transform:scale(0.96) translateY(2px) rotate(0deg)}
+  100%{transform:scale(1) translateY(0) rotate(0deg)}
+}
 .hero{background:#2563eb;color:#fff;padding:20px 16px 30px;text-align:center}
-.hero-logo{width:150px;height:150px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none;margin:0 auto 12px}
-.hero h1{margin:0;font-size:28px}
-.hero p{opacity:.9;margin:8px 0 0}
+.hero-logo{width:150px;height:150px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none;margin:0 auto 12px;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
+.hero h1{background:rgba(255,255,255,.15);border:2px solid #fff;border-radius:999px;padding:10px 14px;margin:0 auto;max-width:340px;font-size:26px}
+.hero p{opacity:.9;margin:12px 0 0}
 .caixa{background:#fff;margin:12px;border-radius:14px;padding:16px}
-.caixa h3{margin:0 0 8px;color:#2563eb}
+.caixa h3{background:#eff6ff;border:2px solid #2563eb;border-radius:999px;padding:10px 14px;text-align:center;margin:0 0 10px;color:#2563eb}
 .caixa p{color:#444;line-height:1.6;margin:0;white-space:pre-line}
 .info{line-height:2}
 .btn{background:#16a34a;color:#fff;display:block;text-align:center;padding:13px;border-radius:10px;text-decoration:none;font-weight:700;margin:12px}
@@ -38,6 +52,7 @@
 <div class="caixa"><h3>🏠 Sobre Nós</h3><p id="sobre">A carregar...</p></div>
 <div class="caixa"><h3>👁️ A Nossa Visão</h3><p id="visao">A carregar...</p></div>
 <div class="caixa"><h3>🎯 A Nossa Missão</h3><p id="missao">A carregar...</p></div>
+<div class="caixa"><h3>🔒 Política de Segurança da Nossa Loja</h3><p id="politica">A carregar...</p></div>
 <div class="caixa"><h3>📍 Endereço & Contactos</h3><div class="info" id="info">
 📍 <b>Endereço:</b> <span id="endereco">-</span><br>
 📞 <b>Telefone:</b> <span id="telefone">-</span><br>
@@ -53,7 +68,6 @@
 async function carregar(){
   const r=await db.from('loja_config').select('*').eq('id',1).maybeSingle();
   let c=r.data||{};
-  // LOGOTIPO - AGORA APARECE
   if(c.logo_url){
     let lt=document.getElementById('logoTopo');
     lt.src=c.logo_url; lt.style.display='block';
@@ -64,13 +78,14 @@ async function carregar(){
   document.getElementById('sobre').textContent=c.sobre||'Bem-vindo à Casa Nova! A tua loja de confiança em Luanda.';
   document.getElementById('visao').textContent=c.visao||'Ser a melhor loja de eletrodomésticos e telemóveis em Angola, com qualidade e bons preços.';
   document.getElementById('missao').textContent=c.missao||'Levar produtos de qualidade a todas as famílias, com atendimento rápido e honesto.';
-  document.getElementById('endereco').textContent=c.endereco||'Luanda, Angola';
+  document.getElementById('politica').textContent=c.politica_seguranca||c.politica||c.seguranca||'A tua segurança é a nossa prioridade. Os teus dados são protegidos e nunca são partilhados. Todos os pagamentos são verificados antes da entrega. O teu comprovativo fica guardado por 1 mês e depois é apagado sozinho.';
+  document.getElementById('endereco').textContent=c.endereco||[c.loja_pais,c.loja_cidade,c.loja_bairro].filter(Boolean).join(', ')||'Luanda, Angola';
   document.getElementById('telefone').textContent=c.telefone||'-';
   document.getElementById('whatsapp').textContent=c.whatsapp||'-';
   document.getElementById('horario').textContent=c.horario||'Seg - Sáb: 08h00 - 19h00';
   document.getElementById('email').textContent=c.email_loja||'-';
   if(c.whatsapp){
-    let num=c.whatsapp.replace(/\D/g,'');
+    let num=String(c.whatsapp).replace(/\D/g,'');
     document.getElementById('btnWpp').href='https://wa.me/'+num+'?text=Olá Casa Nova, vim da página Sobre';
   }
 }

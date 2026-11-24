@@ -107,33 +107,39 @@ function filtrar(){
       ${perc?`<div><span class="preco-antigo">${antigo.toLocaleString()} Kz</span> <span class="desconto">-${perc}%</span></div>`:''}
       <div class="preco">${novo.toLocaleString()} Kz</div>
       <div style="background:#fef2f2;border:1px dashed #dc2626;border-radius:10px;padding:8px;margin-top:8px">
-        <label style="font-size:12px;font-weight:800;color:#dc2626">🔥 Preço antigo (promoção):</label>
-        <input id="ant-${p.id}" type="number" placeholder="Ex: 150000" value="${antigo||''}" style="margin:6px 0">
+        <label style="font-size:12px;font-weight:800;color:#dc2626">🔥 Preço da promoção (novo preço mais baixo):</label>
+        <div style="font-size:12px;color:#666;margin:2px 0">Preço atual: <b>${novo.toLocaleString()} Kz</b> - vai ficar riscado</div>
+        <input id="promo-${p.id}" type="number" placeholder="Ex: 114000" value="${perc?novo:''}" style="margin:6px 0">
         <button class="btn btn-vermelho" onclick="salvarPromo(${p.id})">💾 Guardar Promoção</button>
-        ${perc?`<button class="btn btn-cinza" onclick="tirarPromo(${p.id})" style="margin-top:6px">❌ Tirar Promoção</button>`:''}
+        ${perc?`<button class="btn btn-cinza" onclick="tirarPromo(${p.id})" style="margin-top:6px">❌ Tirar Promoção (volta a ${antigo.toLocaleString()} Kz)</button>`:''}
       </div>
       <button class="btn btn-azul" onclick="location.href='admin-categorias.html'" style="margin-top:8px">✏️ Editar</button>
       <button class="btn btn-vermelho" onclick="apagar(${p.id},'${(p.nome||'').replace(/'/g,'')}')" style="margin-top:6px">🗑️ Apagar</button>
     </div>
   `}).join('');
 }
-// 🔥 SALVAR / TIRAR PROMOÇÃO - 1 CLIQUE
+// 🔥 CORRIGIDO: TU METES O PREÇO NOVO MAIS BAIXO, ELE GUARDA O ATUAL COMO ANTIGO
 async function salvarPromo(id){
-  let v=Number(document.getElementById('ant-'+id).value||0);
-  if(!v){ aviso('⚠️ Escreve o preço antigo! Ex: 150000','aviso'); return; }
+  let novoPreco=Number(document.getElementById('promo-'+id).value||0);
+  if(!novoPreco){ aviso('⚠️ Escreve o preço novo da promoção! Ex: 114000','aviso'); return; }
   let p=todos.find(x=>x.id==id);
-  if(v <= Number(p.preco)){ aviso('⚠️ Preço antigo tem que ser maior que o preço atual!','aviso'); return; }
-  let r=await db.from('produtos').update({preco_antigo:v}).eq('id',id);
+  let precoAtual=Number(p.preco);
+  if(novoPreco >= precoAtual){ aviso('⚠️ O preço da promoção tem que ser MENOR que '+precoAtual.toLocaleString()+' Kz','aviso'); return; }
+  let perc=Math.round((1-novoPreco/precoAtual)*100);
+  let ok=await perguntar('Confirmar promoção?\nPreço atual '+precoAtual.toLocaleString()+' Kz vai ficar riscado.\nNovo preço: '+novoPreco.toLocaleString()+' Kz (-'+perc+'%)');
+  if(!ok) return;
+  let r=await db.from('produtos').update({preco:novoPreco, preco_antigo:precoAtual}).eq('id',id);
   if(r.error) return aviso('❌ '+r.error.message,'erro');
-  aviso('✅ Promoção guardada! Na loja já aparece riscado + %');
+  aviso('✅ Promoção guardada! -'+perc+'% na loja');
   carregar();
 }
 async function tirarPromo(id){
-  let ok=await perguntar('Tirar a promoção deste produto? Volta ao preço normal.');
+  let p=todos.find(x=>x.id==id);
+  let ok=await perguntar('Tirar promoção? O preço volta a '+Number(p.preco_antigo).toLocaleString()+' Kz');
   if(!ok) return;
-  let r=await db.from('produtos').update({preco_antigo:null}).eq('id',id);
+  let r=await db.from('produtos').update({preco:Number(p.preco_antigo), preco_antigo:null}).eq('id',id);
   if(r.error) return aviso('❌ '+r.error.message,'erro');
-  aviso('✅ Promoção tirada');
+  aviso('✅ Promoção tirada, preço voltou ao normal');
   carregar();
 }
 async function apagar(id,nome){

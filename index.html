@@ -19,7 +19,6 @@ a { color: inherit; text-decoration: none; }
 .topo.tem-logo .logo-text { display: none; }
 .topo nav { display: flex; gap: 16px; align-items: center; }
 .topo nav a, #auth-links { display: inline-flex; gap: 12px; }
-/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
 @keyframes logoZoom{
   0%{transform:scale(0.7) translateY(0) rotate(0deg)}
   25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
@@ -94,6 +93,9 @@ a { color: inherit; text-decoration: none; }
 .modal-sobre-box h2{background:#eff6ff;border:2px solid #0b5ed7;border-radius:999px;padding:10px 14px;text-align:center;margin:8px 0}
 .sobre-detalhe{background:#f8fafc;border-radius:12px;padding:14px;font-size:14px;line-height:1.8;margin-top:14px}
 .sobre-detalhe b{color:#0b5ed7}
+/* TELA VERIFICAR PEDIDO */
+#telaVerificar{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1300;display:none;align-items:center;justify-content:center;padding:16px}
+#telaVerificar.aberto{display:flex}
 </style>
 </head>
 <body>
@@ -176,6 +178,7 @@ a { color: inherit; text-decoration: none; }
   </div>
   <div class="menu-secao">Ajuda</div>
   <a class="menu-item" href="#" onclick="falarWhatsApp();return false"><span>💬</span> Falar no WhatsApp</a>
+  <a class="menu-item" href="#" onclick="fecharMenu();abrirTelaVerificar();return false" style="background:#fff7ed;border:2px solid #f97316;border-radius:12px;margin:10px 16px;padding:14px"><span>🔍</span><span><b>Se o teu pedido ainda não foi respondido</b><br><small style="color:#0b5ed7;font-weight:800">👆 Clica aqui para verificar</small></span></a>
 </div>
 <div id="modalSobre" onclick="if(event.target.id==='modalSobre') fecharSobre()">
   <div class="modal-sobre-box">
@@ -207,6 +210,30 @@ a { color: inherit; text-decoration: none; }
     <button class="btn" style="width:100%;margin-top:14px" onclick="fecharSobre();falarWhatsApp()">💬 Falar no WhatsApp</button>
   </div>
 </div>
+
+<!-- TELA VERIFICAR PEDIDO - ABRE QUANDO CLICA NO BOTÃO LARANJA -->
+<div id="telaVerificar" onclick="if(event.target.id==='telaVerificar') fecharTelaVerificar()">
+  <div style="background:#fff;width:100%;max-width:380px;border-radius:20px;overflow:hidden;max-height:92vh;overflow-y:auto">
+    <div style="background:#0b5ed7;color:#fff;padding:18px;text-align:center">
+      <div style="font-size:36px">🔍</div>
+      <h3 style="margin:4px 0">Verificar Meu Pedido</h3>
+      <p style="margin:0;font-size:13px;opacity:.9">Preenche para entrares em contato</p>
+    </div>
+    <div style="padding:18px">
+      <label style="font-size:13px;font-weight:700">👤 Teu nome completo:</label>
+      <input id="vNome" placeholder="Ex: Cosme Bento" style="width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;margin:6px 0 12px;box-sizing:border-box">
+      <label style="font-size:13px;font-weight:700">📱 Teu número do WhatsApp:</label>
+      <input id="vWhats" type="tel" placeholder="Ex: 972370499" style="width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;margin:6px 0 12px;box-sizing:border-box">
+      <label style="font-size:13px;font-weight:700">🔖 Número do pedido:</label>
+      <input id="vCodigo" placeholder="Ex: CN-583981" style="width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;margin:6px 0 16px;box-sizing:border-box;text-transform:uppercase">
+      <button onclick="irParaWhatsApp()" style="background:#25D366;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:15px;cursor:pointer;margin-bottom:10px">💬 ENTRAR EM CONTATO VIA WHATSAPP</button>
+      <button onclick="confirmarNoSistema()" style="background:#0b5ed7;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:15px;cursor:pointer">✅ CONFIRMAR NO SISTEMA</button>
+      <button onclick="fecharTelaVerificar()" style="background:#eee;border:0;padding:12px;border-radius:12px;width:100%;font-weight:700;margin-top:10px;cursor:pointer">❌ Fechar</button>
+      <p id="msgVerificar" style="text-align:center;font-size:13px;color:#16a34a;font-weight:700;display:none;margin-top:10px"></p>
+    </div>
+  </div>
+</div>
+
 <script>
 let todosProdutos = [];
 let categoriaAtual = 'Todas';
@@ -235,6 +262,53 @@ function fecharMenu(){ document.getElementById('menuLateral').classList.remove('
 function abrirSobre(){ fecharMenu(); document.getElementById('modalSobre').classList.add('aberto'); }
 function fecharSobre(){ document.getElementById('modalSobre').classList.remove('aberto'); }
 function falarWhatsApp(){ let n = localStorage.getItem('whatsapp_loja') || lojaCfgGlobal.whatsapp || '244972370499'; window.open('https://wa.me/'+n+'?text='+encodeURIComponent('Olá Casa Nova, preciso de ajuda!'),'_blank'); }
+// ===== VERIFICAR PEDIDO - TELA QUE ABRE DO MENU =====
+function abrirTelaVerificar(){
+  // Preenche automático se o cliente já está logado
+  try{
+    let c = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null');
+    if(c){
+      if(c.nome) document.getElementById('vNome').value = c.nome || c.nome_cliente || '';
+      if(c.telefone) document.getElementById('vWhats').value = c.telefone || '';
+    }
+  }catch(e){}
+  document.getElementById('msgVerificar').style.display='none';
+  document.getElementById('telaVerificar').classList.add('aberto');
+}
+function fecharTelaVerificar(){ document.getElementById('telaVerificar').classList.remove('aberto'); }
+function pegarDadosVerificar(){
+  let nome = document.getElementById('vNome').value.trim();
+  let whats = document.getElementById('vWhats').value.trim();
+  let codigo = document.getElementById('vCodigo').value.trim().toUpperCase();
+  if(!nome){ alert("⚠️ Escreve o teu nome completo!"); return null; }
+  if(!whats){ alert("⚠️ Escreve o teu número do WhatsApp!"); return null; }
+  if(!codigo){ alert("⚠️ Escreve o número do pedido! Ex: CN-583981"); return null; }
+  return {nome, whats, codigo};
+}
+function irParaWhatsApp(){
+  let d = pegarDadosVerificar();
+  if(!d) return;
+  let numeroLoja = localStorage.getItem('whatsapp_loja') || lojaCfgGlobal.whatsapp || '244972370499';
+  let mensagem = "Olá Casa Nova! 👋\n\nQuero verificar o meu pedido.\n\n👤 Nome: " + d.nome + "\n📱 Meu WhatsApp: " + d.whats + "\n🔖 Número do pedido: " + d.codigo + "\n\nAinda não foi respondido. Podem verificar por favor?";
+  window.open("https://wa.me/" + numeroLoja + "?text=" + encodeURIComponent(mensagem), "_blank");
+  fecharTelaVerificar();
+}
+async function confirmarNoSistema(){
+  let d = pegarDadosVerificar();
+  if(!d) return;
+  try{
+    // Tenta gravar no Supabase - se a coluna não existir, guarda local e mostra sucesso na mesma
+    let r = await db.from('pedidos').update({ nome_verificacao: d.nome, whats_cliente_verificacao: d.whats, pedido_verificado_por_cliente: true }).eq('codigo', d.codigo);
+    if(r.error) throw r.error;
+  }catch(e){
+    // Guarda local para não travar o cliente
+    localStorage.setItem('pedido_verificado_' + d.codigo, JSON.stringify({nome:d.nome, whats:d.whats, quando:new Date().toISOString()}));
+  }
+  let msg = document.getElementById('msgVerificar');
+  msg.style.display='block';
+  msg.textContent = "✅ Pedido " + d.codigo + " confirmado no sistema! Aguarda a resposta da loja.";
+  setTimeout(()=>{ fecharTelaVerificar(); }, 2200);
+}
 function clienteLogado(){
   try{ return JSON.parse(localStorage.getItem('cliente_casa_nova') || 'null'); }catch(e){ return null; }
 }

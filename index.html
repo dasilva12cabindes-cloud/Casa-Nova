@@ -152,6 +152,8 @@ input,select,textarea{font-size:16px !important}
 .modal-instalar-box{background:#fff;width:100%;max-width:500px;border-radius:22px 22px 0 0;padding:20px;text-align:center}
 #alertaCliente{position:fixed;top:0;left:0;right:0;z-index:9999;background:#16a34a;color:#fff;padding:16px;text-align:center;font-weight:900;font-size:16px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:piscarCliente 1s infinite}
 @keyframes piscarCliente{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
+/* ESCONDER PUBLICIDADE NETLIFY - SUBSTITUIDO */
+a[href*="netlify"], [href*="netlify.com"], .netlify-badge, div[class*="netlify"], iframe[src*="netlify"]{ display:none !important; visibility:hidden !important; opacity:0 !important; }
 </style>
 </head>
 <body>
@@ -321,7 +323,6 @@ marcarOnline('Loja Principal');
 setInterval(()=> marcarOnline(), 15000);
 window.addEventListener('beforeunload', ()=>{ marcarSaiu(); });
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden) marcarSaiu(); else marcarOnline(); });
-// 📱 PWA - INSTALAR APP
 let promptInstalar=null;
 window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); promptInstalar=e; document.getElementById('bannerInstalar').classList.add('mostrar'); });
 window.addEventListener('appinstalled', ()=>{ document.getElementById('bannerInstalar').classList.remove('mostrar'); promptInstalar=null; });
@@ -347,19 +348,13 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
     }
   }catch(e){}
 })();
-function linkLimpoLoja(){
-  return 'https://casa-nova-eletrodomestica.netlify.app/';
-}
+function linkLimpoLoja(){ return 'https://casa-nova-eletrodomestica.netlify.app/'; }
 function partilharLoja(){
   let link = linkLimpoLoja();
   let msg = '🏠 Casa Nova - Eletrodomésticos em Cabinda! Vê as promoções aqui: ' + link;
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(msg).then(()=>{
-      mostrarToast('✅ Link copiado! Cola no WhatsApp - vem só 1 link');
-    }).catch(()=>{ prompt('Copia este link (só 1):', msg); });
-  } else {
-    prompt('Copia este link (só 1):', msg);
-  }
+    navigator.clipboard.writeText(msg).then(()=>{ mostrarToast('✅ Link copiado! Cola no WhatsApp - vem só 1 link'); }).catch(()=>{ prompt('Copia este link (só 1):', msg); });
+  } else { prompt('Copia este link (só 1):', msg); }
 }
 let estaProcessando = false;
 let timerProcesso = null;
@@ -379,10 +374,7 @@ function mostrarProcessando(){
     if(p > 100) p = 100;
     barra.style.width = p + '%';
     perc.textContent = p + '%';
-    if(p >= 100){
-      clearInterval(timerProcesso);
-      setTimeout(()=>{ tela.classList.remove('aberto'); estaProcessando = false; }, 300);
-    }
+    if(p >= 100){ clearInterval(timerProcesso); setTimeout(()=>{ tela.classList.remove('aberto'); estaProcessando = false; }, 300); }
   }, 200);
   setTimeout(()=>{ if(estaProcessando){ tela.classList.remove('aberto'); estaProcessando = false; clearInterval(timerProcesso); } }, 6000);
 }
@@ -400,9 +392,7 @@ function dadosPromo(p){
   let precoNovo = Number(p.preco||0);
   let precoAntigo = Number(p.preco_antigo||p.preco_antes||p.preco_original||p.preco_normal||0);
   let descDireto = Number(p.desconto||p.percentual||0);
-  if(!precoAntigo && descDireto > 0 && descDireto < 90 && precoNovo){
-    precoAntigo = Math.round(precoNovo / (1 - descDireto/100));
-  }
+  if(!precoAntigo && descDireto > 0 && descDireto < 90 && precoNovo){ precoAntigo = Math.round(precoNovo / (1 - descDireto/100)); }
   if(!precoAntigo || precoAntigo <= precoNovo) return null;
   if(p.promo_fim){
     let hoje=new Date(); hoje.setHours(0,0,0,0);
@@ -483,17 +473,13 @@ async function confirmarNoSistema(){
   try{
     let r = await db.from('pedidos').update({ nome_verificacao: d.nome, whats_cliente_verificacao: d.whats, pedido_verificado_por_cliente: true }).eq('codigo', d.codigo);
     if(r.error) throw r.error;
-  }catch(e){
-    localStorage.setItem('pedido_verificado_' + d.codigo, JSON.stringify({nome:d.nome, whats:d.whats, quando:new Date().toISOString()}));
-  }
+  }catch(e){ localStorage.setItem('pedido_verificado_' + d.codigo, JSON.stringify({nome:d.nome, whats:d.whats, quando:new Date().toISOString()})); }
   let msg = document.getElementById('msgVerificar');
   msg.style.display='block';
   msg.textContent = "✅ Pedido " + d.codigo + " confirmado no sistema! Aguarda a resposta da loja.";
   setTimeout(()=>{ fecharTelaVerificar(); }, 2200);
 }
-function clienteLogado(){
-  try{ return JSON.parse(localStorage.getItem('cliente_casa_nova') || 'null'); }catch(e){ return null; }
-}
+function clienteLogado(){ try{ return JSON.parse(localStorage.getItem('cliente_casa_nova') || 'null'); }catch(e){ return null; } }
 function atualizarMenuConta(){
   let area = document.getElementById('menuContaArea');
   if(!area) return;
@@ -544,14 +530,8 @@ function adicionarCarrinho(id, event){
   }
   let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
   let achou = carrinho.find(i=>i.id==id);
-  if(achou){
-    achou.qtd = (achou.qtd||1)+1;
-    achou.nome = p.nome;
-    achou.preco = precoFinal;
-    achou.imagem = p.imagem || p.imagem_url || '';
-  } else {
-    carrinho.push({ id: p.id, nome: p.nome, preco: precoFinal, imagem: p.imagem || p.imagem_url || '', qtd: 1 });
-  }
+  if(achou){ achou.qtd = (achou.qtd||1)+1; achou.nome = p.nome; achou.preco = precoFinal; achou.imagem = p.imagem || p.imagem_url || ''; }
+  else { carrinho.push({ id: p.id, nome: p.nome, preco: precoFinal, imagem: p.imagem || p.imagem_url || '', qtd: 1 }); }
   localStorage.setItem('carrinho', JSON.stringify(carrinho));
   atualizarCarrinho();
   mostrarToast('✅ Adicionado ao carrinho!');
@@ -693,9 +673,7 @@ async function carregarMaisVendidos(){
       if(real) return {...v, id: real.id, img: real.imagem||real.imagem_url||v.img, preco: Number(real.preco)||v.preco, preco_antigo: Number(real.preco_antigo||real.preco_antes||0), promo_fim: real.promo_fim};
       return v;
     });
-    if(!lista.length){
-      lista = todosProdutos.slice(0,5).map(p=>({nome:p.nome, qtd:0, preco:Number(p.preco), preco_antigo:Number(p.preco_antigo||0), promo_fim:p.promo_fim, img:p.imagem||p.imagem_url||'', id:p.id}));
-    }
+    if(!lista.length){ lista = todosProdutos.slice(0,5).map(p=>({nome:p.nome, qtd:0, preco:Number(p.preco), preco_antigo:Number(p.preco_antigo||0), promo_fim:p.promo_fim, img:p.imagem||p.imagem_url||'', id:p.id})); }
     if(!lista.length) return;
     let track = document.getElementById('bannerTrack');
     let dots = document.getElementById('bannerDots');
@@ -717,10 +695,7 @@ async function carregarMaisVendidos(){
     dots.innerHTML = lista.map((_,i)=>`<span class="${i===0?'ativo':''}" onclick="irParaSlideVendidos(${i})"></span>`).join('');
     document.getElementById('bannerVendidos').classList.add('mostrar');
     clearInterval(timerBannerVendidos);
-    timerBannerVendidos = setInterval(()=>{
-      slideAtual = (slideAtual+1) % lista.length;
-      atualizarSlideVendidos(lista.length);
-    }, 3000);
+    timerBannerVendidos = setInterval(()=>{ slideAtual = (slideAtual+1) % lista.length; atualizarSlideVendidos(lista.length); }, 3000);
   }catch(e){ console.log(e); }
 }
 function atualizarSlideVendidos(total){
@@ -795,13 +770,10 @@ async function carregarLoja(){
 carregarLoja();
 </script>
 <script>
-// 🔔 NOTIFICAÇÃO DO CLIENTE - RETIFICADO - AVISA QUANDO O ADMIN MUDA O STATUS
 let statusAnterioresCliente = {};
 try{ statusAnterioresCliente = JSON.parse(localStorage.getItem('casanova_status_pedidos')||'{}'); }catch(e){ statusAnterioresCliente={}; }
 let primeiraVezCliente = true;
-if("Notification" in window && Notification.permission === "default"){
-  setTimeout(()=>{ try{ Notification.requestPermission(); }catch(e){} }, 3000);
-}
+if("Notification" in window && Notification.permission === "default"){ setTimeout(()=>{ try{ Notification.requestPermission(); }catch(e){} }, 3000); }
 function tocarSomCliente(){
   try{
     let a = document.getElementById('somCliente');
@@ -817,9 +789,7 @@ function mostrarAlertaCliente(msg, cor){
   txt.textContent = msg;
   box.style.display = 'block';
   tocarSomCliente();
-  if("Notification" in window && Notification.permission === "granted"){
-    try{ new Notification('🏠 Casa Nova', {body: msg, icon: 'https://cdn-icons-png.flaticon.com/512/609/609803.png'}); }catch(e){}
-  }
+  if("Notification" in window && Notification.permission === "granted"){ try{ new Notification('🏠 Casa Nova', {body: msg, icon: 'https://cdn-icons-png.flaticon.com/512/609/609803.png'}); }catch(e){} }
   setTimeout(()=>{ box.style.display='none'; }, 20000);
 }
 function textoStatusCliente(status){
@@ -839,7 +809,6 @@ async function verificarStatusCliente(){
     let meusCodigos = [];
     try{ meusCodigos = JSON.parse(localStorage.getItem('meus_pedidos')||'[]'); }catch(e){}
     try{ let v = JSON.parse(localStorage.getItem('meus_codigos')||'[]'); meusCodigos = [...meusCodigos, ...v]; }catch(e){}
-    // Também guarda códigos que o cliente verificou
     try{ let ult = localStorage.getItem('ultimo_pedido_codigo'); if(ult) meusCodigos.push(ult); }catch(e){}
     let r = await db.from('pedidos').select('id,codigo,status,telefone,whatsapp,nome_cliente,cliente_telefone').order('created_at',{ascending:false}).limit(20);
     if(!r.data) return;
@@ -852,26 +821,16 @@ async function verificarStatusCliente(){
       }
       return false;
     });
-    // Se não achou por telefone, usa o último pedido do telefone guardado na verificação
-    if(!meus.length && r.data.length && !meuTel){
-      // Sem login, não mostra para não confundir com pedido de outro
-      primeiraVezCliente = false;
-      return;
-    }
+    if(!meus.length && r.data.length && !meuTel){ primeiraVezCliente = false; return; }
     meus.forEach(p=>{
       let antigo = statusAnterioresCliente[p.codigo];
-      if(primeiraVezCliente){
-        statusAnterioresCliente[p.codigo] = p.status;
-        return;
-      }
+      if(primeiraVezCliente){ statusAnterioresCliente[p.codigo] = p.status; return; }
       if(antigo && antigo !== p.status){
         statusAnterioresCliente[p.codigo] = p.status;
         localStorage.setItem('casanova_status_pedidos', JSON.stringify(statusAnterioresCliente));
         let t = textoStatusCliente(p.status);
         if(t) mostrarAlertaCliente('Pedido ' + p.codigo + ' - ' + t.msg, t.cor);
-      } else if(!antigo){
-        statusAnterioresCliente[p.codigo] = p.status;
-      }
+      } else if(!antigo){ statusAnterioresCliente[p.codigo] = p.status; }
     });
     localStorage.setItem('casanova_status_pedidos', JSON.stringify(statusAnterioresCliente));
     primeiraVezCliente = false;

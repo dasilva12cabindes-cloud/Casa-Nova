@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Casa Nova - Eletrodomésticos</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b5ed7">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Casa Nova">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/609/609803.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
@@ -137,6 +144,12 @@ input,select,textarea{font-size:16px !important}
 @keyframes ledTeto{0%{stroke-dashoffset:320;opacity:1}50%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:-320;opacity:1}}
 .barra-processo{width:220px;height:10px;background:#222;border-radius:20px;overflow:hidden;margin:16px auto 0}
 .barra-processo div{height:100%;width:0%;background:#00aaff;border-radius:20px;transition:width .2s;box-shadow:0 0 10px #00aaff}
+#bannerInstalar{display:none;margin:12px 16px 0;background:#111827;color:#fff;border-radius:16px;padding:14px;align-items:center;gap:12px}
+#bannerInstalar.mostrar{display:flex}
+#bannerInstalar img{width:48px;height:48px;border-radius:12px;background:#fff}
+#modalInstalar{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;display:none;align-items:flex-end;justify-content:center}
+#modalInstalar.aberto{display:flex}
+.modal-instalar-box{background:#fff;width:100%;max-width:500px;border-radius:22px 22px 0 0;padding:20px;text-align:center}
 </style>
 </head>
 <body>
@@ -161,6 +174,12 @@ input,select,textarea{font-size:16px !important}
   <nav><div id="auth-links"></div><a href="carrinho.html">🛒 Carrinho (<span id="qtdCarrinho">0</span>)</a></nav>
 </div>
 <div id="toast">✅ Adicionado ao carrinho!</div>
+<div id="bannerInstalar">
+  <img src="https://cdn-icons-png.flaticon.com/512/609/609803.png" alt="Casa Nova">
+  <div style="flex:1"><b>📱 App Casa Nova</b><br><small>Instala no teu telefone, é grátis e rápido!</small></div>
+  <button onclick="instalarApp()" style="background:#16a34a;color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:800;cursor:pointer;white-space:nowrap">Instalar</button>
+  <button onclick="fecharBannerInstalar()" style="background:rgba(255,255,255,.2);color:#fff;border:0;width:32px;height:32px;border-radius:50%;cursor:pointer">✕</button>
+</div>
 <div class="banners" id="banners"><img src="" id="bannerImg" alt="Publicidade"></div>
 <div class="banner-vendidos" id="bannerVendidos">
   <p class="banner-vendidos-titulo">🔥 Mais Vendidos da Semana - Casa Nova</p>
@@ -223,6 +242,7 @@ input,select,textarea{font-size:16px !important}
   <div class="menu-topo"><div><b>🏠 CASA NOVA</b><br><small>Eletrodomésticos</small></div><button onclick="fecharMenu()">✕</button></div>
   <div class="menu-secao">Minha Conta</div>
   <div id="menuContaArea"></div>
+  <a class="menu-item" href="#" onclick="fecharMenu();instalarApp();return false" style="background:#111827;color:#fff;border-radius:12px;margin:10px 16px"><span>📱</span><span><b>Instalar App Casa Nova</b><br><small style="color:#fbbf24;font-weight:800">Grátis - Fica no teu telefone</small></span></a>
   <a class="menu-item" href="#" onclick="fecharMenu();partilharLoja();return false" style="background:#f0fdf4;border:2px solid #16a34a;border-radius:12px;margin:10px 16px"><span>🔗</span><span><b>Partilhar Loja</b><br><small style="color:#16a34a;font-weight:800">Partilha sem mostrar a tua conta</small></span></a>
   <a class="menu-item" href="promocao.html" style="background:#fef2f2;border:2px solid #dc2626;border-radius:12px;margin:10px 16px"><span>🔥</span><b>PROMOÇÃO</b> <small style="color:#dc2626;font-weight:800">Preços Baixos!</small></a>
   <a class="menu-item" href="carrinho.html"><span>🛒</span> Meu Carrinho</a>
@@ -262,7 +282,36 @@ input,select,textarea{font-size:16px !important}
     </div>
   </div>
 </div>
+<div id="modalInstalar" onclick="if(event.target.id==='modalInstalar') fecharModalInstalar()">
+  <div class="modal-instalar-box">
+    <button class="fechar" onclick="fecharModalInstalar()">✕</button>
+    <div style="font-size:48px">📱</div>
+    <h2 style="margin:8px 0">Instalar App Casa Nova</h2>
+    <div id="instalarAndroid" style="text-align:left;background:#f0fdf4;border-radius:12px;padding:14px;font-size:14px;line-height:1.7">
+      <b>Android:</b><br>1. Clica nos 3 pontinhos do Chrome (em cima)<br>2. Clica em <b>Instalar aplicação</b> ou <b>Adicionar ao ecrã principal</b><br>3. Clica em <b>Instalar</b>
+    </div>
+    <div id="instalarIphone" style="text-align:left;background:#eff6ff;border-radius:12px;padding:14px;font-size:14px;line-height:1.7;margin-top:10px">
+      <b>iPhone (tem que ser no Safari):</b><br>1. Clica no botão <b>Partilhar</b> ⬆️ em baixo<br>2. Desce e clica em <b>Adicionar ao Ecrã Principal</b><br>3. Clica em <b>Adicionar</b> em cima
+    </div>
+    <button class="btn" style="width:100%;margin-top:14px" onclick="fecharModalInstalar()">Entendi ✅</button>
+  </div>
+</div>
 <script>
+// 📱 PWA - INSTALAR APP
+let promptInstalar=null;
+window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); promptInstalar=e; document.getElementById('bannerInstalar').classList.add('mostrar'); });
+window.addEventListener('appinstalled', ()=>{ document.getElementById('bannerInstalar').classList.remove('mostrar'); promptInstalar=null; });
+function eIphone(){ return /iPhone|iPad|iPod/.test(navigator.userAgent); }
+function jaInstalado(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true; }
+async function instalarApp(){
+  if(jaInstalado()){ mostrarToast('✅ Já tens a App instalada!'); return; }
+  if(promptInstalar){ promptInstalar.prompt(); let r=await promptInstalar.userChoice; if(r.outcome==='accepted') mostrarToast('✅ App instalada!'); promptInstalar=null; document.getElementById('bannerInstalar').classList.remove('mostrar'); return; }
+  document.getElementById('modalInstalar').classList.add('aberto');
+}
+function fecharModalInstalar(){ document.getElementById('modalInstalar').classList.remove('aberto'); }
+function fecharBannerInstalar(){ document.getElementById('bannerInstalar').classList.remove('mostrar'); localStorage.setItem('banner_instalar_fechado','1'); }
+setTimeout(()=>{ if(!jaInstalado() && !localStorage.getItem('banner_instalar_fechado') && !promptInstalar){ document.getElementById('bannerInstalar').classList.add('mostrar'); } }, 3000);
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 (function limparLinkPerigoso(){
   try{
     let q = window.location.search || '';
@@ -321,7 +370,6 @@ function verificarNovoUsuario(){
 let todosProdutos = [];
 let categoriaAtual = 'Todas';
 let lojaCfgGlobal = {};
-// 🔥 NOVO: PROMOÇÃO COM DATA - SE PASSOU, NÃO MOSTRA
 function dadosPromo(p){
   let precoNovo = Number(p.preco||0);
   let precoAntigo = Number(p.preco_antigo||p.preco_antes||p.preco_original||p.preco_normal||0);
@@ -330,7 +378,6 @@ function dadosPromo(p){
     precoAntigo = Math.round(precoNovo / (1 - descDireto/100));
   }
   if(!precoAntigo || precoAntigo <= precoNovo) return null;
-  // SE TEM DATA E JÁ PASSOU -> NÃO É PROMOÇÃO
   if(p.promo_fim){
     let hoje=new Date(); hoje.setHours(0,0,0,0);
     let fim=new Date(p.promo_fim);
@@ -462,10 +509,8 @@ function adicionarCarrinho(id, event){
   if(!exigirCadastro()) return;
   let p = todosProdutos.find(x=>x.id==id);
   if(!p) return;
-  // 🔥 SE A PROMOÇÃO JÁ TERMINOU, O PREÇO QUE VAI PARA O CARRINHO É O NORMAL
   let promo = dadosPromo(p);
   let precoFinal = promo ? promo.novo : (promo===null && p.preco_antigo ? Number(p.preco_antigo) : Number(p.preco));
-  // Se expirou, usa o preço antigo como preço normal
   if(!promo && p.preco_antigo && p.promo_fim){
     let hoje=new Date(); hoje.setHours(0,0,0,0);
     if(new Date(p.promo_fim) < hoje) precoFinal = Number(p.preco_antigo);
@@ -496,7 +541,6 @@ function abrirDetalhe(id){
     document.getElementById('dPromo').innerHTML = `<span class="selo-promo">🔥 PROMOÇÃO -${promo.perc}%</span><br><span class="preco-antigo" style="font-size:14px">${promo.antigo.toLocaleString()} Kz</span> <span class="desconto">-${promo.perc}%</span>${tempo}`;
     document.getElementById('dPreco').textContent = promo.novo.toLocaleString() + ' Kz';
   } else {
-    // SE EXPIROU, MOSTRA O PREÇO NORMAL (O ANTIGO)
     let precoMostrar = Number(p.preco);
     if(p.preco_antigo && p.promo_fim){
       let hoje=new Date(); hoje.setHours(0,0,0,0);
@@ -530,7 +574,6 @@ function mostrarProdutos(lista){
   if(!lista.length){ grade.innerHTML = categoriaAtual==='Promoção' ? '<div class="aviso">🔥 Nenhuma promoção agora.<br>Volta mais tarde!</div>' : '<div class="aviso">Nenhum produto encontrado.</div>'; return; }
   grade.innerHTML = lista.map(p=>{
     let promo = dadosPromo(p);
-    // SE EXPIROU, MOSTRA PREÇO NORMAL NO CARD
     let precoCard = '';
     if(promo) precoCard = htmlPreco(p);
     else {

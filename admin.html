@@ -25,7 +25,10 @@
 .card:active, .card.zoom{animation:none !important;transform:scale(1.12) !important;box-shadow:0 12px 22px rgba(0,0,0,.25)}
 .card:active span, .card.zoom span{transform:scale(1.3)}
 .card-pagamento{border:2px solid #1e3a8a;background:#eff6ff}.card-verificar{border:2px solid #16a34a;background:#f0fdf4}.card-verificar b{color:#166534}.card-conta{border:2px solid #f97316;background:#fff7ed}.card-pedidos{border:2px solid #6b7280;background:#f9fafb}.card-logo{border:2px solid #eab308;background:#fefce8}.card-sobre{border:2px solid #dc2626;background:#fef2f2}.card-categorias{border:2px solid #0b5ed7;background:#eff6ff}.card-produtos{border:2px solid #ec4899;background:#fdf2f8}.card-vendas{border:2px solid #f59e0b;background:#fffbeb}.card-clientes{border:2px solid #06b6d4;background:#ecfeff}
+.card-online{border:2px solid #22c55e;background:#f0fdf4;grid-column:1 / -1}
+.card-online b{color:#15803d;font-size:17px}
 .badge-pedidos{position:absolute;top:8px;right:8px;background:#dc2626;color:#fff;min-width:26px;height:26px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:13px;font-weight:900;padding:0 6px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.badge-online{position:absolute;top:8px;right:8px;background:#22c55e;color:#fff;min-width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;padding:0 7px;box-shadow:0 2px 6px rgba(0,0,0,.3);border:2px solid #fff}
 .btn-sair{background:#dc2626;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer;font-size:14px;transition:transform .15s ease}.btn-sair:active{transform:scale(1.1)}
 #telaLogin{position:fixed;inset:0;background:#0b5ed7;z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}#telaLogin.aberto{display:flex}
 .login-box{background:#fff;width:100%;max-width:340px;border-radius:20px;padding:24px;text-align:center}
@@ -71,6 +74,7 @@
 <div class="sub">Escolhe o que queres gerir:</div>
 <div id="avisoNovoPedido" style="padding:0 14px"></div>
 <div class="grid">
+  <a class="card card-online" href="admin-online.html"><span id="badgeOnline" class="badge-online">0</span><span>👀</span><b>Quem Está Online Agora</b><small id="textoOnline">A carregar... • Clica para ver nomes, telefone e onde estão</small></a>
   <a class="card card-verificar" href="verificar-novo.html"><span>🔍</span><b>Verificar Comprovativo e Código</b><small>Nome, e-mail, o que comprou, o que pagou, o que falta + comprovativo</small></a>
   <a class="card card-pedidos" href="admin-pedidos.html"><span id="badgePedidos" class="badge-pedidos">0</span><span>📦</span><b>Pedidos</b><small>Pedidos recebidos</small></a>
   <a class="card card-logo" href="admin-logo.html"><span>🖼️</span><b>Logotipo & Banner</b><small>Logo da loja + publicidade</small></a>
@@ -158,6 +162,25 @@ function salvarConta(){
   mostrarToast('✅ Guardado! Novo e-mail: '+email);
   fecharConta();
 }
+// ===== QUEM ESTÁ ONLINE - LIGADO COM ADMIN-ONLINE.HTML =====
+async function atualizarOnline(){
+  try{
+    let r = await db.from('presenca').select('*').eq('online', true).order('ultima_vez',{ascending:false}).limit(50);
+    let agora = new Date();
+    let on = (r.data||[]).filter(p=>{
+      let diff = p.ultima_vez ? (agora - new Date(p.ultima_vez))/1000 : 9999;
+      return diff < 60;
+    });
+    let badge = document.getElementById('badgeOnline');
+    let texto = document.getElementById('textoOnline');
+    if(badge) badge.textContent = on.length;
+    if(texto){
+      if(on.length===0) texto.textContent = 'Ninguém online agora • Clica para ver quem saiu';
+      else if(on.length===1) texto.textContent = '🟢 1 pessoa online agora: ' + (on[0].nome||'Visitante') + ' • Clica para controlar';
+      else texto.textContent = '🟢 ' + on.length + ' pessoas online: ' + on.slice(0,2).map(p=>p.nome||'Visitante').join(', ') + ' • Clica para ver todos';
+    }
+  }catch(e){}
+}
 // ===== ALERTA PEDIDOS NOVOS - SOM + NOTIFICAÇÃO + NÚMERO =====
 let totalNovos = 0;
 function pedirPermissaoNotificacao(){
@@ -202,7 +225,6 @@ function ligarTempoRealPedidos(){
       totalNovos++; atualizarBadge(); notificarNovoPedido(payload.new);
     })
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'pedidos'}, payload=>{
-      // Quando sai de Novo para Em Preparação, baixa o número
       if(payload.old && payload.old.status === 'Novo' && payload.new.status !== 'Novo'){
         totalNovos = Math.max(0, totalNovos - 1); atualizarBadge();
       }
@@ -227,5 +249,7 @@ async function carregarLogoTopo(){
 carregarLogoTopo();
 contarPedidosNovos();
 ligarTempoRealPedidos();
+atualizarOnline();
+setInterval(atualizarOnline, 10000);
 </script>
 </body></html>

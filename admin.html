@@ -18,6 +18,7 @@ label{font-size:13px;color:#555;font-weight:700}
 .item{display:flex;gap:10px;align-items:center;border-top:1px solid #eee;padding:10px 0}
 .item img{width:80px;height:80px;object-fit:cover;border-radius:8px;background:#f8f8f8;display:block}
 .preview{width:100%;margin-top:8px}
+.cat-item{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;padding:8px 0}
 </style></head>
 <body>
 <div class="topo"><b>Admin Casa Nova</b><a href="index.html">Ver Loja</a></div>
@@ -39,22 +40,19 @@ label{font-size:13px;color:#555;font-weight:700}
 <div id="listaBanners">A carregar...</div>
 </div>
 
+<div class="caixa"><h3>📁 Gerir Categorias - ÉS TU QUE ADICIONAS</h3>
+<p style="color:#666;font-size:14px">Escreve a categoria e clica em Adicionar. Ela vai aparecer quando fores criar o produto.</p>
+<input id="novaCategoria" placeholder="Ex: Arca, Geladeira, Coluna...">
+<button class="btn" onclick="adicionarCategoria()">+ Adicionar Categoria</button>
+<div id="listaCategorias" style="margin-top:10px">A carregar...</div>
+</div>
+
 <div class="caixa"><h3>➕ Adicionar / Editar Produto</h3>
 <input type="hidden" id="editId" value="">
 <label>Nome do produto</label>
 <input id="fNome" placeholder="Ex: Arca Oux 200L">
-<label>Categoria - AGORA APARECE TUDO</label>
-<select id="fCategoria">
-  <option value="Arca">Arca</option>
-  <option value="Ar Condicionado">Ar Condicionado</option>
-  <option value="Telemóveis">Telemóveis</option>
-  <option value="Máquina de Lavar">Máquina de Lavar</option>
-  <option value="Ferro de Engomar">Ferro de Engomar</option>
-  <option value="Eletrodomésticos">Eletrodomésticos</option>
-  <option value="TV e Som">TV e Som</option>
-  <option value="Informática">Informática</option>
-  <option value="Outros">Outros</option>
-</select>
+<label>Categoria</label>
+<select id="fCategoria"></select>
 <label>Preço (Kz)</label>
 <input id="fPreco" type="number" placeholder="Ex: 8000">
 <label>Descrição</label>
@@ -71,6 +69,33 @@ label{font-size:13px;color:#555;font-weight:700}
 <script>
 let banners=[];
 let produtos=[];
+let categorias=['Arca','Ar Condicionado','Telemóveis','Máquina de Lavar','Ferro de Engomar','Eletrodomésticos','TV e Som','Informática','Outros'];
+// CARREGAR CATEGORIAS QUE TU JÁ ADICIONASTE
+try{
+  let salvas=JSON.parse(localStorage.getItem('categorias_casanova')||'[]');
+  salvas.forEach(c=>{ if(c && !categorias.includes(c)) categorias.push(c); });
+}catch(e){}
+function guardarCategorias(){ localStorage.setItem('categorias_casanova', JSON.stringify(categorias)); }
+function mostrarCategorias(){
+  document.getElementById('listaCategorias').innerHTML=categorias.map((c,i)=>'<div class="cat-item"><b>📁 '+c+'</b><button class="btn-vermelho" onclick="apagarCategoria('+i+')">🗑️ Apagar</button></div>').join('')||'Sem categorias';
+  let sel=document.getElementById('fCategoria');
+  let atual=sel.value;
+  sel.innerHTML=categorias.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
+  if(atual && categorias.includes(atual)) sel.value=atual;
+}
+function adicionarCategoria(){
+  let v=document.getElementById('novaCategoria').value.trim();
+  if(!v) return alert('Escreve a categoria primeiro');
+  if(categorias.includes(v)) return alert('Essa categoria já existe!');
+  categorias.push(v); guardarCategorias(); mostrarCategorias();
+  document.getElementById('novaCategoria').value='';
+  document.getElementById('fCategoria').value=v;
+  alert('✅ Categoria "'+v+'" adicionada! Agora cria o produto com essa categoria.');
+}
+function apagarCategoria(i){
+  if(!confirm('Apagar a categoria "'+categorias[i]+'"? Os produtos com ela continuam, mas a categoria some da lista.')) return;
+  categorias.splice(i,1); guardarCategorias(); mostrarCategorias();
+}
 function mostrarBanners(){
   let div=document.getElementById('listaBanners');
   if(!banners.length){div.innerHTML='<p>Nenhum banner ainda.</p>';return}
@@ -129,7 +154,6 @@ function limparForm(){
   document.getElementById('fPreco').value='';
   document.getElementById('fDesc').value='';
   document.getElementById('fImagem').value='';
-  document.getElementById('fCategoria').value='Arca';
   window.scrollTo({top:0,behavior:'smooth'});
 }
 async function salvarProduto(){
@@ -159,6 +183,7 @@ async function salvarProduto(){
 }
 function editarProduto(id){
   let p=produtos.find(x=>x.id==id); if(!p) return;
+  if(p.categoria && !categorias.includes(p.categoria)){ categorias.push(p.categoria); guardarCategorias(); mostrarCategorias(); }
   document.getElementById('editId').value=p.id;
   document.getElementById('fNome').value=p.nome||'';
   document.getElementById('fPreco').value=p.preco||'';
@@ -177,7 +202,10 @@ async function apagarProduto(id){
 async function carregarProdutos(){
   const r=await db.from('produtos').select('*').order('id',{ascending:false});
   produtos=r.data||[];
+  produtos.forEach(p=>{ if(p.categoria && !categorias.includes(p.categoria)) categorias.push(p.categoria); });
+  guardarCategorias(); mostrarCategorias();
   document.getElementById('listaProdutos').innerHTML=produtos.map(x=>'<div class="item"><img src="'+(x.imagem||x.imagem_url||'')+'"><div style="flex:1"><b>'+x.nome+'</b><br><small style="color:#2563eb;font-weight:700">📁 '+(x.categoria||'Sem categoria')+'</small><br>'+Number(x.preco).toLocaleString()+' Kz<br><button class="btn-cinza" style="margin-top:6px" onclick="editarProduto('+x.id+')">✏️ Editar</button> <button class="btn-vermelho" onclick="apagarProduto('+x.id+')">🗑️ Apagar</button></div></div>').join('')||'Sem produtos';
 }
+mostrarCategorias();
 carregarTudo(); carregarProdutos();
 </script></body></html>

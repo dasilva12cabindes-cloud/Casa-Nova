@@ -125,6 +125,10 @@ input,select,textarea{font-size:16px !important}
 .sobre-detalhe b{color:#0b5ed7}
 #telaVerificar{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1300;display:none;align-items:center;justify-content:center;padding:16px}
 #telaVerificar.aberto{display:flex}
+/* TELA DE BOAS-VINDAS - OBRIGA NOVO A CADASTRAR */
+#telaBoasVindas{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;display:none;align-items:center;justify-content:center;padding:16px}
+#telaBoasVindas.aberto{display:flex}
+.boasvindas-box{background:#fff;width:100%;max-width:380px;border-radius:22px;padding:24px;text-align:center}
 </style>
 </head>
 <body>
@@ -158,6 +162,19 @@ input,select,textarea{font-size:16px !important}
   </div>
   <div class="grade" id="grade"><div class="aviso">A carregar produtos...</div></div>
 </div>
+
+<!-- TELA QUE TRAVA QUEM É NOVO -->
+<div id="telaBoasVindas">
+  <div class="boasvindas-box">
+    <div style="font-size:56px">🏠</div>
+    <h2 style="margin:8px 0">Bem-vindo à Casa Nova!</h2>
+    <p style="color:#666;font-size:14px;line-height:1.6">Para veres os produtos e comprares, precisas te cadastrar.<br>É rápido, só 30 segundos!</p>
+    <button onclick="location.href='cadastro.html'" style="background:#16a34a;color:#fff;border:0;padding:15px;border-radius:12px;width:100%;font-weight:800;font-size:16px;cursor:pointer;margin-top:16px">✅ CADASTRAR-ME AGORA</button>
+    <button onclick="location.href='cadastro.html'" style="background:#0b5ed7;color:#fff;border:0;padding:15px;border-radius:12px;width:100%;font-weight:800;font-size:15px;cursor:pointer;margin-top:10px">🔑 JÁ TENHO CONTA - ENTRAR</button>
+    <p style="font-size:12px;color:#999;margin-top:12px">🔒 A tua conta fica só no teu telefone.<br>Ninguém vê a tua conta pelo link.</p>
+  </div>
+</div>
+
 <div id="modal" onclick="if(event.target.id==='modal') fecharDetalhe()">
   <div class="modal-box">
     <button class="fechar" onclick="fecharDetalhe()">✕</button>
@@ -262,10 +279,6 @@ input,select,textarea{font-size:16px !important}
 
 <script>
 // ===== SEPARAÇÃO ADMIN / CLIENTE - LINK NÃO PARTILHA CONTA =====
-// ADMIN é fixo e escondido: teusite.com/admin.html (nunca aparece aqui)
-// CLIENTE é sempre limpo: teusite.com/index.html (sem nome, sem conta no link)
-// A conta fica SÓ no telefone da pessoa, no localStorage. Não vai no link.
-// Se alguém tentar colar ?cliente=... ?conta=... ?user=... ?id=... para entrar na conta do outro, apagamos logo.
 (function limparLinkPerigoso(){
   try{
     let q = window.location.search || '';
@@ -273,28 +286,29 @@ input,select,textarea{font-size:16px !important}
     if(q || h){
       let perigoso = ['cliente','conta','user','usuario','nome','telefone','email','token','senha','id='];
       let achou = perigoso.some(p=> q.toLowerCase().includes(p) || h.toLowerCase().includes(p));
-      if(achou || q.length>1){
-        window.history.replaceState({}, '', window.location.pathname);
-      }
+      if(achou || q.length>1){ window.history.replaceState({}, '', window.location.pathname); }
     }
   }catch(e){}
 })();
 function linkLimpoLoja(){
-  // Sempre devolve só o link da loja, sem nada pessoal
   let base = window.location.origin + window.location.pathname;
-  base = base.replace(/[^\/]+$/, ''); // tira o nome do ficheiro
+  base = base.replace(/[^\/]+$/, '');
   return base + 'index.html';
 }
 function partilharLoja(){
   let link = linkLimpoLoja();
   let texto = '🏠 Casa Nova - Eletrodomésticos em Cabinda! Vê as promoções aqui: ' + link;
-  if(navigator.share){
-    navigator.share({title:'Casa Nova', text:texto, url:link}).catch(()=>{});
-  } else if(navigator.clipboard){
-    navigator.clipboard.writeText(link).then(()=>mostrarToast('🔗 Link da loja copiado! Partilha à vontade'));
-  } else {
-    prompt('Copia o link da loja (sem a tua conta):', link);
-  }
+  if(navigator.share){ navigator.share({title:'Casa Nova', text:texto, url:link}).catch(()=>{}); }
+  else if(navigator.clipboard){ navigator.clipboard.writeText(link).then(()=>mostrarToast('🔗 Link da loja copiado! Partilha à vontade')); }
+  else { prompt('Copia o link da loja (sem a tua conta):', link); }
+}
+// ===== NOVO VISITANTE TEM QUE SE CADASTRAR - TRAVA A LOJA =====
+function verificarNovoUsuario(){
+  let c = null;
+  try{ c = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
+  if(c) return; // Já tem conta, entra direto, sem tela
+  // É novo: mostra a tela de boas-vindas e trava
+  document.getElementById('telaBoasVindas').classList.add('aberto');
 }
 let todosProdutos = [];
 let categoriaAtual = 'Todas';
@@ -384,7 +398,6 @@ async function confirmarNoSistema(){
   setTimeout(()=>{ fecharTelaVerificar(); }, 2200);
 }
 function clienteLogado(){
-  // NUNCA lê do link (?cliente=...), só do telefone da pessoa
   try{ return JSON.parse(localStorage.getItem('cliente_casa_nova') || 'null'); }catch(e){ return null; }
 }
 function atualizarMenuConta(){
@@ -522,6 +535,8 @@ function confirmarSair(){
   mostrarToast('👋 Saíste da tua conta. Até já!');
   atualizarMenuConta();
   atualizarCarrinho();
+  // Depois de sair, volta a travar para o próximo
+  document.getElementById('telaBoasVindas').classList.add('aberto');
 }
 function atualizarSobre(cfg){
   let sobre = cfg.sobre || 'A Casa Nova é a tua loja de confiança em Cabinda. Vendemos eletrodomésticos de qualidade: arcas, geleiras, ar condicionado, máquinas de lavar, fogões, TVs, telemóveis e muito mais.';
@@ -616,6 +631,7 @@ document.addEventListener('touchend', e=>{
   }
 }, {passive:true});
 async function carregarLoja(){
+  verificarNovoUsuario();
   atualizarMenuConta();
   let cfg = {};
   try{

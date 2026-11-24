@@ -22,6 +22,11 @@ a { color: inherit; text-decoration: none; }
 .topo nav { display: flex; gap: 16px; align-items: center; }
 .topo nav a, #auth-links { display: inline-flex; gap: 12px; }
 
+/* BANNERS / PUBLICIDADE - DE VOLTA */
+.banners { width: 100%; max-width: 1100px; margin: 12px auto 0; padding: 0 16px; display: none; }
+.banners img { width: 100%; height: 180px; object-fit: cover; display: block; border-radius: 12px; background: #eef0f4; }
+@media (max-width: 700px){ .banners img{ height: 140px; } }
+
 .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
 #busca { width: 100%; padding: 12px 14px; border: 1px solid #cfd5df; border-radius: 10px;
   font-size: 1rem; margin-bottom: 12px; }
@@ -58,6 +63,9 @@ a { color: inherit; text-decoration: none; }
     <a href="carrinho.html">🛒 Carrinho (<span id="qtdCarrinho">0</span>)</a>
   </nav>
 </div>
+
+<!-- BANNERS -->
+<div class="banners" id="banners"><img src="" id="bannerImg" alt="Publicidade"></div>
 
 <div class="container">
   <input id="busca" placeholder="🔍 Pesquisar produto..." oninput="filtrar()">
@@ -120,10 +128,12 @@ function mostrarProdutos(lista){
 }
 
 async function carregarLoja(){
-  // 1. LOGOTIPO - SE TEM LOGO, NOME SOME
+  let cfg = {};
+  // 1. LOGOTIPO + BANNERS
   try{
     const r = await db.from('loja_config').select('*').eq('id',1).maybeSingle();
-    let cfg = r.data || {};
+    cfg = r.data || {};
+    // LOGOTIPO
     if(cfg.logo_url){
       const logo = document.getElementById('logoTopo');
       logo.src = cfg.logo_url;
@@ -133,13 +143,29 @@ async function carregarLoja(){
       document.getElementById('logoTopo').style.display = 'none';
       document.getElementById('topoSite').classList.remove('tem-logo');
     }
+    // BANNERS
+    let banners = [];
+    try{
+      if(typeof cfg.banners === 'string') banners = JSON.parse(cfg.banners || '[]');
+      else banners = cfg.banners || [];
+    }catch(e){ banners = []; }
+    if(!banners.length && cfg.banner_url) banners = [cfg.banner_url];
+    if(banners.length){
+      let i = 0;
+      let img = document.getElementById('bannerImg');
+      document.getElementById('banners').style.display = 'block';
+      img.src = banners[0];
+      setInterval(()=>{
+        i = (i+1) % banners.length;
+        img.src = banners[i];
+      }, 3000);
+    }
   }catch(e){ console.log(e); }
 
   // 2. PRODUTOS
   try{
     const r2 = await db.from('produtos').select('*').order('id',{ascending:false});
     todosProdutos = r2.data || [];
-    // Categorias automaticas
     let cats = [...new Set(todosProdutos.map(p=>p.categoria||'Outros'))];
     document.getElementById('categorias').innerHTML =
       `<button class="chip ativo" onclick="filtrarCategoria('Todas',this)">Todas</button>` +

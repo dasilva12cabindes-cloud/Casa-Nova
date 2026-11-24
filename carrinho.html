@@ -3,159 +3,292 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Meu Carrinho - Casa Nova</title>
+<title>Entrar / Cadastrar - Casa Nova</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,Arial,sans-serif;background:#f5f6f8;color:#1d2330}
-.topo{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#0b5ed7;color:#fff}
-.topo a{color:#fff;text-decoration:none;font-weight:700}
-.container{max-width:600px;margin:0 auto;padding:16px}
-h1{font-size:1.4rem;margin-bottom:12px}
-.cliente-box{background:#e0f2fe;border:1px solid #93c5fd;padding:12px;border-radius:12px;margin-bottom:12px;font-size:14px}
-.item{background:#fff;border-radius:14px;padding:12px;margin-bottom:10px;display:flex;gap:10px;align-items:center}
-.item img{width:70px;height:70px;object-fit:cover;border-radius:10px;background:#eee}
-.item-info{flex:1}
-.item-info b{font-size:15px;display:block}
-.item-info span{color:#0b5ed7;font-weight:700}
-.qtd{display:flex;gap:6px;align-items:center}
-.qtd button{width:32px;height:32px;border:0;border-radius:8px;background:#eef2ff;font-size:18px;cursor:pointer}
-.qtd .remover{background:#fee2e2;color:#dc2626}
-.form{background:#fff;border-radius:16px;padding:16px;margin-top:10px}
-.form h3{margin-bottom:12px}
-.form input,.form select,.form textarea{width:100%;padding:12px;border:1px solid #cfd5df;border-radius:10px;margin-bottom:10px;font-size:15px}
-.total{font-size:1.2rem;font-weight:800;margin:12px 0}
-.btn-whats{background:#0b5ed7;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;cursor:pointer}
-.btn-limpar{background:#eee;border:0;padding:10px;border-radius:10px;width:100%;margin-top:8px;cursor:pointer}
-.vazio{text-align:center;padding:30px;color:#666}
+body{font-family:system-ui,Arial,sans-serif;background:#f5f6f8;color:#1d2330;padding:16px}
+.topo{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.topo a{color:#0b5ed7;font-weight:700;text-decoration:none}
+.topo-logo{display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.topo-logo img{height:64px;width:auto;max-width:240px;object-fit:contain;display:block}
+.topo-logo .logo-text{font-size:1.5rem;font-weight:800;color:#0b5ed7}
+.card{background:#fff;border-radius:20px;padding:20px;max-width:480px;margin:0 auto}
+h1{font-size:1.4rem;margin-bottom:4px}
+.sub{color:#666;font-size:13px;margin-bottom:16px}
+.abas{display:flex;background:#eef2ff;border-radius:12px;padding:4px;margin-bottom:16px}
+.aba{flex:1;padding:11px;border:0;border-radius:9px;background:transparent;font-weight:700;cursor:pointer;font-size:15px}
+.aba.ativa{background:#0b5ed7;color:#fff}
+label{font-weight:700;font-size:14px;display:block;margin:12px 0 6px}
+input{width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;font-size:15px}
+.btn{width:100%;padding:14px;border:0;border-radius:12px;font-weight:800;font-size:16px;cursor:pointer;margin-top:16px}
+.btn-verde{background:#16a34a;color:#fff}
+.btn-azul{background:#0b5ed7;color:#fff}
+.link{display:block;text-align:center;margin-top:14px;color:#0b5ed7;font-weight:700;cursor:pointer;text-decoration:none;font-size:14px;background:none;border:0;width:100%}
+.erro{background:#fee2e2;color:#dc2626;padding:10px;border-radius:10px;font-size:13px;margin-top:10px;display:none}
+.sucesso{background:#dcfce7;color:#15803d;padding:10px;border-radius:10px;font-size:13px;margin-top:10px;display:none}
+#modalRecuperar{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+#modalRecuperar.aberto{display:flex}
+.modal-rec-box{background:#fff;width:100%;max-width:380px;border-radius:20px;padding:22px;text-align:center}
+.modal-rec-box input{margin-top:10px}
 </style>
 </head>
 <body>
-<div class="topo"><a href="index.html">⬅ Casa Nova</a><a href="index.html">Loja</a></div>
-<div class="container">
-<h1>Meu Carrinho</h1>
-<div id="infoCliente" class="cliente-box" style="display:none"></div>
-<div id="lista"></div>
-<div id="formBox" class="form" style="display:none">
-  <h3>Dados de Entrega</h3>
-  <input id="nome" placeholder="Teu nome completo">
-  <input id="telefone" placeholder="Teu telefone / WhatsApp">
-  <textarea id="morada" placeholder="Morada de entrega" rows="2"></textarea>
-  <select id="pagamento">
-    <option>Multicaixa Express</option>
-    <option>Dinheiro na entrega</option>
-    <option>Transferência</option>
-  </select>
-  <div class="total" id="total">Total: 0 Kz</div>
-  <button class="btn-whats" onclick="finalizar()">Finalizar Pedido no WhatsApp</button>
-  <button class="btn-limpar" onclick="limpar()">🗑️ Limpar Carrinho</button>
-</div>
-<div id="vazio" class="vazio" style="display:none">O teu carrinho está vazio.<br><br><a href="index.html" style="color:#0b5ed7;font-weight:700">⬅ Voltar à Loja</a></div>
+<div class="topo"><a href="index.html">⬅ Voltar à Loja</a><span style="color:#999;font-size:13px">Casa Nova</span></div>
+
+<!-- LOGOTIPO NO TOPO -->
+<div class="topo-logo" id="logoBox">
+  <img id="logoCadastro" src="" alt="Casa Nova" style="display:none">
+  <span class="logo-text" id="nomeLogo">Casa Nova</span>
 </div>
 
+<div class="card">
+<h1 id="titulo">👤 Cadastrar Cliente</h1>
+<p class="sub" id="subtitulo">Cria a tua conta para comprar mais rápido na Casa Nova.</p>
+<div class="abas">
+  <button class="aba" id="abaEntrar" onclick="mostrarAba('entrar')">Entrar</button>
+  <button class="aba ativa" id="abaCadastrar" onclick="mostrarAba('cadastrar')">Cadastrar</button>
+</div>
+<div id="formEntrar" style="display:none">
+  <label>📧 Email *</label>
+  <input id="loginEmail" type="email" placeholder="Ex: silva@gmail.com">
+  <label>🔒 Senha *</label>
+  <input id="loginSenha" type="password" placeholder="Tua senha">
+  <div id="erroLogin" class="erro"></div>
+  <div id="sucessoLogin" class="sucesso"></div>
+  <button class="btn btn-azul" onclick="fazerLogin()">Entrar na Minha Conta</button>
+  <button class="link" onclick="abrirRecuperar()">🔑 Esqueci a minha senha / Recuperar conta</button>
+  <button class="link" style="color:#666" onclick="mostrarAba('cadastrar')">Ainda não tens conta? Cadastrar agora</button>
+</div>
+<div id="formCadastrar">
+  <label>👤 Nome Completo *</label>
+  <input id="nome" placeholder="Ex: Cosme Bento">
+  <label>📞 Telefone / WhatsApp *</label>
+  <input id="telefone" placeholder="Ex: 942788931">
+  <label>📍 Morada *</label>
+  <input id="morada" placeholder="Ex: Viana, Luanda">
+  <label>📧 Email *</label>
+  <input id="email" type="email" placeholder="Ex: silva@gmail.com">
+  <label>🔒 Criar Senha *</label>
+  <input id="senha" type="password" placeholder="Mínimo 6 caracteres">
+  <div id="erroCad" class="erro"></div>
+  <div id="sucessoCad" class="sucesso"></div>
+  <button class="btn btn-verde" onclick="cadastrar()">✅ Cadastrar</button>
+  <button class="link" onclick="abrirRecuperar()">🔑 Esqueci a minha senha</button>
+</div>
+</div>
+<div id="modalRecuperar" onclick="if(event.target.id==='modalRecuperar') fecharRecuperar()">
+  <div class="modal-rec-box">
+    <div style="font-size:40px">🔑</div>
+    <h3 style="margin:8px 0">Recuperar Conta</h3>
+    <p style="color:#666;font-size:14px">Escreve o teu email cadastrado para recuperar a conta:</p>
+    <input id="recEmail" type="email" placeholder="Teu email cadastrado">
+    <div id="recNovaSenhaBox" style="display:none">
+      <label style="text-align:left">Nova Senha *</label>
+      <input id="recNovaSenha" type="password" placeholder="Nova senha, mínimo 6 caracteres">
+    </div>
+    <div id="recMsg" class="erro" style="display:none"></div>
+    <div id="recOk" class="sucesso" style="display:none"></div>
+    <button class="btn btn-azul" id="btnRecuperar" onclick="procurarConta()">Procurar Minha Conta</button>
+    <button class="btn" style="background:#e5e7eb" onclick="fecharRecuperar()">Cancelar</button>
+  </div>
+</div>
 <script>
-function getCarrinho(){ try{ return JSON.parse(localStorage.getItem('carrinho')||'[]'); }catch(e){ return []; } }
-function setCarrinho(c){ localStorage.setItem('carrinho', JSON.stringify(c)); }
-
-// Se não está cadastrado, não pode comprar
-let cliente = null;
-try{ cliente = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){ cliente=null; }
-if(!cliente){
-  alert('⚠️ Precisas te cadastrar para comprar!');
-  location.href='cadastro.html';
+function getClientes(){
+  try{ return JSON.parse(localStorage.getItem('clientes_casa_nova')||'[]'); }catch(e){ return []; }
 }
+function setClientes(l){ localStorage.setItem('clientes_casa_nova', JSON.stringify(l)); }
+function mostrarAba(qual){
+  document.getElementById('formEntrar').style.display = qual==='entrar' ? 'block' : 'none';
+  document.getElementById('formCadastrar').style.display = qual==='cadastrar' ? 'block' : 'none';
+  document.getElementById('abaEntrar').classList.toggle('ativa', qual==='entrar');
+  document.getElementById('abaCadastrar').classList.toggle('ativa', qual==='cadastrar');
+  document.getElementById('titulo').textContent = qual==='entrar' ? '👋 Entrar na Conta' : '👤 Cadastrar Cliente';
+  document.getElementById('subtitulo').textContent = qual==='entrar' ? 'Bem-vindo de volta! Entra para comprar.' : 'Cria a tua conta para comprar mais rápido na Casa Nova.';
+}
+let params = new URLSearchParams(location.search);
+if(params.get('aba')==='entrar') mostrarAba('entrar');
 
-async function corrigirItensAntigos(){
-  let carrinho = getCarrinho();
-  // Se algum item está sem nome/preco (itens antigos), vai buscar no Supabase
-  let precisa = carrinho.some(i=>!i.nome || !i.preco);
-  if(precisa && typeof db !== 'undefined'){
+// LOGOTIPO NO TOPO - igual ao da loja
+async function carregarLogo(){
+  try{
+    if(typeof db === 'undefined') return;
+    const r = await db.from('loja_config').select('*').eq('id',1).maybeSingle();
+    let cfg = r.data || {};
+    if(cfg.logo_url){
+      let img = document.getElementById('logoCadastro');
+      img.src = cfg.logo_url; img.style.display='block';
+      document.getElementById('nomeLogo').style.display='none';
+    }
+  }catch(e){ console.log(e); }
+}
+carregarLogo();
+
+// ===== CORRIGIDO: procura sem diferenciar maiúsculas e em todas as tabelas =====
+async function buscarNoSupabase(email){
+  email = (email||'').trim().toLowerCase();
+  if(typeof db === 'undefined' || !email) return null;
+  let tabelas = ['clientes','clientes_casa_nova'];
+  for(let t of tabelas){
     try{
-      let ids = carrinho.map(i=>i.id);
-      let { data } = await db.from('produtos').select('id,nome,preco,imagem,imagem_url').in('id', ids);
-      if(data){
-        carrinho = carrinho.map(item=>{
-          let p = data.find(x=>x.id==item.id);
-          if(p) return {...item, nome:p.nome, preco:Number(p.preco), imagem:p.imagem||p.imagem_url||''};
-          return item;
-        });
-        setCarrinho(carrinho);
+      // 1. Tenta com ilike (ignora maiúsculas)
+      let r1 = await db.from(t).select('*').ilike('email', email).maybeSingle();
+      if(r1.data) { r1.data._tabela = t; return r1.data; }
+      // 2. Se não achou, busca todos e compara no JS (mais seguro)
+      let r2 = await db.from(t).select('*').limit(100);
+      if(r2.data){
+        let achado = r2.data.find(x => (x.email||'').toLowerCase() === email);
+        if(achado){ achado._tabela = t; return achado; }
       }
-    }catch(e){ console.log(e); }
+      if(r1.error) console.log('Erro tabela '+t+':', r1.error.message);
+    }catch(e){ console.log('Erro buscar '+t, e); }
   }
-  return carrinho;
+  return null;
+}
+function normalizarCliente(c){
+  return {
+    id: c.id,
+    _tabela: c._tabela || 'clientes',
+    nome: c.nome || c.nome_cliente || '',
+    telefone: c.telefone || c.telefone_cliente || '',
+    morada: c.morada || c.endereco || '',
+    email: (c.email||'').toLowerCase(),
+    senha: c.senha || c.password || ''
+  };
 }
 
-async function renderizar(){
-  let carrinho = await corrigirItensAntigos();
-  let lista = document.getElementById('lista');
-  let formBox = document.getElementById('formBox');
-  let vazio = document.getElementById('vazio');
+async function cadastrar(){
+  let nome=document.getElementById('nome').value.trim();
+  let telefone=document.getElementById('telefone').value.trim();
+  let morada=document.getElementById('morada').value.trim();
+  let email=document.getElementById('email').value.trim().toLowerCase();
+  let senha=document.getElementById('senha').value;
+  let erro=document.getElementById('erroCad');
+  let ok=document.getElementById('sucessoCad');
+  erro.style.display='none'; ok.style.display='none';
+  if(!nome||!telefone||!morada||!email||!senha){ erro.textContent='Preenche todos os campos!'; erro.style.display='block'; return; }
+  if(senha.length<6){ erro.textContent='Senha deve ter no mínimo 6 caracteres!'; erro.style.display='block'; return; }
+  let existeSupabase = await buscarNoSupabase(email);
+  let lista=getClientes();
+  if(existeSupabase || lista.find(c=>c.email===email)){ erro.textContent='Este email já está cadastrado! Tenta Entrar.'; erro.style.display='block'; mostrarAba('entrar'); document.getElementById('loginEmail').value=email; return; }
+  let cliente={nome,telefone,morada,email,senha};
+  try{
+    if(typeof db !== 'undefined'){
+      let r = await db.from('clientes').insert([{nome, telefone, morada, email, senha}]);
+      if(r.error) console.log('Erro insert clientes:', r.error.message);
+    }
+  }catch(e){ console.log('Supabase cadastrar:', e); }
+  lista.push(cliente); setClientes(lista);
+  localStorage.setItem('cliente_casa_nova', JSON.stringify(cliente));
+  ok.textContent='✅ Conta criada! A entrar...'; ok.style.display='block';
+  setTimeout(()=>location.href='index.html',1000);
+}
 
-  if(cliente){
-    document.getElementById('infoCliente').style.display='block';
-    document.getElementById('infoCliente').innerHTML = `👤 Comprando como: <b>${cliente.nome||cliente.nome_cliente||''}</b><br>📧 ${cliente.email||''} • 📞 ${cliente.telefone||''}`;
-    document.getElementById('nome').value = cliente.nome||cliente.nome_cliente||'';
-    document.getElementById('telefone').value = cliente.telefone||'';
-    document.getElementById('morada').value = cliente.morada||'';
+async function fazerLogin(){
+  let email=document.getElementById('loginEmail').value.trim().toLowerCase();
+  let senha=document.getElementById('loginSenha').value;
+  let erro=document.getElementById('erroLogin');
+  let ok=document.getElementById('sucessoLogin');
+  erro.style.display='none'; ok.style.display='none';
+  if(!email||!senha){ erro.textContent='Escreve email e senha!'; erro.style.display='block'; return; }
+  ok.textContent='A verificar...'; ok.style.display='block';
+  let sup = await buscarNoSupabase(email);
+  if(sup){
+    let c = normalizarCliente(sup);
+    if(!c.senha){
+      // Conta antiga sem senha (veio de encomenda) - deixa criar senha via Recuperar
+      erro.textContent='Esta conta ainda não tem senha. Clica em "Esqueci a minha senha" para criar uma.'; erro.style.display='block'; ok.style.display='none'; return;
+    }
+    if(c.senha===senha){
+      let lista=getClientes();
+      if(!lista.find(x=>x.email===email)) { lista.push(c); setClientes(lista); }
+      localStorage.setItem('cliente_casa_nova', JSON.stringify(c));
+      ok.textContent='✅ Bem-vindo de volta, '+c.nome.split(' ')[0]+'!'; 
+      setTimeout(()=>location.href='index.html',800);
+      return;
+    } else {
+      erro.textContent='Senha errada! Tenta de novo ou clica em Recuperar conta.'; erro.style.display='block'; ok.style.display='none'; return;
+    }
   }
+  let lista=getClientes();
+  let achado=lista.find(c=>c.email===email && c.senha===senha);
+  if(!achado){
+    let existe=lista.find(c=>c.email===email);
+    erro.textContent= existe ? 'Senha errada! Tenta de novo ou clica em Recuperar conta.' : 'Conta não encontrada! Clica em Cadastrar.';
+    erro.style.display='block'; ok.style.display='none'; return;
+  }
+  localStorage.setItem('cliente_casa_nova', JSON.stringify(achado));
+  ok.textContent='✅ Bem-vindo de volta, '+achado.nome.split(' ')[0]+'!'; ok.style.display='block';
+  setTimeout(()=>location.href='index.html',800);
+}
 
-  if(!carrinho.length){
-    lista.innerHTML=''; formBox.style.display='none'; vazio.style.display='block';
-    return;
+let emailRecuperar='';
+let clienteRecuperado=null;
+function abrirRecuperar(){
+  document.getElementById('recEmail').value=document.getElementById('loginEmail').value||'';
+  document.getElementById('recNovaSenhaBox').style.display='none';
+  document.getElementById('btnRecuperar').textContent='Procurar Minha Conta';
+  document.getElementById('btnRecuperar').onclick=procurarConta;
+  document.getElementById('recMsg').style.display='none';
+  document.getElementById('recOk').style.display='none';
+  document.getElementById('modalRecuperar').classList.add('aberto');
+}
+function fecharRecuperar(){ document.getElementById('modalRecuperar').classList.remove('aberto'); }
+
+async function procurarConta(){
+  let email=document.getElementById('recEmail').value.trim().toLowerCase();
+  let msg=document.getElementById('recMsg');
+  let okBox=document.getElementById('recOk');
+  msg.style.display='none'; okBox.style.display='none';
+  if(!email){ msg.textContent='Escreve o teu email!'; msg.style.display='block'; return; }
+  document.getElementById('btnRecuperar').textContent='A procurar...';
+  let sup = await buscarNoSupabase(email);
+  let achado = sup ? normalizarCliente(sup) : null;
+  if(!achado){
+    let lista=getClientes();
+    let atual=null;
+    try{ atual=JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
+    if(atual && !lista.find(c=>c.email===atual.email)) lista.push(atual);
+    let local = lista.find(c=> (c.email||'').toLowerCase()===email);
+    if(local) achado = normalizarCliente(local);
   }
-  vazio.style.display='none'; formBox.style.display='block';
-  let total = 0;
-  lista.innerHTML = carrinho.map((item, idx)=>{
-    let preco = Number(item.preco||0);
-    let qtd = Number(item.qtd||1);
-    total += preco*qtd;
-    return `
-    <div class="item">
-      <img src="${item.imagem||'https://via.placeholder.com/100'}" onerror="this.src='https://via.placeholder.com/100'">
-      <div class="item-info">
-        <b>${item.nome||'Produto'}</b>
-        <span>${preco.toLocaleString()} Kz x ${qtd}</span><br>
-        <small>= ${(preco*qtd).toLocaleString()} Kz</small>
-      </div>
-      <div class="qtd">
-        <button onclick="mudarQtd(${idx},1)">+</button>
-        <button onclick="mudarQtd(${idx},-1)">-</button>
-        <button class="remover" onclick="remover(${idx})">X</button>
-      </div>
-    </div>`;
-  }).join('');
-  document.getElementById('total').textContent = 'Total: ' + total.toLocaleString() + ' Kz';
+  document.getElementById('btnRecuperar').textContent='Procurar Minha Conta';
+  if(!achado){ msg.textContent='Email não encontrado! Verifica ou cria uma conta nova.'; msg.style.display='block'; return; }
+  emailRecuperar=email;
+  clienteRecuperado=achado;
+  document.getElementById('recNovaSenhaBox').style.display='block';
+  document.getElementById('btnRecuperar').textContent='Guardar Nova Senha e Entrar';
+  document.getElementById('btnRecuperar').onclick=salvarNovaSenha;
+  okBox.textContent='✅ Conta encontrada: '+achado.nome+'. Cria uma nova senha abaixo.';
+  okBox.style.display='block';
 }
-function mudarQtd(idx, delta){
-  let c = getCarrinho();
-  c[idx].qtd = (c[idx].qtd||1) + delta;
-  if(c[idx].qtd <= 0) c.splice(idx,1);
-  setCarrinho(c); renderizar();
+async function salvarNovaSenha(){
+  let nova=document.getElementById('recNovaSenha').value;
+  let msg=document.getElementById('recMsg');
+  msg.style.display='none';
+  if(!nova||nova.length<6){ msg.textContent='Nova senha deve ter no mínimo 6 caracteres!'; msg.style.display='block'; return; }
+  try{
+    if(typeof db !== 'undefined' && clienteRecuperado && clienteRecuperado.id){
+      let tabela = clienteRecuperado._tabela || 'clientes';
+      let r = await db.from(tabela).update({senha: nova}).eq('id', clienteRecuperado.id);
+      if(r.error) console.log('Erro update senha:', r.error.message);
+      // Tenta também na outra tabela caso esteja duplicado
+      if(tabela !== 'clientes'){
+        await db.from('clientes').update({senha: nova}).eq('email', emailRecuperar);
+      }
+    }
+  }catch(e){ console.log(e); }
+  let lista=getClientes();
+  let idx=lista.findIndex(c=> (c.email||'').toLowerCase()===emailRecuperar);
+  let clienteFinal = {...clienteRecuperado, senha: nova};
+  if(idx>=0){ lista[idx].senha=nova; setClientes(lista); }
+  else { lista.push(clienteFinal); setClientes(lista); }
+  localStorage.setItem('cliente_casa_nova', JSON.stringify(clienteFinal));
+  fecharRecuperar();
+  setTimeout(()=>location.href='index.html',600);
 }
-function remover(idx){
-  let c = getCarrinho(); c.splice(idx,1); setCarrinho(c); renderizar();
-}
-function limpar(){
-  if(!confirm('Limpar todo o carrinho?')) return;
-  setCarrinho([]); renderizar();
-}
-function finalizar(){
-  let carrinho = getCarrinho();
-  if(!carrinho.length) return alert('Carrinho vazio');
-  let nome = document.getElementById('nome').value.trim();
-  let telefone = document.getElementById('telefone').value.trim();
-  let morada = document.getElementById('morada').value.trim();
-  let pagamento = document.getElementById('pagamento').value;
-  if(!nome || !telefone || !morada) return alert('Preenche nome, telefone e morada!');
-  let total = carrinho.reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
-  let msg = `🛒 *NOVO PEDIDO - CASA NOVA*\n\n👤 Cliente: ${nome}\n📞 ${telefone}\n📍 ${morada}\n💳 Pagamento: ${pagamento}\n\n📦 *Produtos:*\n` + carrinho.map(i=>`• ${i.nome} - ${Number(i.preco).toLocaleString()} Kz x ${i.qtd} = ${(Number(i.preco)*(i.qtd||1)).toLocaleString()} Kz`).join('\n') + `\n\n💰 *Total: ${total.toLocaleString()} Kz*`;
-  let numero = '244900000000'; // <-- TROCA PELO TEU NÚMERO
-  window.open('https://wa.me/'+numero+'?text='+encodeURIComponent(msg), '_blank');
-}
-renderizar();
 </script>
 </body>
 </html>

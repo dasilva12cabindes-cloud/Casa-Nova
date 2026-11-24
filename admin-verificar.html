@@ -27,16 +27,12 @@ function fecharComp(){ document.getElementById('visorComp').classList.remove('ab
 function getUrlComprovativo(valor){
   if(!valor) return null;
   valor = String(valor).trim();
-  // 1. Se já é link http, usa direto
   if(valor.startsWith('http')) return valor;
-  // 2. Se é só nome do ficheiro, tenta montar o link do Storage
-  // Tira pastas se tiver: ex: "comprovativo_xxx.jpg" ou "pasta/comprovativo_xxx.jpg"
   let nome = valor.split('/').pop();
   try{
     let r = db.storage.from('comprovativos').getPublicUrl(nome);
     if(r && r.data && r.data.publicUrl) return r.data.publicUrl;
   }catch(e){}
-  // 3. Tenta também com o valor completo
   try{
     let r2 = db.storage.from('comprovativos').getPublicUrl(valor);
     if(r2 && r2.data && r2.data.publicUrl) return r2.data.publicUrl;
@@ -73,14 +69,26 @@ async function verificar(){
     else itens = it || '-';
   }catch(e){ itens = p.itens || '-'; }
 
-  // COMPROVATIVO - RETIFICADO: tenta abrir mesmo se for só nome do ficheiro
+  // RETIFICADO: ABRE PDF, PNG E FOTO - O TEU FICHEIRO ANTIGO NÃO TINHA ISTO
   let comp = '';
   let urlComp = getUrlComprovativo(p.comprovativo_url);
   if(urlComp){
-    comp = `<h3>🧾 Comprovativo</h3>
+    let ePdf = urlComp.toLowerCase().includes('.pdf');
+    if(ePdf){
+      comp = `<h3>🧾 Comprovativo (PDF)</h3>
+      <div style="text-align:center;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:20px">
+        <div style="font-size:50px">📄</div><b>Comprovativo em PDF</b><br>
+        <a href="${urlComp}" target="_blank" style="display:block;background:#dc2626;color:#fff;padding:14px;border-radius:12px;text-decoration:none;font-weight:800;margin-top:12px">📄 ABRIR PDF</a>
+        <a href="${urlComp}" download style="display:block;background:#111;color:#fff;padding:12px;border-radius:12px;text-decoration:none;font-weight:700;margin-top:8px">⬇️ Baixar PDF</a>
+      </div>
+      <iframe src="${urlComp}" style="width:100%;height:300px;border:1px solid #eee;border-radius:12px;margin-top:10px"></iframe>`;
+    } else {
+      comp = `<h3>🧾 Comprovativo (Foto / PNG)</h3>
       <img class="comp" src="${urlComp}" onclick="abrirComp('${urlComp}')" onerror="this.style.display='none';document.getElementById('erroComp').style.display='block'">
       <p style="color:#0b5ed7;font-size:13px;font-weight:700;text-align:center">👆 Clica na foto para ampliar</p>
+      <a href="${urlComp}" target="_blank" style="display:block;text-align:center;background:#111;color:#fff;padding:12px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">🔍 Abrir foto em tamanho grande</a>
       <div id="erroComp" style="display:none;color:#dc2626;font-size:13px">⚠️ A foto não foi encontrada no Storage. Este pedido é antigo. Pede ao cliente para enviar o comprovativo no WhatsApp: <a href="https://wa.me/244${String(telefone).replace(/\D/g,'').slice(-9)}" style="color:#16a34a;font-weight:800">Abrir WhatsApp →</a></div>`;
+    }
   } else if(p.comprovativo_url){
     comp = `<h3>🧾 Comprovativo</h3><p>📎 Ficheiro: ${p.comprovativo_url}<br><small style="color:#999">Este pedido foi feito antes da correção do Storage, por isso a foto não ficou guardada. Pede ao cliente para mostrar o comprovativo no WhatsApp.</small></p>`;
   } else {

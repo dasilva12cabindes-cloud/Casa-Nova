@@ -125,10 +125,11 @@ input,select,textarea{font-size:16px !important}
 .sobre-detalhe b{color:#0b5ed7}
 #telaVerificar{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1300;display:none;align-items:center;justify-content:center;padding:16px}
 #telaVerificar.aberto{display:flex}
-#telaBoasVindas{position:fixed;inset:0;background:#0b5ed7;z-index:2000;display:none;align-items:center;justify-content:center;padding:16px}
+/* BOAS-VINDAS - CORES A COMBINAR: FUNDO AZUL DEGRADE + CARTAO BRANCO */
+#telaBoasVindas{position:fixed;inset:0;background:linear-gradient(180deg,#0b5ed7 0%,#084bb0 55%,#063a8a 100%);z-index:2000;display:none;align-items:center;justify-content:center;padding:16px}
 #telaBoasVindas.aberto{display:flex}
-.boasvindas-box{background:#0b5ed7;width:100%;max-width:380px;border-radius:22px;padding:24px;text-align:center;color:#fff}
-.boasvindas-logo{width:230px;max-width:90%;height:auto;display:block;margin:0 auto 12px;background:#0b5ed7;border-radius:0;padding:0;mix-blend-mode:multiply}
+.boasvindas-box{background:#fff;width:100%;max-width:380px;border-radius:26px;padding:22px;text-align:center;color:#1d2330;box-shadow:0 20px 40px rgba(0,0,0,.35)}
+.boasvindas-logo{width:230px;max-width:90%;height:auto;display:block;margin:0 auto 14px;background:#fff;border-radius:18px;padding:0}
 #telaProcessando{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:3000;display:none;align-items:center;justify-content:center;flex-direction:column;padding:20px;text-align:center;color:#fff}
 #telaProcessando.aberto{display:flex}
 .teto-box{width:260px;max-width:85%;margin:10px auto;filter:drop-shadow(0 0 12px rgba(0,170,255,.6))}
@@ -189,11 +190,11 @@ input,select,textarea{font-size:16px !important}
   <div class="boasvindas-box">
     <img id="logoBoasVindas" class="boasvindas-logo" src="" alt="Casa Nova" style="display:none">
     <div id="logoBoasVindasFallback" style="font-size:56px">🏠</div>
-    <h2 style="margin:8px 0;color:#fff">Bem-vindo à Casa Nova!</h2>
-    <p style="color:#dbeafe;font-size:14px;line-height:1.6">Para veres os produtos e comprares, precisas te cadastrar.<br>É rápido, só 30 segundos!</p>
+    <h2 style="margin:8px 0;color:#0b5ed7">Bem-vindo à Casa Nova!</h2>
+    <p style="color:#475569;font-size:14px;line-height:1.6">Para veres os produtos e comprares, precisas te cadastrar.<br>É rápido, só 30 segundos!</p>
     <button onclick="location.href='cadastro.html'" style="background:#16a34a;color:#fff;border:0;padding:15px;border-radius:12px;width:100%;font-weight:800;font-size:16px;cursor:pointer;margin-top:16px">✅ CADASTRAR-ME AGORA</button>
-    <button onclick="location.href='cadastro.html'" style="background:#fff;color:#0b5ed7;border:0;padding:15px;border-radius:12px;width:100%;font-weight:800;font-size:15px;cursor:pointer;margin-top:10px">🔑 JÁ TENHO CONTA - ENTRAR</button>
-    <p style="font-size:12px;color:#bfdbfe;margin-top:12px">🔒 A tua conta fica só no teu telefone.<br>Ninguém vê a tua conta pelo link.</p>
+    <button onclick="location.href='cadastro.html'" style="background:#0b5ed7;color:#fff;border:0;padding:15px;border-radius:12px;width:100%;font-weight:800;font-size:15px;cursor:pointer;margin-top:10px">🔑 JÁ TENHO CONTA - ENTRAR</button>
+    <p style="font-size:12px;color:#94a3b8;margin-top:12px">🔒 A tua conta fica só no teu telefone.<br>Ninguém vê a tua conta pelo link.</p>
   </div>
 </div>
 
@@ -323,7 +324,6 @@ function partilharLoja(){
   else if(navigator.clipboard){ navigator.clipboard.writeText(link).then(()=>mostrarToast('🔗 Link da loja copiado! Partilha à vontade')); }
   else { prompt('Copia o link da loja (sem a tua conta):', link); }
 }
-// ===== PROCESSAMENTO SÓ QUANDO ATUALIZAR O SITE - 5 SEGUNDOS =====
 let estaProcessando = false;
 let timerProcesso = null;
 function mostrarProcessando(){

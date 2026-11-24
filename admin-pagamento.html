@@ -10,7 +10,6 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,Arial,sans-serif;background:#f5f6f8;color:#1d2330}
-/* TOPO COM LOGOTIPO - igual ao Admin */
 .topo{background:#0b5ed7;color:#fff;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;height:72px;margin-bottom:16px}
 .topo .logo{display:flex;align-items:center;gap:10px}
 .topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:none}
@@ -27,6 +26,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #cfd5df;border-ra
 .btn{width:100%;padding:14px;border:0;border-radius:12px;font-weight:800;font-size:16px;cursor:pointer;margin-top:14px}
 .btn-azul{background:#0b5ed7;color:#fff}
 .btn-verde{background:#16a34a;color:#fff}
+.btn-laranja{background:#f97316;color:#fff}
 .btn-vermelho{background:#fee2e2;color:#dc2626;padding:8px 12px;border:0;border-radius:8px;cursor:pointer;font-size:13px}
 .metodo{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-bottom:10px}
 .metodo b{display:block;font-size:15px}
@@ -40,8 +40,6 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #cfd5df;border-ra
 </style>
 </head>
 <body>
-
-<!-- TOPO COM LOGOTIPO RETIFICADO -->
 <div class="topo" id="topoSite">
   <div class="logo">
     <img id="logoTopo" class="logo-img" src="">
@@ -52,7 +50,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #cfd5df;border-ra
 
 <div class="conteudo">
 <h1>💳 Sistema de Pagamento</h1>
-<p class="sub">Adiciona as formas de pagamento e o WhatsApp da loja.</p>
+<p class="sub">Pagamentos, WhatsApp e localização da loja.</p>
 
 <!-- WHATSAPP -->
 <div class="card">
@@ -62,6 +60,26 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #cfd5df;border-ra
   <input id="whatsapp" placeholder="Ex: 942788931">
   <div id="msgWhatsBox" class="sucesso"></div>
   <button class="btn btn-verde" onclick="salvarWhatsApp()">💾 Guardar WhatsApp</button>
+</div>
+
+<!-- LOCALIZAÇÃO DA LOJA - NOVO -->
+<div class="card">
+  <h3>🏪 Localização da Nossa Loja</h3>
+  <p style="color:#666;font-size:13px">É isto que o cliente vê quando clica em <b>Receber na Loja</b> no carrinho.</p>
+  <label>🌍 País da Loja *</label>
+  <input id="lojaPais" list="listaPaisLoja" placeholder="Ex: Angola - ou escreve">
+  <datalist id="listaPaisLoja">
+    <option value="Angola"><option value="Congo"><option value="RDC - República Democrática do Congo"><option value="Portugal"><option value="Brasil">
+  </datalist>
+  <label>🏙️ Cidade da Loja *</label>
+  <input id="lojaCidade" list="listaCidadeLoja" placeholder="Ex: Luanda - ou escreve">
+  <datalist id="listaCidadeLoja">
+    <option value="Luanda"><option value="Cabinda"><option value="Huíla"><option value="Benguela"><option value="Huambo"><option value="Lobito"><option value="Lubango"><option value="Viana"><option value="Cacuaco">
+  </datalist>
+  <label>📍 Bairro / Referência da Loja *</label>
+  <input id="lojaBairro" placeholder="Ex: Viana, Luanda - ao lado do mercado, loja azul">
+  <div id="msgLojaBox" class="sucesso"></div>
+  <button class="btn btn-laranja" onclick="salvarLocalizacaoLoja()">💾 Guardar Localização da Loja</button>
 </div>
 
 <!-- ADICIONAR PAGAMENTO -->
@@ -120,17 +138,12 @@ function mostrarCampos(){
   document.getElementById('camposIban').style.display = tipo==='IBAN' ? 'block' : 'none';
   if(tipo==='Dinheiro na Entrega') document.getElementById('camposMulticaixa').style.display='none';
 }
-// LOGOTIPO NO TOPO
 async function carregarLogoTopo(){
   try{
     if(typeof db === 'undefined') return;
     let r = await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();
     let logo = r.data?.logo_url;
-    if(logo){
-      let img = document.getElementById('logoTopo');
-      img.src = logo; img.style.display='block';
-      document.getElementById('topoSite').classList.add('tem-logo');
-    }
+    if(logo){ let img=document.getElementById('logoTopo'); img.src=logo; img.style.display='block'; document.getElementById('topoSite').classList.add('tem-logo'); }
   }catch(e){}
 }
 async function carregarTudo(){
@@ -138,10 +151,19 @@ async function carregarTudo(){
   try{
     if(typeof db !== 'undefined'){
       let r = await db.from('loja_config').select('*').eq('id',1).maybeSingle();
-      if(r.data && r.data.whatsapp) document.getElementById('whatsapp').value = r.data.whatsapp;
+      if(r.data){
+        if(r.data.whatsapp) document.getElementById('whatsapp').value = r.data.whatsapp;
+        if(r.data.loja_pais) document.getElementById('lojaPais').value = r.data.loja_pais;
+        if(r.data.loja_cidade) document.getElementById('lojaCidade').value = r.data.loja_cidade;
+        if(r.data.loja_bairro) document.getElementById('lojaBairro').value = r.data.loja_bairro;
+      }
     }
   }catch(e){}
+  // Fallback localStorage
   if(!document.getElementById('whatsapp').value) document.getElementById('whatsapp').value = localStorage.getItem('whatsapp_loja')||'';
+  if(!document.getElementById('lojaPais').value) document.getElementById('lojaPais').value = localStorage.getItem('loja_pais')||'Angola';
+  if(!document.getElementById('lojaCidade').value) document.getElementById('lojaCidade').value = localStorage.getItem('loja_cidade')||'Luanda';
+  if(!document.getElementById('lojaBairro').value) document.getElementById('lojaBairro').value = localStorage.getItem('loja_bairro')||'';
   renderPagamentos();
 }
 async function salvarWhatsApp(){
@@ -152,6 +174,18 @@ async function salvarWhatsApp(){
   localStorage.setItem('whatsapp_loja', num);
   try{ if(typeof db !== 'undefined') await db.from('loja_config').upsert({id:1, whatsapp:num}, {onConflict:'id'}); }catch(e){}
   box.textContent='✅ WhatsApp guardado: '+num; box.style.display='block'; toast('✅ WhatsApp guardado!');
+}
+async function salvarLocalizacaoLoja(){
+  let pais = document.getElementById('lojaPais').value.trim();
+  let cidade = document.getElementById('lojaCidade').value.trim();
+  let bairro = document.getElementById('lojaBairro').value.trim();
+  let box = document.getElementById('msgLojaBox'); box.style.display='none';
+  if(!pais || !cidade || !bairro){ toast('⚠️ Preenche País, Cidade e Bairro!'); return; }
+  localStorage.setItem('loja_pais', pais);
+  localStorage.setItem('loja_cidade', cidade);
+  localStorage.setItem('loja_bairro', bairro);
+  try{ if(typeof db !== 'undefined') await db.from('loja_config').upsert({id:1, loja_pais:pais, loja_cidade:cidade, loja_bairro:bairro}, {onConflict:'id'}); }catch(e){ console.log(e.message); }
+  box.textContent=`✅ Localização guardada: ${pais}, ${cidade}, ${bairro}`; box.style.display='block'; toast('✅ Localização da loja guardada!');
 }
 async function adicionarPagamento(){
   let tipo = document.getElementById('tipoPagamento').value;

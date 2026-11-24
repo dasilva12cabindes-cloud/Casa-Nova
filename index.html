@@ -50,6 +50,23 @@ a { color: inherit; text-decoration: none; }
 .banners { width: 100%; max-width: 1100px; margin: 12px auto 0; padding: 0 16px; display: none; }
 .banners img { width: 100%; height: 220px; object-fit: contain; display: block; border-radius: 26px; background: #fff; }
 @media (max-width: 700px){ .banners img{ height: 220px; } }
+/* 🔥 PUBLICIDADE - MAIS VENDIDOS */
+.banner-vendidos{width:100%;max-width:1100px;margin:12px auto 0;padding:0 16px;display:none}
+.banner-vendidos.mostrar{display:block}
+.banner-vendidos-titulo{font-size:14px;font-weight:900;margin:0 0 8px}
+.banner-vendidos-box{overflow:hidden;border-radius:18px;background:#111;position:relative}
+.banner-track{display:flex;transition:transform .6s ease}
+.banner-slide{min-width:100%;display:flex;align-items:center;gap:12px;padding:12px;background:linear-gradient(135deg,#111,#0b5ed7);color:#fff}
+.banner-slide img{width:90px;height:90px;object-fit:cover;border-radius:12px;background:#fff;flex-shrink:0}
+.banner-slide .info{flex:1;min-width:0}
+.banner-slide .selo{background:#f59e0b;color:#111;font-size:11px;font-weight:900;padding:3px 8px;border-radius:20px;display:inline-block}
+.banner-slide h3{margin:6px 0 2px;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.banner-slide p{margin:0;font-size:13px;color:#cbd5e1}
+.banner-slide .preco{font-size:18px;font-weight:900;color:#fbbf24;margin-top:4px}
+.banner-slide button{background:#fff;color:#111;border:0;padding:8px 14px;border-radius:20px;font-weight:900;margin-top:6px;cursor:pointer}
+.banner-dots{display:flex;justify-content:center;gap:6px;padding:8px 0 0}
+.banner-dots span{width:8px;height:8px;border-radius:50%;background:#ddd;display:block;cursor:pointer}
+.banner-dots span.ativo{background:#0b5ed7;width:22px;border-radius:10px}
 .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
 #busca { width: 100%; padding: 12px 14px; border: 1px solid #cfd5df; border-radius: 14px; font-size: 1rem; margin-bottom: 12px; }
 .categorias { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; }
@@ -93,7 +110,6 @@ a { color: inherit; text-decoration: none; }
 .modal-sobre-box h2{background:#eff6ff;border:2px solid #0b5ed7;border-radius:999px;padding:10px 14px;text-align:center;margin:8px 0}
 .sobre-detalhe{background:#f8fafc;border-radius:12px;padding:14px;font-size:14px;line-height:1.8;margin-top:14px}
 .sobre-detalhe b{color:#0b5ed7}
-/* TELA VERIFICAR PEDIDO */
 #telaVerificar{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1300;display:none;align-items:center;justify-content:center;padding:16px}
 #telaVerificar.aberto{display:flex}
 </style>
@@ -116,6 +132,12 @@ a { color: inherit; text-decoration: none; }
 </div>
 <div id="toast">✅ Adicionado ao carrinho!</div>
 <div class="banners" id="banners"><img src="" id="bannerImg" alt="Publicidade"></div>
+<!-- 🔥 PUBLICIDADE - MAIS VENDIDOS - PASSA SOZINHO -->
+<div class="banner-vendidos" id="bannerVendidos">
+  <p class="banner-vendidos-titulo">🔥 Mais Vendidos da Semana - Casa Nova</p>
+  <div class="banner-vendidos-box"><div class="banner-track" id="bannerTrack"></div></div>
+  <div class="banner-dots" id="bannerDots"></div>
+</div>
 <div class="container">
   <input id="busca" placeholder="🔍 Pesquisar produto..." oninput="filtrar()">
   <div class="categorias" id="categorias">
@@ -210,8 +232,6 @@ a { color: inherit; text-decoration: none; }
     <button class="btn" style="width:100%;margin-top:14px" onclick="fecharSobre();falarWhatsApp()">💬 Falar no WhatsApp</button>
   </div>
 </div>
-
-<!-- TELA VERIFICAR PEDIDO - ABRE QUANDO CLICA NO BOTÃO LARANJA -->
 <div id="telaVerificar" onclick="if(event.target.id==='telaVerificar') fecharTelaVerificar()">
   <div style="background:#fff;width:100%;max-width:380px;border-radius:20px;overflow:hidden;max-height:92vh;overflow-y:auto">
     <div style="background:#0b5ed7;color:#fff;padding:18px;text-align:center">
@@ -262,9 +282,7 @@ function fecharMenu(){ document.getElementById('menuLateral').classList.remove('
 function abrirSobre(){ fecharMenu(); document.getElementById('modalSobre').classList.add('aberto'); }
 function fecharSobre(){ document.getElementById('modalSobre').classList.remove('aberto'); }
 function falarWhatsApp(){ let n = localStorage.getItem('whatsapp_loja') || lojaCfgGlobal.whatsapp || '244972370499'; window.open('https://wa.me/'+n+'?text='+encodeURIComponent('Olá Casa Nova, preciso de ajuda!'),'_blank'); }
-// ===== VERIFICAR PEDIDO - TELA QUE ABRE DO MENU =====
 function abrirTelaVerificar(){
-  // Preenche automático se o cliente já está logado
   try{
     let c = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null');
     if(c){
@@ -297,11 +315,9 @@ async function confirmarNoSistema(){
   let d = pegarDadosVerificar();
   if(!d) return;
   try{
-    // Tenta gravar no Supabase - se a coluna não existir, guarda local e mostra sucesso na mesma
     let r = await db.from('pedidos').update({ nome_verificacao: d.nome, whats_cliente_verificacao: d.whats, pedido_verificado_por_cliente: true }).eq('codigo', d.codigo);
     if(r.error) throw r.error;
   }catch(e){
-    // Guarda local para não travar o cliente
     localStorage.setItem('pedido_verificado_' + d.codigo, JSON.stringify({nome:d.nome, whats:d.whats, quando:new Date().toISOString()}));
   }
   let msg = document.getElementById('msgVerificar');
@@ -436,6 +452,86 @@ function atualizarSobre(cfg){
   document.getElementById('sobreDetalhe').innerHTML = html;
   document.getElementById('menuDetalhe').innerHTML = `<b>🏪 Localização da Nossa Loja</b><br>🌍 ${pais}<br>🏙️ ${cidade}<br>📍 ${bairro}<br><br><b>🔒 Segurança</b><br>${politica}<br><br><b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br><b>🚚 Entrega</b><br>✅ Paga 50% agora<br>📦 Paga 50% na entrega<br>🏪 Receber na loja - paga 100%<br><br><b>📞 Contacto</b><br>WhatsApp: +${whats}`;
 }
+// 🔥 CARROSSEL MAIS VENDIDOS - PASSA SOZINHO
+let slideAtual = 0;
+let timerBannerVendidos = null;
+async function carregarMaisVendidos(){
+  try{
+    let vendas = {};
+    let r = await db.from('pedidos').select('itens,produtos,items,detalhes').order('created_at',{ascending:false}).limit(100);
+    if(!r.error && r.data){
+      r.data.forEach(p=>{
+        let it = p.itens||p.produtos||p.items||p.detalhes;
+        try{ if(typeof it==='string') it=JSON.parse(it); }catch(e){}
+        if(Array.isArray(it)) it.forEach(i=>{
+          let nome = i.nome||i.produto||'Produto';
+          if(!vendas[nome]) vendas[nome] = {nome, qtd:0, preco: Number(i.preco||0), img: i.imagem||i.foto||i.img||'', id:null};
+          vendas[nome].qtd += Number(i.qtd||i.quantidade||1);
+          if(Number(i.preco||0)) vendas[nome].preco = Number(i.preco);
+          if(i.imagem||i.foto||i.img) vendas[nome].img = i.imagem||i.foto||i.img;
+        });
+      });
+    }
+    let lista = Object.values(vendas).sort((a,b)=> b.qtd - a.qtd).slice(0,5);
+    // Liga com produtos reais para ter id e foto certa
+    lista = lista.map(v=>{
+      let real = todosProdutos.find(p=> (p.nome||'').toLowerCase() === v.nome.toLowerCase());
+      if(real) return {...v, id: real.id, img: real.imagem||real.imagem_url||v.img, preco: Number(real.preco)||v.preco};
+      return v;
+    });
+    if(!lista.length){
+      lista = todosProdutos.slice(0,5).map(p=>({nome:p.nome, qtd:0, preco:Number(p.preco), img:p.imagem||p.imagem_url||'', id:p.id}));
+    }
+    if(!lista.length) return;
+    let track = document.getElementById('bannerTrack');
+    let dots = document.getElementById('bannerDots');
+    if(!track) return;
+    track.innerHTML = lista.map((v,i)=>`
+      <div class="banner-slide">
+        <img src="${v.img||'https://via.placeholder.com/90'}" onerror="this.src='https://via.placeholder.com/90'">
+        <div class="info">
+          <span class="selo">🔥 ${i===0 ? 'Nº1 MAIS VENDIDO' : 'MAIS VENDIDO'}</span>
+          <h3>${v.nome}</h3>
+          <p>${v.qtd>0 ? v.qtd+' vendidos' : 'Em destaque na Casa Nova'}</p>
+          <div class="preco">${Number(v.preco||0).toLocaleString()} Kz</div>
+          <button onclick="comprarMaisVendido(${v.id||0},'${String(v.nome).replace(/'/g,"")}')">🛒 Comprar Agora</button>
+        </div>
+      </div>`).join('');
+    dots.innerHTML = lista.map((_,i)=>`<span class="${i===0?'ativo':''}" onclick="irParaSlideVendidos(${i})"></span>`).join('');
+    document.getElementById('bannerVendidos').classList.add('mostrar');
+    clearInterval(timerBannerVendidos);
+    timerBannerVendidos = setInterval(()=>{
+      slideAtual = (slideAtual+1) % lista.length;
+      atualizarSlideVendidos(lista.length);
+    }, 3000);
+  }catch(e){ console.log(e); }
+}
+function atualizarSlideVendidos(total){
+  let track = document.getElementById('bannerTrack');
+  if(track) track.style.transform = `translateX(-${slideAtual*100}%)`;
+  document.querySelectorAll('#bannerDots span').forEach((d,i)=> d.className = i===slideAtual ? 'ativo' : '');
+}
+function irParaSlideVendidos(i){ slideAtual = i; atualizarSlideVendidos(document.querySelectorAll('#bannerTrack .banner-slide').length); }
+function comprarMaisVendido(id, nome){
+  if(id && todosProdutos.find(p=>p.id==id)){ adicionarCarrinho(id); return; }
+  let real = todosProdutos.find(p=> (p.nome||'').toLowerCase() === String(nome).toLowerCase());
+  if(real){ adicionarCarrinho(real.id); return; }
+  mostrarToast('⚠️ Abre o produto na lista para comprar');
+}
+// Arrastar com o dedo para passar
+let toqueXBanner = 0;
+document.addEventListener('touchstart', e=>{ toqueXBanner = e.touches[0].clientX; }, {passive:true});
+document.addEventListener('touchend', e=>{
+  let box = document.getElementById('bannerVendidos');
+  if(!box || !box.classList.contains('mostrar')) return;
+  let diff = e.changedTouches[0].clientX - toqueXBanner;
+  let total = document.querySelectorAll('#bannerTrack .banner-slide').length;
+  if(Math.abs(diff) > 50 && total){
+    if(diff < 0) slideAtual = (slideAtual+1) % total;
+    else slideAtual = (slideAtual-1+total) % total;
+    atualizarSlideVendidos(total);
+  }
+}, {passive:true});
 async function carregarLoja(){
   let cfg = {};
   try{
@@ -470,6 +566,7 @@ async function carregarLoja(){
       `<button class="chip ativo" onclick="filtrarCategoria('Todas',this)">Todas</button>` +
       cats.map(c=>`<button class="chip" onclick="filtrarCategoria('${c}',this)">${c}</button>`).join('');
     mostrarProdutos(todosProdutos);
+    carregarMaisVendidos();
   }catch(e){ document.getElementById('grade').innerHTML='<div class="aviso">Erro a carregar produtos.</div>'; }
   atualizarCarrinho();
 }

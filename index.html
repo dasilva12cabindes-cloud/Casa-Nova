@@ -125,13 +125,42 @@ input,select,textarea{font-size:16px !important}
 .sobre-detalhe b{color:#0b5ed7}
 #telaVerificar{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1300;display:none;align-items:center;justify-content:center;padding:16px}
 #telaVerificar.aberto{display:flex}
-/* TELA DE BOAS-VINDAS - OBRIGA NOVO A CADASTRAR */
-#telaBoasVindas{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;display:none;align-items:center;justify-content:center;padding:16px}
+/* TELA DE BOAS-VINDAS AZUL COM LOGO */
+#telaBoasVindas{position:fixed;inset:0;background:#0b5ed7;z-index:2000;display:none;align-items:center;justify-content:center;padding:16px}
 #telaBoasVindas.aberto{display:flex}
-.boasvindas-box{background:#fff;width:100%;max-width:380px;border-radius:22px;padding:24px;text-align:center}
+.boasvindas-box{background:#0b5ed7;width:100%;max-width:380px;border-radius:22px;padding:24px;text-align:center;color:#fff}
+.boasvindas-logo{width:200px;max-width:85%;height:auto;display:block;margin:0 auto 12px;background:#fff;border-radius:16px;padding:8px}
+/* PROCESSAMENTO - TETO DA CASA NOVA COM LED AZUL */
+#telaProcessando{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:3000;display:none;align-items:center;justify-content:center;flex-direction:column;padding:20px;text-align:center;color:#fff}
+#telaProcessando.aberto{display:flex}
+.teto-box{width:260px;max-width:85%;margin:10px auto;filter:drop-shadow(0 0 12px rgba(0,170,255,.6))}
+.teto-fundo{fill:none;stroke:#333;stroke-width:10;stroke-linecap:round;stroke-linejoin:round}
+.teto-led{fill:none;stroke:#00aaff;stroke-width:10;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:320;stroke-dashoffset:320;animation:ledTeto 1.5s linear infinite;filter:drop-shadow(0 0 8px #00aaff)}
+@keyframes ledTeto{0%{stroke-dashoffset:320;opacity:1}50%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:-320;opacity:1}}
+.barra-processo{width:220px;height:10px;background:#222;border-radius:20px;overflow:hidden;margin:16px auto 0}
+.barra-processo div{height:100%;width:0%;background:#00aaff;border-radius:20px;transition:width .2s;box-shadow:0 0 10px #00aaff}
 </style>
 </head>
 <body>
+<!-- TELA DE PROCESSAMENTO - TETO COM LED -->
+<div id="telaProcessando">
+  <h2 style="margin:0 0 6px;letter-spacing:2px">CASA NOVA</h2>
+  <p style="font-size:12px;color:#999;margin-bottom:6px">ELETRODOMÉSTICOS</p>
+  <div class="teto-box">
+    <svg viewBox="0 0 200 110" width="100%" height="110">
+      <path class="teto-fundo" d="M10 85 L100 15 L190 85" />
+      <path class="teto-led" d="M10 85 L100 15 L190 85" />
+      <circle r="7" fill="#00aaff" style="filter:drop-shadow(0 0 10px #00aaff)"><animateMotion dur="1.5s" repeatCount="indefinite" path="M10 85 L100 15 L190 85" /></circle>
+      <path d="M45 85 L45 105 L155 105 L155 85" fill="none" stroke="#333" stroke-width="6" stroke-linecap="round"/>
+      <rect x="85" y="80" width="30" height="25" rx="3" fill="none" stroke="#333" stroke-width="5"/>
+    </svg>
+  </div>
+  <p id="textoProcessando" style="font-size:15px;font-weight:700;margin-top:6px">A processar... Aguarda 5 segundos</p>
+  <div class="barra-processo"><div id="barraProcesso"></div></div>
+  <p id="percentProcesso" style="font-size:13px;margin-top:8px;color:#00aaff;font-weight:800">0%</p>
+  <p style="font-size:12px;color:#777;margin-top:10px">🔒 A tua conta está segura</p>
+</div>
+
 <div class="topo" id="topoSite">
   <div class="lado-esq">
     <button class="btn-menu" onclick="abrirMenu()" aria-label="Menu">
@@ -163,15 +192,15 @@ input,select,textarea{font-size:16px !important}
   <div class="grade" id="grade"><div class="aviso">A carregar produtos...</div></div>
 </div>
 
-<!-- TELA QUE TRAVA QUEM É NOVO -->
 <div id="telaBoasVindas">
   <div class="boasvindas-box">
-    <div style="font-size:56px">🏠</div>
-    <h2 style="margin:8px 0">Bem-vindo à Casa Nova!</h2>
-    <p style="color:#666;font-size:14px;line-height:1.6">Para veres os produtos e comprares, precisas te cadastrar.<br>É rápido, só 30 segundos!</p>
+    <img id="logoBoasVindas" class="boasvindas-logo" src="" alt="Casa Nova" style="display:none">
+    <div id="logoBoasVindasFallback" style="font-size:56px">🏠</div>
+    <h2 style="margin:8px 0;color:#fff">Bem-vindo à Casa Nova!</h2>
+    <p style="color:#dbeafe;font-size:14px;line-height:1.6">Para veres os produtos e comprares, precisas te cadastrar.<br>É rápido, só 30 segundos!</p>
     <button onclick="location.href='cadastro.html'" style="background:#16a34a;color:#fff;border:0;padding:15px;border-radius:12px;width:100%;font-weight:800;font-size:16px;cursor:pointer;margin-top:16px">✅ CADASTRAR-ME AGORA</button>
-    <button onclick="location.href='cadastro.html'" style="background:#0b5ed7;color:#fff;border:0;padding:15px;border-radius:12px;width:100%;font-weight:800;font-size:15px;cursor:pointer;margin-top:10px">🔑 JÁ TENHO CONTA - ENTRAR</button>
-    <p style="font-size:12px;color:#999;margin-top:12px">🔒 A tua conta fica só no teu telefone.<br>Ninguém vê a tua conta pelo link.</p>
+    <button onclick="location.href='cadastro.html'" style="background:#fff;color:#0b5ed7;border:0;padding:15px;border-radius:12px;width:100%;font-weight:800;font-size:15px;cursor:pointer;margin-top:10px">🔑 JÁ TENHO CONTA - ENTRAR</button>
+    <p style="font-size:12px;color:#bfdbfe;margin-top:12px">🔒 A tua conta fica só no teu telefone.<br>Ninguém vê a tua conta pelo link.</p>
   </div>
 </div>
 
@@ -278,7 +307,7 @@ input,select,textarea{font-size:16px !important}
 </div>
 
 <script>
-// ===== SEPARAÇÃO ADMIN / CLIENTE - LINK NÃO PARTILHA CONTA =====
+// ===== SEPARAÇÃO ADMIN / CLIENTE =====
 (function limparLinkPerigoso(){
   try{
     let q = window.location.search || '';
@@ -302,12 +331,56 @@ function partilharLoja(){
   else if(navigator.clipboard){ navigator.clipboard.writeText(link).then(()=>mostrarToast('🔗 Link da loja copiado! Partilha à vontade')); }
   else { prompt('Copia o link da loja (sem a tua conta):', link); }
 }
-// ===== NOVO VISITANTE TEM QUE SE CADASTRAR - TRAVA A LOJA =====
+// ===== PROCESSAMENTO EM TUDO - TETO COM LED - 5 SEGUNDOS =====
+let estaProcessando = false;
+function mostrarProcessandoTotal(texto, depois){
+  let tela = document.getElementById('telaProcessando');
+  let barra = document.getElementById('barraProcesso');
+  let perc = document.getElementById('percentProcesso');
+  let txt = document.getElementById('textoProcessando');
+  if(!tela){ if(depois) depois(); return; }
+  txt.textContent = texto || 'A processar... Aguarda 5 segundos';
+  tela.classList.add('aberto');
+  let p = 0;
+  barra.style.width = '0%'; perc.textContent = '0%';
+  let timer = setInterval(()=>{
+    p += 4;
+    if(p > 100) p = 100;
+    barra.style.width = p + '%';
+    perc.textContent = p + '%';
+    if(p >= 100){
+      clearInterval(timer);
+      setTimeout(()=>{ tela.classList.remove('aberto'); estaProcessando = false; if(depois) depois(); }, 300);
+    }
+  }, 200);
+}
+window.addEventListener('load', ()=>{
+  estaProcessando = true;
+  mostrarProcessandoTotal('A entrar na Casa Nova... A procurar...');
+});
+document.addEventListener('click', (e)=>{
+  if(estaProcessando) return;
+  let alvo = e.target.closest('button, a, .card, .chip, .menu-item, input');
+  if(!alvo) return;
+  if(alvo.closest('#telaProcessando')) return;
+  if(alvo.classList.contains('fechar')) return;
+  if(alvo.textContent.includes('✕')) return;
+  if(alvo.id === 'busca' || alvo.id === 'vNome' || alvo.id === 'vWhats' || alvo.id === 'vCodigo') return;
+  let nome = alvo.textContent.trim().slice(0,25) || alvo.id || 'a processar';
+  e.preventDefault(); e.stopPropagation(); estaProcessando = true;
+  mostrarProcessandoTotal('A processar "' + nome + '"... Aguarda 5 segundos', ()=>{
+    if(alvo.tagName === 'A' && alvo.getAttribute('href') && alvo.getAttribute('href') !== '#'){
+      window.location.href = alvo.getAttribute('href'); return;
+    }
+    estaProcessando = true;
+    setTimeout(()=>{ estaProcessando = false; alvo.click(); }, 100);
+  });
+}, true);
+// ===== NOVO VISITANTE TEM QUE SE CADASTRAR =====
 function verificarNovoUsuario(){
   let c = null;
   try{ c = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
-  if(c) return; // Já tem conta, entra direto, sem tela
-  // É novo: mostra a tela de boas-vindas e trava
+  if(c) return;
   document.getElementById('telaBoasVindas').classList.add('aberto');
 }
 let todosProdutos = [];
@@ -535,7 +608,6 @@ function confirmarSair(){
   mostrarToast('👋 Saíste da tua conta. Até já!');
   atualizarMenuConta();
   atualizarCarrinho();
-  // Depois de sair, volta a travar para o próximo
   document.getElementById('telaBoasVindas').classList.add('aberto');
 }
 function atualizarSobre(cfg){
@@ -644,6 +716,8 @@ async function carregarLoja(){
       const logo = document.getElementById('logoTopo');
       logo.src = cfg.logo_url; logo.style.display = 'block';
       document.getElementById('topoSite').classList.add('tem-logo');
+      let logoBV = document.getElementById('logoBoasVindas');
+      if(logoBV){ logoBV.src = cfg.logo_url; logoBV.style.display = 'block'; document.getElementById('logoBoasVindasFallback').style.display='none'; }
     } else {
       document.getElementById('logoTopo').style.display = 'none';
       document.getElementById('topoSite').classList.remove('tem-logo');

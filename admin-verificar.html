@@ -52,7 +52,7 @@ async function verificar(){
   let p = r.data;
   let st = String(p.status || p.estado || '').toLowerCase();
   if(st === 'entregue'){
-    document.getElementById('resultado').innerHTML = `<div class="caixa" style="text-align:center;border:2px solid #dc2626"><h3 style="color:#dc2626">🚫 CÓDIGO JÁ USADO - JÁ FOI ENTREGUE</h3><p>Código: <b>${p.codigo}</b></p><p>Cliente: <b>${p.nome_cliente || p.nome || '-'}</b></p><p style="color:#dc2626;font-weight:700">Não entregues de novo!</p></div>`;
+    document.getElementById('resultado').innerHTML = `<div class="caixa" style="text-align:center;border:2px solid #dc2626"><h3 style="color:#dc2626">🚫 CÓDIGO JÁ USADO - JÁ FOI ENTREGUE</h3><p>Código: <b>${p.codigo}</b></p><p>Cliente: <b>${p.nome_cliente || p.nome || '-'}</b></p><p style="color:#dc2626;font-weight:700">Não entregues de novo!</p><p style="color:#666;font-size:13px">📄 O comprovativo fica guardado por 1 mês e depois é apagado sozinho.</p></div>`;
     return;
   }
   let nome = p.nome_cliente || p.nome || '-';
@@ -69,7 +69,7 @@ async function verificar(){
     else itens = it || '-';
   }catch(e){ itens = p.itens || '-'; }
 
-  // RETIFICADO: ABRE PDF, PNG E FOTO - O TEU FICHEIRO ANTIGO NÃO TINHA ISTO
+  // RETIFICADO: SEM IFRAME - NÃO MOSTRA MAIS O ERRO 404
   let comp = '';
   let urlComp = getUrlComprovativo(p.comprovativo_url);
   if(urlComp){
@@ -81,13 +81,16 @@ async function verificar(){
         <a href="${urlComp}" target="_blank" style="display:block;background:#dc2626;color:#fff;padding:14px;border-radius:12px;text-decoration:none;font-weight:800;margin-top:12px">📄 ABRIR PDF</a>
         <a href="${urlComp}" download style="display:block;background:#111;color:#fff;padding:12px;border-radius:12px;text-decoration:none;font-weight:700;margin-top:8px">⬇️ Baixar PDF</a>
       </div>
-      <iframe src="${urlComp}" style="width:100%;height:300px;border:1px solid #eee;border-radius:12px;margin-top:10px"></iframe>`;
+      <div id="erroPdf" style="display:none;background:#fee2e2;border:1px solid #fca5a5;padding:14px;border-radius:12px;margin-top:10px;text-align:center">
+        <b style="color:#dc2626">⚠️ Este PDF já não existe</b><br><small>Foi apagado depois de 1 mês ou é pedido antigo. Pede no WhatsApp.</small><br><br>
+        <a href="https://wa.me/244${String(telefone).replace(/\D/g,'').slice(-9)}" target="_blank" style="display:block;background:#16a34a;color:#fff;padding:12px;border-radius:10px;text-decoration:none;font-weight:800">💬 Pedir comprovativo no WhatsApp →</a>
+      </div>`;
     } else {
       comp = `<h3>🧾 Comprovativo (Foto / PNG)</h3>
       <img class="comp" src="${urlComp}" onclick="abrirComp('${urlComp}')" onerror="this.style.display='none';document.getElementById('erroComp').style.display='block'">
       <p style="color:#0b5ed7;font-size:13px;font-weight:700;text-align:center">👆 Clica na foto para ampliar</p>
       <a href="${urlComp}" target="_blank" style="display:block;text-align:center;background:#111;color:#fff;padding:12px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:8px">🔍 Abrir foto em tamanho grande</a>
-      <div id="erroComp" style="display:none;color:#dc2626;font-size:13px">⚠️ A foto não foi encontrada no Storage. Este pedido é antigo. Pede ao cliente para enviar o comprovativo no WhatsApp: <a href="https://wa.me/244${String(telefone).replace(/\D/g,'').slice(-9)}" style="color:#16a34a;font-weight:800">Abrir WhatsApp →</a></div>`;
+      <div id="erroComp" style="display:none;color:#dc2626;font-size:13px">⚠️ A foto não foi encontrada no Storage. Foi apagada depois de 1 mês ou é pedido antigo. Pede ao cliente para enviar o comprovativo no WhatsApp: <a href="https://wa.me/244${String(telefone).replace(/\D/g,'').slice(-9)}" style="color:#16a34a;font-weight:800">Abrir WhatsApp →</a></div>`;
     }
   } else if(p.comprovativo_url){
     comp = `<h3>🧾 Comprovativo</h3><p>📎 Ficheiro: ${p.comprovativo_url}<br><small style="color:#999">Este pedido foi feito antes da correção do Storage, por isso a foto não ficou guardada. Pede ao cliente para mostrar o comprovativo no WhatsApp.</small></p>`;
@@ -110,14 +113,24 @@ async function verificar(){
     <div class="linha">📊 <b>Estado:</b> ${p.status || p.estado || 'Novo'}</div>
     ${comp}
     <button onclick="marcarEntregue('${p.codigo}')" style="background:#16a34a;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;margin-top:14px;cursor:pointer">✅ MARCAR COMO ENTREGUE - Invalidar Código</button>
-    <p style="text-align:center;color:#dc2626;font-size:12px;margin-top:8px">⚠️ Depois de clicares, este código nunca mais vai funcionar.</p>
+    <p style="text-align:center;color:#666;font-size:12px;margin-top:8px">📄 O comprovativo fica guardado por 1 mês e depois é apagado sozinho do Supabase.<br><span style="color:#dc2626;font-weight:700">⚠️ Depois de clicares, este código nunca mais vai funcionar.</span></p>
   </div>`;
+
+  // VERIFICA SE O PDF EXISTE SEM MOSTRAR O 404
+  if(urlComp && urlComp.toLowerCase().includes('.pdf')){
+    try{
+      let res = await fetch(urlComp, {method:'HEAD'});
+      if(!res.ok){ let e = document.getElementById('erroPdf'); if(e) e.style.display='block'; }
+    }catch(e){ let el = document.getElementById('erroPdf'); if(el) el.style.display='block'; }
+  }
 }
 async function marcarEntregue(cod){
-  if(!confirm('Tens a certeza que já entregaste este pedido?\n\nDepois disso o código ' + cod + ' NUNCA mais vai funcionar.')) return;
+  if(!confirm('Tens a certeza que já entregaste este pedido?\n\nDepois disso o código ' + cod + ' NUNCA mais vai funcionar.\n\nO comprovativo vai ficar guardado por 1 mês e depois vai ser apagado sozinho.')) return;
+  // RETIFICADO: NÃO APAGA O COMPROVATIVO AQUI - SÓ MARCA COMO ENTREGUE
+  // A limpeza de 1 mês é feita sozinha pelo Supabase
   let r1 = await db.from('pedidos').update({status:'Entregue', estado:'Entregue'}).eq('codigo', cod);
   if(r1.error){ alert('Erro: ' + r1.error.message); return; }
-  alert('✅ Pedido marcado como ENTREGUE!');
+  alert('✅ Pedido marcado como ENTREGUE!\n📄 Comprovativo vai ficar guardado por 1 mês.');
   verificar();
 }
 </script></body></html>

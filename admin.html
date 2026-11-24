@@ -19,8 +19,23 @@ label{font-size:13px;color:#555;font-weight:700}
 .item img{width:80px;height:80px;object-fit:cover;border-radius:8px;background:#f8f8f8;display:block}
 .preview{width:100%;margin-top:8px}
 .cat-item{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;padding:8px 0}
+/* NOTIFICAÇÃO BONITA - SEM LINK */
+#toast{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:14px 18px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:9999;font-size:15px;font-weight:700;max-width:92%;text-align:center;transition:.35s;opacity:0;pointer-events:none}
+#toast.mostrar{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.sucesso{background:#16a34a}
+#toast.erro{background:#dc2626}
+#toast.aviso{background:#f59e0b;color:#111}
+/* JANELA DE CONFIRMAR BONITA */
+#modalFundo{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9998;padding:16px}
+#modalFundo.mostrar{display:flex}
+#modalCaixa{background:#fff;width:100%;max-width:360px;border-radius:18px;padding:20px;text-align:center}
+#modalCaixa h3{margin:0 0 8px}
+#modalCaixa p{color:#555;font-size:14px}
 </style></head>
 <body>
+<div id="toast"></div>
+<div id="modalFundo"><div id="modalCaixa"><h3 id="modalTitulo">Confirmar?</h3><p id="modalTexto"></p><button class="btn-verde" id="modalSim" style="margin-top:10px">✅ Sim, continuar</button><button class="btn-cinza" onclick="fecharModal(false)" style="margin-top:8px">Cancelar</button></div></div>
+
 <div class="topo"><b>Admin Casa Nova</b><a href="index.html">Ver Loja</a></div>
 
 <div class="caixa"><h3>🏠 Logotipo da Loja</h3>
@@ -41,7 +56,7 @@ label{font-size:13px;color:#555;font-weight:700}
 </div>
 
 <div class="caixa"><h3>📁 Gerir Categorias - ÉS TU QUE ADICIONAS</h3>
-<p style="color:#666;font-size:14px">Escreve a categoria e clica em Adicionar. Ela vai aparecer quando fores criar o produto.</p>
+<p style="color:#666;font-size:14px">Escreve a categoria e clica em Adicionar.</p>
 <input id="novaCategoria" placeholder="Ex: Arca, Geladeira, Coluna...">
 <button class="btn" onclick="adicionarCategoria()">+ Adicionar Categoria</button>
 <div id="listaCategorias" style="margin-top:10px">A carregar...</div>
@@ -50,13 +65,13 @@ label{font-size:13px;color:#555;font-weight:700}
 <div class="caixa"><h3>➕ Adicionar / Editar Produto</h3>
 <input type="hidden" id="editId" value="">
 <label>Nome do produto</label>
-<input id="fNome" placeholder="Ex: Arca Oux 200L">
+<input id="fNome" placeholder="Ex: Samsung Galaxy A51">
 <label>Categoria</label>
 <select id="fCategoria"></select>
 <label>Preço (Kz)</label>
 <input id="fPreco" type="number" placeholder="Ex: 8000">
 <label>Descrição</label>
-<textarea id="fDesc" placeholder="Ex: Arca 200L, nova, com garantia..."></textarea>
+<textarea id="fDesc" placeholder="Ex: Samsung A51, novo, com garantia..."></textarea>
 <label>Foto - link ou subir do telefone</label>
 <input id="fImagem" placeholder="Cola o link da foto ou sobe em baixo">
 <input type="file" id="fileProduto" accept="image/*">
@@ -67,10 +82,33 @@ label{font-size:13px;color:#555;font-weight:700}
 <div class="caixa"><h3>🛍️ Produtos</h3><div id="listaProdutos">A carregar...</div></div>
 
 <script>
+// ===== NOTIFICAÇÃO BONITA - SUBSTITUI O ALERT =====
+let toastTimer;
+function aviso(msg, tipo){
+  let t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='mostrar '+(tipo||'sucesso');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{ t.className=''; }, 3000);
+}
+// ===== CONFIRMAR BONITO - SUBSTITUI O CONFIRM =====
+let resolverModal=null;
+function perguntar(texto){
+  return new Promise(res=>{
+    resolverModal=res;
+    document.getElementById('modalTexto').textContent=texto;
+    document.getElementById('modalFundo').classList.add('mostrar');
+  });
+}
+function fecharModal(v){
+  document.getElementById('modalFundo').classList.remove('mostrar');
+  if(resolverModal){ resolverModal(v); resolverModal=null; }
+}
+document.getElementById('modalSim').onclick=()=>fecharModal(true);
+
 let banners=[];
 let produtos=[];
 let categorias=['Arca','Ar Condicionado','Telemóveis','Máquina de Lavar','Ferro de Engomar','Eletrodomésticos','TV e Som','Informática','Outros'];
-// CARREGAR CATEGORIAS QUE TU JÁ ADICIONASTE
 try{
   let salvas=JSON.parse(localStorage.getItem('categorias_casanova')||'[]');
   salvas.forEach(c=>{ if(c && !categorias.includes(c)) categorias.push(c); });
@@ -85,16 +123,18 @@ function mostrarCategorias(){
 }
 function adicionarCategoria(){
   let v=document.getElementById('novaCategoria').value.trim();
-  if(!v) return alert('Escreve a categoria primeiro');
-  if(categorias.includes(v)) return alert('Essa categoria já existe!');
+  if(!v) return aviso('⚠️ Escreve a categoria primeiro','aviso');
+  if(categorias.includes(v)) return aviso('⚠️ Essa categoria já existe','aviso');
   categorias.push(v); guardarCategorias(); mostrarCategorias();
   document.getElementById('novaCategoria').value='';
   document.getElementById('fCategoria').value=v;
-  alert('✅ Categoria "'+v+'" adicionada! Agora cria o produto com essa categoria.');
+  aviso('✅ Categoria "'+v+'" adicionada!');
 }
-function apagarCategoria(i){
-  if(!confirm('Apagar a categoria "'+categorias[i]+'"? Os produtos com ela continuam, mas a categoria some da lista.')) return;
+async function apagarCategoria(i){
+  let ok=await perguntar('Apagar a categoria "'+categorias[i]+'"?');
+  if(!ok) return;
   categorias.splice(i,1); guardarCategorias(); mostrarCategorias();
+  aviso('🗑️ Categoria apagada');
 }
 function mostrarBanners(){
   let div=document.getElementById('listaBanners');
@@ -115,37 +155,38 @@ async function carregarTudo(){
 }
 async function subirLogo(){
   const f=document.getElementById('fileLogo').files[0];
-  if(!f) return alert('Escolhe o logotipo primeiro');
+  if(!f) return aviso('⚠️ Escolhe o logotipo primeiro','aviso');
   const nome='logo_'+Date.now()+'_'+f.name.replace(/\s/g,'_');
   const up=await db.storage.from('produtos').upload(nome,f,{upsert:true});
-  if(up.error) return alert('Erro: '+up.error.message);
+  if(up.error) return aviso('❌ Erro: '+up.error.message,'erro');
   const pub=db.storage.from('produtos').getPublicUrl(nome);
   const url=pub.data.publicUrl;
   const r=await db.from('loja_config').update({logo_url:url}).eq('id',1);
-  if(r.error) return alert('Erro: '+r.error.message);
-  alert('✅ Logotipo guardado!'); carregarTudo();
+  if(r.error) return aviso('❌ Erro: '+r.error.message,'erro');
+  aviso('✅ Logotipo guardado!'); carregarTudo();
 }
 async function guardar(){
   const r=await db.from('loja_config').update({banners:JSON.stringify(banners), banner_url:banners[0]||null}).eq('id',1);
-  if(r.error) return alert('Erro: '+r.error.message);
-  mostrarBanners(); alert('✅ Guardado!');
+  if(r.error) return aviso('❌ Erro: '+r.error.message,'erro');
+  mostrarBanners(); aviso('✅ Guardado!');
 }
 async function adicionarBanner(){
   const v=document.getElementById('urlBanner').value.trim();
-  if(!v) return alert('Cola o link primeiro');
+  if(!v) return aviso('⚠️ Cola o link primeiro','aviso');
   banners.push(v); document.getElementById('urlBanner').value=''; await guardar();
 }
 async function subirBanner(){
   const f=document.getElementById('fileBanner').files[0];
-  if(!f) return alert('Escolhe uma foto');
+  if(!f) return aviso('⚠️ Escolhe uma foto','aviso');
   const nome='banner_'+Date.now()+'_'+f.name.replace(/\s/g,'_');
   const up=await db.storage.from('produtos').upload(nome,f,{upsert:true});
-  if(up.error) return alert('Erro: '+up.error.message);
+  if(up.error) return aviso('❌ Erro: '+up.error.message,'erro');
   const pub=db.storage.from('produtos').getPublicUrl(nome);
   banners.push(pub.data.publicUrl); await guardar();
 }
 async function apagarBanner(i){
-  if(!confirm('Apagar este banner?')) return;
+  let ok=await perguntar('Apagar este banner?');
+  if(!ok) return;
   banners.splice(i,1); await guardar();
 }
 function limparForm(){
@@ -164,21 +205,21 @@ async function salvarProduto(){
   let descricao=document.getElementById('fDesc').value.trim();
   let imagem=document.getElementById('fImagem').value.trim();
   let f=document.getElementById('fileProduto').files[0];
-  if(!nome || !preco) return alert('Preenche o nome e o preço');
+  if(!nome || !preco) return aviso('⚠️ Preenche o nome e o preço','aviso');
   if(f){
     let nomeF='prod_'+Date.now()+'_'+f.name.replace(/\s/g,'_');
     let up=await db.storage.from('produtos').upload(nomeF,f,{upsert:true});
-    if(up.error) return alert('Erro foto: '+up.error.message);
+    if(up.error) return aviso('❌ Erro foto: '+up.error.message,'erro');
     imagem=db.storage.from('produtos').getPublicUrl(nomeF).data.publicUrl;
   }
-  if(!imagem && !id) return alert('Cola o link da foto ou sobe uma foto');
+  if(!imagem && !id) return aviso('⚠️ Cola o link da foto ou sobe uma foto','aviso');
   let dados={nome:nome, preco:preco, categoria:categoria, descricao:descricao};
   if(imagem) { dados.imagem=imagem; dados.imagem_url=imagem; }
   let r;
   if(id) r=await db.from('produtos').update(dados).eq('id',id);
   else r=await db.from('produtos').insert([dados]);
-  if(r.error) return alert('Erro: '+r.error.message);
-  alert('✅ Produto guardado com categoria: '+categoria);
+  if(r.error) return aviso('❌ Erro: '+r.error.message,'erro');
+  aviso('✅ Produto guardado: '+nome);
   limparForm(); carregarProdutos();
 }
 function editarProduto(id){
@@ -191,12 +232,14 @@ function editarProduto(id){
   document.getElementById('fDesc').value=p.descricao||p.detalhes||'';
   document.getElementById('fImagem').value=p.imagem||p.imagem_url||'';
   window.scrollTo({top:0,behavior:'smooth'});
-  alert('Agora edita em cima e clica em Guardar. Categoria atual: '+(p.categoria||'sem categoria'));
+  aviso('✏️ Agora edita em cima e clica em Guardar');
 }
 async function apagarProduto(id){
-  if(!confirm('Apagar este produto?')) return;
+  let ok=await perguntar('Apagar este produto?');
+  if(!ok) return;
   let r=await db.from('produtos').delete().eq('id',id);
-  if(r.error) return alert('Erro: '+r.error.message);
+  if(r.error) return aviso('❌ Erro: '+r.error.message,'erro');
+  aviso('🗑️ Produto apagado');
   carregarProdutos();
 }
 async function carregarProdutos(){

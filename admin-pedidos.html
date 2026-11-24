@@ -1,62 +1,106 @@
 <!DOCTYPE html>
-<html lang="pt">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pedidos - Casa Nova</title>
-<link rel="stylesheet" href="css/style.css">
-<style>
-.caixa{background:#fff;padding:16px;border-radius:12px;margin-bottom:12px}
-.caixa b{font-size:1.05rem}
-.caixa small{color:#666}
-.linha{padding:6px 0;border-top:1px solid #eef0f4}
-.logo-topo{height:42px;max-width:160px;object-fit:contain;background:transparent;display:none}
-.logo-texto{font-weight:800;font-size:18px;color:#fff}
-</style>
-</head>
-<body>
-<header class="topo" style="display:flex;justify-content:space-between;align-items:center">
-  <a href="index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none">
-    <img id="logoTopo" class="logo-topo" src="">
-    <span id="logoTexto" class="logo-texto">Casa Nova</span>
-  </a>
-  <nav><a href="admin.html">Admin</a></nav>
-</header>
-<main class="container">
-<h2 style="margin:12px 0">Pedidos Recebidos</h2>
-<p id="msg">A carregar...</p>
-<div id="lista"></div>
-</main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
+<style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
+.topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}
+.topo .logo{display:flex;align-items:center;gap:8px}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:#fff;border-radius:8px;padding:2px;display:none}
+.topo.tem-logo .logo-text{display:none}
+.topo a{color:#fff;text-decoration:none;font-weight:700}
+.caixa{background:#fff;padding:14px;border-radius:12px;margin-top:12px}
+.btn{border:0;padding:11px;border-radius:8px;width:100%;font-weight:700;cursor:pointer}
+.btn-azul{background:#0b5ed7;color:#fff}
+.btn-verde{background:#16a34a;color:#fff}
+.btn-laranja{background:#f59e0b;color:#111}
+.btn-cinza{background:#e5e7eb;color:#111}
+select{padding:10px;border:1px solid #cfd5df;border-radius:8px;width:100%;font-size:15px}
+.card-pedido{background:#fff;padding:14px;border-radius:12px;margin-top:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700}
+.badge-novo{background:#dbeafe;color:#1e40af}
+.badge-aceite{background:#fef3c7;color:#92400e}
+.badge-entregue{background:#dcfce7;color:#166534}
+.badge-cancelado{background:#fee2e2;color:#991b1b}
+#toast{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:14px 18px;border-radius:14px;z-index:9999;font-weight:700;max-width:92%;text-align:center;transition:.35s;opacity:0;pointer-events:none}
+#toast.mostrar{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.sucesso{background:#16a34a}
+#toast.erro{background:#dc2626}
+</style></head>
+<body>
+<div id="toast"></div>
+<div class="topo" id="topoSite"><div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>Casa Nova</b></span></div><a href="admin.html">← Voltar</a></div>
+
+<div class="caixa">
+<h3>📦 Pedidos Recebidos</h3>
+<p style="color:#666;font-size:13px">Aqui aparecem todos os pedidos que os clientes fazem no carrinho.</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<button class="btn btn-verde" onclick="location.href='admin-vendas.html'">💰 Ver Vendas do Dia →</button>
+<button class="btn btn-azul" onclick="carregar()">🔄 Atualizar</button>
+</div>
+</div>
+
+<div id="lista"><p style="text-align:center;color:#888">A carregar pedidos...</p></div>
+
 <script>
-async function carregarLogo(){
-  try{
-    var r = await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();
-    if(r.data && r.data.logo_url){
-      var lt = document.getElementById('logoTopo');
-      lt.src = r.data.logo_url; lt.style.display='block';
-      document.getElementById('logoTexto').style.display='none';
-    }
-  }catch(e){}
+let toastTimer;
+function aviso(msg,tipo){let t=document.getElementById('toast');t.textContent=msg;t.className='mostrar '+(tipo||'sucesso');clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='';},3000);}
+async function carregarLogoTopo(){
+  try{let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();let logo=r.data?.logo_url;if(logo){let img=document.getElementById('logoTopo');img.src=logo;img.style.display='block';document.getElementById('topoSite').classList.add('tem-logo');}}catch(e){}
+}
+function badge(status){
+  let s=(status||'Novo').toLowerCase();
+  if(s.includes('entregue')) return '<span class="badge badge-entregue">✅ Entregue</span>';
+  if(s.includes('aceite')||s.includes('confirmado')||s.includes('prepar')) return '<span class="badge badge-aceite">🟡 '+status+'</span>';
+  if(s.includes('cancel')) return '<span class="badge badge-cancelado">❌ Cancelado</span>';
+  return '<span class="badge badge-novo">🆕 Novo</span>';
 }
 async function carregar(){
-  var r = await db.from("pedidos").select("*").order("criado_em", {ascending:false});
-  if(r.error){ document.getElementById("msg").textContent = "Erro: " + r.error.message; return; }
-  if(!r.data.length){ document.getElementById("msg").textContent = "Ainda nenhum pedido."; return; }
-  document.getElementById("msg").textContent = "";
-  document.getElementById("lista").innerHTML = r.data.map(function(p){
-    var itens = "";
+  let lista=[]; let tabela='pedidos';
+  let r=await db.from('pedidos').select('*').order('created_at',{ascending:false});
+  if(r.error){
+    let r2=await db.from('encomendas').select('*').order('created_at',{ascending:false});
+    if(!r2.error){ lista=r2.data||[]; tabela='encomendas'; }
+    else { document.getElementById('lista').innerHTML='<div class="caixa" style="text-align:center">Ainda não tens pedidos.<br><small style="color:#888">Quando um cliente fizer pedido no carrinho, aparece aqui.</small></div>'; return; }
+  } else lista=r.data||[];
+
+  if(!lista.length){ document.getElementById('lista').innerHTML='<div class="caixa" style="text-align:center">Nenhum pedido ainda.</div>'; return; }
+
+  document.getElementById('lista').innerHTML=lista.map(p=>{
+    let nome=p.nome_cliente||p.cliente_nome||p.nome||'Cliente';
+    let tel=p.telefone||p.whatsapp||'';
+    let morada=p.morada||p.endereco||p.localizacao||'';
+    let valor=Number(p.total||p.valor_total||p.preco_total||0).toLocaleString();
+    let status=p.status||p.estado||'Novo';
+    let data=(p.created_at||'').slice(0,10).split('-').reverse().join('/')+' '+(p.created_at||'').slice(11,16);
+    let itens='';
     try{
-      var arr = typeof p.itens === "string" ? JSON.parse(p.itens) : p.itens;
-      itens = (arr||[]).map(function(i){ return "<div class='linha'>"+(i.nome||i.name)+" x "+i.qtd+" - "+kz(i.preco*i.qtd)+"</div>"; }).join("");
-    }catch(e){ itens = "<div>"+JSON.stringify(p.itens)+"</div>"; }
-    return "<div class='caixa'><b>"+(p.nome||"Cliente")+"</b> <small>"+new Date(p.criado_em).toLocaleString("pt-AO")+"</small><br>📞 "+(p.telefone||"")+"<br>📍 "+(p.morada||"")+"<br><br>"+itens+"<br><b>Total: "+kz(p.total)+"</b></div>";
-  }).join("");
+      let it=p.itens||p.produtos||p.items||p.detalhes;
+      if(typeof it==='string') it=JSON.parse(it);
+      if(Array.isArray(it)) itens=it.map(i=>`• ${i.nome||i.produto||'Produto'} x${i.qtd||i.quantidade||1}`).join('<br>');
+      else if(it) itens=it;
+    }catch(e){}
+    let waMsg=encodeURIComponent('Olá '+nome+', recebemos o teu pedido na Casa Nova de '+valor+' Kz. Obrigado!');
+    return `<div class="card-pedido">
+      <div style="display:flex;justify-content:space-between"><b>${nome}</b>${badge(status)}</div>
+      <div style="color:#666;font-size:13px;margin:4px 0">${data} • ${tel}<br>${morada}</div>
+      <div style="font-size:14px">${itens}</div>
+      <div style="font-weight:800;color:#0b5ed7;margin:8px 0">Total: ${valor} Kz</div>
+      <select onchange="mudarStatus(${p.id},this.value,'${tabela}')">
+        <option value="Novo" ${status==='Novo'?'selected':''}>🆕 Novo</option>
+        <option value="Aceite" ${status==='Aceite'?'selected':''}>🟡 Aceite / A Preparar</option>
+        <option value="Entregue" ${status==='Entregue'?'selected':''}>✅ Entregue</option>
+        <option value="Cancelado" ${status==='Cancelado'?'selected':''}>❌ Cancelado</option>
+      </select>
+      <button class="btn btn-verde" style="margin-top:8px" onclick="window.open('https://wa.me/${tel.replace(/[^0-9]/g,'')}?text=${waMsg}','_blank')">💬 Falar no WhatsApp</button>
+    </div>`;
+  }).join('');
 }
-carregarLogo();
-carregar();
-</script>
-</body>
-</html>
+async function mudarStatus(id,status,tabela){
+  let r=await db.from(tabela).update({status:status,estado:status}).eq('id',id);
+  if(r.error) return aviso('❌ '+r.error.message,'erro');
+  aviso('✅ Pedido atualizado para: '+status); carregar();
+}
+carregarLogoTopo(); carregar();
+</script></body></html>

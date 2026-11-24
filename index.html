@@ -1,104 +1,157 @@
 <!DOCTYPE html>
-<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Casa Nova - Loja</title>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Casa Nova - Eletrodomésticos</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
-<style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6}
-.topo{background:#2563eb;color:#fff;padding:12px;display:flex;justify-content:space-between;align-items:center}
-.topo a{color:#fff;text-decoration:none;font-weight:700}.logo-img{height:38px;border-radius:6px}
-.banner-wrap{position:relative;width:100%;height:auto;overflow:hidden;background:#fff;display:none}
-.banner-wrap img{position:relative;width:100%;height:auto;max-height:420px;object-fit:contain;display:none}
-.banner-wrap img.ativo{display:block;opacity:1}
-.pontos{position:absolute;bottom:10px;left:0;right:0;text-align:center;z-index:2}
-.pontos span{display:inline-block;width:9px;height:9px;background:#fff;opacity:.5;border-radius:50%;margin:0 3px;box-shadow:0 0 3px #000}
-.pontos span.ativo{opacity:1;background:#2563eb}
-.publicidade{background:#ffcc00;padding:10px;overflow:hidden;white-space:nowrap}
-.publicidade span{display:inline-block;animation:passar 18s linear infinite;font-weight:700}
-@keyframes passar{from{transform:translateX(100%)}to{transform:translateX(-100%)}}
-.container{padding:12px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.card{background:#fff;border-radius:12px;padding:10px;text-align:center}
-.card img{width:100%;height:130px;object-fit:cover;border-radius:8px}
-.btn{background:#2563eb;color:#fff;border:0;padding:10px;border-radius:8px;width:100%;font-weight:700;cursor:pointer}
-.sobre{background:#fff;border-radius:12px;padding:14px;margin:12px}
-</style></head>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, Arial, sans-serif; background: #f5f6f8; color: #1d2330; }
+a { color: inherit; text-decoration: none; }
+
+/* TOPO - SÓ LOGOTIPO */
+.topo { position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between;
+  align-items: center; padding: 8px 16px; background: #0b5ed7; color: #fff; height: 72px; }
+.topo .logo { display: flex; align-items: center; }
+.topo .logo-img { height: 56px; width: auto; max-width: 200px; object-fit: contain; display: block; background: transparent; }
+.topo .logo-text { font-size: 1.3rem; font-weight: 700; }
+.topo.tem-logo .logo-text { display: none; }
+.topo nav { display: flex; gap: 16px; align-items: center; }
+.topo nav a, #auth-links { display: inline-flex; gap: 12px; }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 16px; }
+#busca { width: 100%; padding: 12px 14px; border: 1px solid #cfd5df; border-radius: 10px;
+  font-size: 1rem; margin-bottom: 12px; }
+
+.categorias { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; }
+.chip { border: 1px solid #cfd5df; background: #fff; padding: 8px 14px; border-radius: 20px;
+  font-size: .9rem; white-space: nowrap; cursor: pointer; }
+.chip.ativo { background: #0b5ed7; color: #fff; border-color: #0b5ed7; }
+
+.grade { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+@media (min-width: 700px) { .grade { grid-template-columns: repeat(4, 1fr); } }
+
+.card { background: #fff; border-radius: 12px; padding: 10px; display: flex; flex-direction: column;
+  gap: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: #eef0f4; }
+.card h3 { font-size: .95rem; font-weight: 600; }
+.preco { font-weight: 700; color: #0b5ed7; }
+
+.btn { background: #0b5ed7; color: #fff; border: 0; padding: 11px; border-radius: 8px;
+  font-size: .95rem; cursor: pointer; margin-top: auto; }
+.btn:disabled { background: #aab1bd; }
+.aviso { grid-column: 1 / -1; text-align: center; padding: 30px 0; color: #667085; }
+</style>
+</head>
 <body>
-<header class="topo"><div style="display:flex;align-items:center;gap:8px"><img id="logoTopo" class="logo-img" style="display:none"><b id="nomeTopo">Casa Nova</b></div><a href="carrinho.html">🛒 Carrinho (<span id="qtd">0</span>)</a></header>
 
-<div class="banner-wrap" id="bannerWrap"><div id="bannerFotos"></div><div class="pontos" id="pontos"></div></div>
+<div class="topo" id="topoSite">
+  <a class="logo" href="index.html">
+    <img id="logoTopo" class="logo-img" src="" alt="Casa Nova" style="display:none">
+    <span class="logo-text" id="nomeTopo">Casa Nova</span>
+  </a>
+  <nav>
+    <div id="auth-links"></div>
+    <a href="carrinho.html">🛒 Carrinho (<span id="qtdCarrinho">0</span>)</a>
+  </nav>
+</div>
 
-<div class="publicidade"><span id="pubTexto">🔥 PROMOÇÃO CASA NOVA - Entrega rápida em Luanda 🔥</span></div>
-<div class="sobre"><h3>🏪 <span id="nomeSobre">Sobre a Casa Nova</span></h3><p id="textoSobre">A carregar...</p>
-<a id="btnWpp" href="https://wa.me/244972370499" target="_blank"><button class="btn">💬 Falar no WhatsApp</button></a></div>
-<main class="container"><h3>🛍️ Produtos</h3><div class="grid" id="lista">A carregar...</div></main>
+<div class="container">
+  <input id="busca" placeholder="🔍 Pesquisar produto..." oninput="filtrar()">
+
+  <div class="categorias" id="categorias">
+    <button class="chip ativo" onclick="filtrarCategoria('Todas',this)">Todas</button>
+  </div>
+
+  <div class="grade" id="grade"><div class="aviso">A carregar produtos...</div></div>
+</div>
+
 <script>
-let bannerAtual=0, bannerTimer=null;
-function mostrarBanner(i){
-  const imgs=document.querySelectorAll('#bannerFotos img');
-  const pts=document.querySelectorAll('#pontos span');
-  if(!imgs.length) return;
-  bannerAtual=((i%imgs.length)+imgs.length)%imgs.length;
-  imgs.forEach((im,idx)=>im.classList.toggle('ativo',idx===bannerAtual));
-  pts.forEach((p,idx)=>p.classList.toggle('ativo',idx===bannerAtual));
+let todosProdutos = [];
+let categoriaAtual = 'Todas';
+
+function atualizarCarrinho(){
+  let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+  let qtd = carrinho.reduce((s,i)=>s + (i.qtd||1), 0);
+  document.getElementById('qtdCarrinho').textContent = qtd;
 }
-function iniciarBanner(fotos){
-  const wrap=document.getElementById('bannerWrap');
-  const div=document.getElementById('bannerFotos');
-  const pontos=document.getElementById('pontos');
-  if(!fotos.length){wrap.style.display='none';return}
-  wrap.style.display='block';
-  div.innerHTML=''; pontos.innerHTML='';
-  if(bannerTimer){clearInterval(bannerTimer); bannerTimer=null}
-  fotos.forEach((f,i)=>{
-    const im=new Image();
-    im.onload=()=>{
-      im.className=(div.children.length===0?'ativo':'');
-      div.appendChild(im);
-      const s=document.createElement('span');
-      s.onclick=()=>mostrarBanner(Array.from(div.children).indexOf(im));
-      if(div.children.length===1) s.classList.add('ativo');
-      pontos.appendChild(s);
-      if(div.children.length>1 && !bannerTimer) bannerTimer=setInterval(()=>mostrarBanner(bannerAtual+1),8000);
-    };
-    im.onerror=()=>{};
-    im.src=f;
+
+function adicionarCarrinho(id){
+  let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
+  let achou = carrinho.find(i=>i.id==id);
+  if(achou) achou.qtd = (achou.qtd||1)+1;
+  else carrinho.push({id:id, qtd:1});
+  localStorage.setItem('carrinho', JSON.stringify(carrinho));
+  atualizarCarrinho();
+  alert('✅ Adicionado ao carrinho!');
+}
+
+function filtrarCategoria(cat, btn){
+  categoriaAtual = cat;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('ativo'));
+  if(btn) btn.classList.add('ativo');
+  filtrar();
+}
+
+function filtrar(){
+  let termo = document.getElementById('busca').value.toLowerCase().trim();
+  let lista = todosProdutos.filter(p=>{
+    let okCat = categoriaAtual==='Todas' || (p.categoria||'Outros')===categoriaAtual;
+    let okBusca = !termo || (p.nome||'').toLowerCase().includes(termo);
+    return okCat && okBusca;
   });
+  mostrarProdutos(lista);
 }
-function lerCarrinho(){try{return JSON.parse(localStorage.getItem('carrinho')||'[]')}catch(e){return[]}}
-function atualizarQtd(){document.getElementById('qtd').textContent=lerCarrinho().reduce((s,i)=>s+(i.qtd||1),0)}
-function foto(p){return p.imagem||p.foto||p.imagem_url||p.foto_url||p.image_url||p.image||p.url||'https://via.placeholder.com/300'}
-async function carregar(){
+
+function mostrarProdutos(lista){
+  let grade = document.getElementById('grade');
+  if(!lista.length){ grade.innerHTML='<div class="aviso">Nenhum produto encontrado.</div>'; return; }
+  grade.innerHTML = lista.map(p=>`
+    <div class="card">
+      <img src="${p.imagem || p.imagem_url || ''}" onerror="this.src='https://via.placeholder.com/300'">
+      <h3>${p.nome}</h3>
+      <div class="preco">${Number(p.preco).toLocaleString()} Kz</div>
+      <button class="btn" onclick="adicionarCarrinho(${p.id})">Adicionar</button>
+    </div>
+  `).join('');
+}
+
+async function carregarLoja(){
+  // 1. LOGOTIPO - SE TEM LOGO, NOME SOME
   try{
-    const cfgR=await db.from('loja_config').select('*').eq('id',1).maybeSingle();
-    const cfg=cfgR.data;
-    if(cfg){
-      document.getElementById('nomeTopo').textContent=cfg.nome_loja||'Casa Nova';
-      document.getElementById('nomeSobre').textContent='Sobre a '+(cfg.nome_loja||'Casa Nova');
-      document.getElementById('textoSobre').textContent=cfg.sobre||'';
-      if(cfg.logo_url){var l=document.getElementById('logoTopo');l.src=cfg.logo_url;l.style.display='block'}
-      if(cfg.whatsapp) document.getElementById('btnWpp').href='https://wa.me/'+cfg.whatsapp;
+    const r = await db.from('loja_config').select('*').eq('id',1).maybeSingle();
+    let cfg = r.data || {};
+    if(cfg.logo_url){
+      const logo = document.getElementById('logoTopo');
+      logo.src = cfg.logo_url;
+      logo.style.display = 'block';
+      document.getElementById('topoSite').classList.add('tem-logo');
+    } else {
+      document.getElementById('logoTopo').style.display = 'none';
+      document.getElementById('topoSite').classList.remove('tem-logo');
     }
-    const prodR=await db.from('produtos').select('*').order('id',{ascending:false});
-    const prod=prodR.data||[];
-    let fotosBanner=[];
-    try{
-      let b=cfg?.banners;
-      if(typeof b==='string') b=JSON.parse(b||'[]');
-      if(Array.isArray(b) && b.length) fotosBanner=b;
-      else if(cfg?.banner_url) fotosBanner=[cfg.banner_url];
-    }catch(e){}
-    if(!fotosBanner.length) prod.forEach(p=>{let f=foto(p); if(f && !f.includes('placeholder')) fotosBanner.push(f)});
-    iniciarBanner(fotosBanner);
-    if(!prod.length){document.getElementById('lista').innerHTML='Nenhum produto ainda.';return}
-    document.getElementById('pubTexto').textContent='🔥 '+prod.slice(0,3).map(p=>p.nome+' - '+Number(p.preco).toLocaleString()+' Kz').join('  |  ')+' 🔥';
-    document.getElementById('lista').innerHTML=prod.map(p=>'<div class="card"><img src="'+foto(p)+'"><b>'+p.nome+'</b><br>'+Number(p.preco).toLocaleString()+' Kz<br><br><button class="btn" onclick="add('+p.id+')">Adicionar</button></div>').join('');
-    window._prod=prod;
-  }catch(e){document.getElementById('lista').innerHTML='Erro: '+e.message}
+  }catch(e){ console.log(e); }
+
+  // 2. PRODUTOS
+  try{
+    const r2 = await db.from('produtos').select('*').order('id',{ascending:false});
+    todosProdutos = r2.data || [];
+    // Categorias automaticas
+    let cats = [...new Set(todosProdutos.map(p=>p.categoria||'Outros'))];
+    document.getElementById('categorias').innerHTML =
+      `<button class="chip ativo" onclick="filtrarCategoria('Todas',this)">Todas</button>` +
+      cats.map(c=>`<button class="chip" onclick="filtrarCategoria('${c}',this)">${c}</button>`).join('');
+    mostrarProdutos(todosProdutos);
+  }catch(e){
+    document.getElementById('grade').innerHTML='<div class="aviso">Erro a carregar produtos.</div>';
+  }
+  atualizarCarrinho();
 }
-function add(id){
-  const p=window._prod.find(x=>x.id==id); let c=lerCarrinho();
-  let ex=c.find(x=>x.id==id); if(ex) ex.qtd++; else c.push({id:p.id,nome:p.nome,preco:Number(p.preco),qtd:1});
-  localStorage.setItem('carrinho',JSON.stringify(c)); atualizarQtd(); alert('✅ Adicionado!');
-}
-atualizarQtd(); carregar();
-</script></body></html>
+
+carregarLoja();
+</script>
+</body>
+</html>

@@ -7,10 +7,25 @@
 <style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
 .topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}
 .topo .logo{display:flex;align-items:center;gap:8px}
-.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
 .topo.tem-logo .logo-text{display:none}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
+/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
+@keyframes logoZoom{
+  0%{transform:scale(0.7) translateY(0) rotate(0deg)}
+  25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
+  40%{transform:scale(1.45) translateY(0) rotate(0deg)}
+  48%{transform:scale(1.45) translateY(0) rotate(-6deg)}
+  56%{transform:scale(1.45) translateY(0) rotate(6deg)}
+  64%{transform:scale(1.45) translateY(0) rotate(-5deg)}
+  72%{transform:scale(1.45) translateY(0) rotate(4deg)}
+  80%{transform:scale(1.25) translateY(4px) rotate(0deg)}
+  88%{transform:scale(1.08) translateY(-3px) rotate(0deg)}
+  94%{transform:scale(0.96) translateY(2px) rotate(0deg)}
+  100%{transform:scale(1) translateY(0) rotate(0deg)}
+}
 .caixa{background:#fff;padding:14px;border-radius:12px;margin-top:12px}
+.caixa h3{background:#eff6ff;border:2px solid #0b5ed7;border-radius:999px;padding:10px 14px;text-align:center;margin:0 0 8px}
 label{font-size:13px;font-weight:700;color:#333;display:block;margin:12px 0 4px}
 input,textarea{width:100%;padding:11px;border:1px solid #cfd5df;border-radius:8px;font-size:15px}
 textarea{resize:vertical}
@@ -27,8 +42,8 @@ textarea{resize:vertical}
 <div class="topo" id="topoSite"><div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>Casa Nova</b></span></div><a href="admin.html">← Voltar</a></div>
 
 <div class="caixa">
-<h3 style="margin:0">🏠 Sobre a Minha Loja</h3>
-<p style="color:#666;font-size:13px">Edita aqui o que aparece na página Sobre para os clientes.</p>
+<h3>🏠 Sobre a Minha Loja</h3>
+<p style="color:#666;font-size:13px;text-align:center">Edita aqui o que aparece na página Sobre para os clientes.</p>
 
 <label>🏠 Sobre Nós</label>
 <textarea id="sobre" rows="4" placeholder="Ex: Bem-vindo à Casa Nova..."></textarea>
@@ -38,6 +53,9 @@ textarea{resize:vertical}
 
 <label>🎯 Missão</label>
 <textarea id="missao" rows="3" placeholder="Ex: Levar produtos de qualidade..."></textarea>
+
+<label>🔒 Política de Segurança da Nossa Loja</label>
+<textarea id="politica_seguranca" rows="5" placeholder="Ex: Na Casa Nova, a tua segurança é a nossa prioridade...&#10;&#10;- Os teus dados pessoais são protegidos e nunca são partilhados com terceiros.&#10;- Todos os pagamentos são verificados antes da entrega.&#10;- Só entregamos depois de confirmar o pagamento / comprovativo.&#10;- Se tiveres dúvidas, fala connosco no WhatsApp."></textarea>
 
 <label>📍 Endereço</label>
 <input id="endereco" placeholder="Ex: Luanda, Angola">
@@ -70,6 +88,7 @@ async function carregar(){
   document.getElementById('sobre').value=c.sobre||'';
   document.getElementById('visao').value=c.visao||'';
   document.getElementById('missao').value=c.missao||'';
+  document.getElementById('politica_seguranca').value=c.politica_seguranca||c.politica||c.seguranca||'';
   document.getElementById('endereco').value=c.endereco||'';
   document.getElementById('telefone').value=c.telefone||'';
   document.getElementById('whatsapp').value=c.whatsapp||'';
@@ -81,6 +100,7 @@ async function salvar(){
     sobre:document.getElementById('sobre').value.trim(),
     visao:document.getElementById('visao').value.trim(),
     missao:document.getElementById('missao').value.trim(),
+    politica_seguranca:document.getElementById('politica_seguranca').value.trim(),
     endereco:document.getElementById('endereco').value.trim(),
     telefone:document.getElementById('telefone').value.trim(),
     whatsapp:document.getElementById('whatsapp').value.trim(),
@@ -88,7 +108,7 @@ async function salvar(){
     email_loja:document.getElementById('email').value.trim()
   };
   let r=await db.from('loja_config').update(dados).eq('id',1);
-  if(r.error) return aviso('❌ '+r.error.message,'erro');
+  if(r.error) return aviso('❌ '+r.error.message+' - Vai ao Supabase > SQL e corre: ALTER TABLE loja_config ADD COLUMN politica_seguranca TEXT;','erro');
   aviso('✅ Sobre a Loja atualizado!');
 }
 carregarLogoTopo(); carregar();

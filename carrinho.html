@@ -73,7 +73,7 @@ h1{font-size:1.4rem;margin-bottom:12px}
     <img id="logoTopo" class="logo-img" src="" alt="Casa Nova" style="display:none">
     <span class="logo-text" id="nomeTopo">⬅ Casa Nova</span>
   </a>
-  <a href="index.html">Loja</a>
+  <a href="meus-pedidos.html">🔖 Meus Códigos</a>
 </div>
 <div class="container">
 <h1>Meu Carrinho</h1>
@@ -85,6 +85,7 @@ h1{font-size:1.4rem;margin-bottom:12px}
   <div id="erroForm" class="erro"></div>
   <div id="avisoUnico" class="aviso-unico">🔒 <b>Pedido já confirmado!</b><br>Este pedido já gerou o código <b id="codigoUnicoTxt"></b>. Guarda o código, faz print. <b>Não é possível gerar outro código com o mesmo comprovativo.</b><br>Se quiseres fazer outro pedido, limpa o carrinho e começa um novo.</div>
   <input id="nome" placeholder="Teu nome completo">
+  <input id="email" type="email" placeholder="Teu e-mail (obrigatório para verificação)">
   <input id="telefone" placeholder="Teu telefone / WhatsApp">
   <label>🚚 Como queres receber?</label>
   <div class="abas-entrega">
@@ -135,7 +136,7 @@ h1{font-size:1.4rem;margin-bottom:12px}
       <div style="font-size:13px;opacity:.8">✅ PAGAMENTO CONFIRMADO</div>
       <div style="font-size:13px;opacity:.8;margin-top:6px">TUA REFERÊNCIA - GUARDA BEM, É ÚNICA</div>
       <b id="codigoRef">CN-000000</b>
-      <div style="font-size:12px;opacity:.8">Faz print! Se perderes, não geramos outro.</div>
+      <div style="font-size:12px;opacity:.8">⚠️ Aponta! Fica visível só 24h em Meus Códigos, depois apaga.</div>
     </div>
   </div>
   <div class="total" id="total">Total: 0 Kz</div>
@@ -149,7 +150,7 @@ h1{font-size:1.4rem;margin-bottom:12px}
   <div class="modal-box"><div style="font-size:40px">🗑️</div><h3 style="margin:8px 0">Limpar todo o carrinho?</h3><button class="btn-whats" style="background:#dc2626" onclick="confirmarLimpar()">Sim, Limpar</button><button class="btn-limpar" onclick="fecharLimpar()">Cancelar</button></div>
 </div>
 <div id="modalFinalizar" class="modal-fundo" onclick="if(event.target.id==='modalFinalizar') fecharFinalizar()">
-  <div class="modal-box"><div style="font-size:40px">⚠️</div><h3 style="margin:8px 0">Confirmar só 1 vez?</h3><p style="color:#666;font-size:14px;margin-bottom:16px" id="textoFinalizar">Vais receber o código de referência.</p><p style="color:#dc2626;font-size:13px;font-weight:700">⚠️ ATENÇÃO: Só podes confirmar 1 vez! Guarda o código, faz print. Se perderes, não geramos outro.</p><button class="btn-whats" onclick="confirmarFinalizar()">Sim, Confirmar 1 Única Vez</button><button class="btn-limpar" onclick="fecharFinalizar()">Cancelar</button></div>
+  <div class="modal-box"><div style="font-size:40px">⚠️</div><h3 style="margin:8px 0">Confirmar só 1 vez?</h3><p style="color:#666;font-size:14px;margin-bottom:16px" id="textoFinalizar">Vais receber o código de referência.</p><p style="color:#dc2626;font-size:13px;font-weight:700">⚠️ ATENÇÃO: Só podes confirmar 1 vez! Guarda o código, faz print. O código fica visível só 24h, depois apaga. Aponta num caderno!</p><button class="btn-whats" onclick="confirmarFinalizar()">Sim, Confirmar 1 Única Vez</button><button class="btn-limpar" onclick="fecharFinalizar()">Cancelar</button></div>
 </div>
 <div id="toast"></div>
 <script>
@@ -163,11 +164,9 @@ let codigoRef = '';
 let comprovativoData = null;
 let comprovativoNome = '';
 let comprovativoTipo = '';
-// TRAVA - 1 ÚNICO PEDIDO POR COMPROVATIVO
 let pedidoJaConfirmado = false;
 let codigoJaGerado = '';
 function gerarCodigo(){
-  // Se já gerou, NÃO gera outro - devolve o mesmo
   if(codigoJaGerado) { codigoRef = codigoJaGerado; return codigoRef; }
   codigoRef = 'CN-' + Math.floor(100000 + Math.random()*900000);
   codigoJaGerado = codigoRef;
@@ -297,6 +296,7 @@ async function renderizar(){
     document.getElementById('infoCliente').style.display='block';
     document.getElementById('infoCliente').innerHTML = `👤 Comprando como: <b>${cliente.nome||cliente.nome_cliente||''}</b><br>📧 ${cliente.email||''} • 📞 ${cliente.telefone||''}`;
     document.getElementById('nome').value = cliente.nome||cliente.nome_cliente||'';
+    document.getElementById('email').value = cliente.email||'';
     document.getElementById('telefone').value = cliente.telefone||'';
     if(cliente.morada) document.getElementById('referenciaZona').value = cliente.morada;
     document.getElementById('avisoLogin').style.display='none';
@@ -325,7 +325,6 @@ function abrirLimpar(){ document.getElementById('modalLimpar').classList.add('ab
 function fecharLimpar(){ document.getElementById('modalLimpar').classList.remove('aberto'); }
 function confirmarLimpar(){
   fecharLimpar();
-  // Limpar desbloqueia para um NOVO pedido - mas o código antigo já foi enviado para o WhatsApp e fica guardado
   pedidoJaConfirmado = false; codigoJaGerado = ''; comprovativoData = null; comprovativoNome = '';
   document.getElementById('btnFinalizar').disabled = false;
   document.getElementById('btnFinalizar').textContent = '✅ Confirmar Pedido e Receber Código';
@@ -345,8 +344,10 @@ function finalizar(){
   let carrinho = getCarrinho(); let erro = document.getElementById('erroForm'); erro.style.display='none';
   if(!carrinho.length){ mostrarToast('🛒 Carrinho vazio'); return; }
   let nome = document.getElementById('nome').value.trim();
+  let email = document.getElementById('email').value.trim();
   let telefone = document.getElementById('telefone').value.trim();
   if(!nome || !telefone){ erro.textContent='⚠️ Preenche nome e telefone!'; erro.style.display='block'; return; }
+  if(!email || !email.includes('@')){ erro.textContent='⚠️ Preenche o teu e-mail! É preciso para o admin verificar o teu pedido.'; erro.style.display='block'; return; }
   if(modoEntrega==='entrega'){
     let pais = document.getElementById('pais').value.trim();
     let cidade = document.getElementById('cidade').value.trim();
@@ -356,25 +357,30 @@ function finalizar(){
   if(!comprovativoData){ erro.textContent='⚠️ 2º - Sobe o comprovativo! PDF, PNG ou foto.'; erro.style.display='block'; return; }
   if(!document.getElementById('checkPago').checked){ erro.textContent='⚠️ 3º - Marca "Confirmo que já fiz o pagamento"!'; erro.style.display='block'; return; }
   if(!cliente){
-    let novoCliente = {nome, telefone, morada: document.getElementById('referenciaZona').value.trim(), email:'', senha:''};
+    let novoCliente = {nome, telefone, morada: document.getElementById('referenciaZona').value.trim(), email: email, senha:''};
     localStorage.setItem('cliente_casa_nova', JSON.stringify(novoCliente)); cliente = novoCliente;
+  } else {
+    cliente.email = email;
+    localStorage.setItem('cliente_casa_nova', JSON.stringify(cliente));
   }
   let total = carrinho.reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
   let aPagar = modoEntrega==='entrega' ? Math.round(total/2) : total;
-  document.getElementById('textoFinalizar').textContent = `Pagaste ${aPagar.toLocaleString()} Kz • Vais receber o código ÚNICO ${codigoRef} • Vais ser levado para o WhatsApp.`;
+  document.getElementById('textoFinalizar').textContent = `Pagaste ${aPagar.toLocaleString()} Kz • Vais receber o código ÚNICO ${codigoRef} • Vais ser levado para o WhatsApp e para Meus Códigos.`;
   document.getElementById('modalFinalizar').classList.add('aberto');
 }
 function fecharFinalizar(){ document.getElementById('modalFinalizar').classList.remove('aberto'); }
-function confirmarFinalizar(){
+async function confirmarFinalizar(){
   if(pedidoJaConfirmado){ fecharFinalizar(); mostrarToast('🔒 Já confirmaste! Teu código é ' + codigoRef); return; }
   fecharFinalizar();
-  // TRAVA LOGO - NÃO DEIXA CLICAR 2 VEZES
   bloquearPedido();
   let carrinho = getCarrinho();
   let nome = document.getElementById('nome').value.trim();
+  let email = document.getElementById('email').value.trim();
   let telefone = document.getElementById('telefone').value.trim();
   let pagamento = document.getElementById('pagamento').value;
   let total = carrinho.reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
+  let pago = modoEntrega==='entrega' ? Math.round(total/2) : total;
+  let falta = total - pago;
   let pag = _pagAtivos.find(x=>x.tipo===pagamento);
   let detalhePag='';
   if(pag){
@@ -382,19 +388,38 @@ function confirmarFinalizar(){
     else if(pag.tipo==='PayPay') detalhePag=`\n💸 PayPay - Ref: ${pag.referencia||pag.conta||''} | Tel: ${pag.telefone||''}`;
     else if(pag.tipo==='IBAN') detalhePag=`\n🏦 IBAN: ${pag.iban||pag.conta||''} (${pag.nome||pag.titular||''})`;
   }
+  let moradaTxt = modoEntrega==='entrega' ? `${document.getElementById('pais').value.trim()}, ${document.getElementById('cidade').value.trim()}, ${document.getElementById('referenciaZona').value.trim()}` : `${_lojaInfo.pais}, ${_lojaInfo.cidade}, ${_lojaInfo.bairro} (Receber na Loja)`;
+  // 1) GUARDA NO TELEFONE DO CLIENTE POR 24H - depois apaga sozinho em meus-pedidos.html
+  try{
+    let meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]');
+    meus.push({ codigo: codigoRef, nome: nome, email: email, telefone: telefone, itens: carrinho.map(i=>i.nome+' x'+i.qtd).join(', '), total: total, pago: pago, falta: falta, tipo: modoEntrega, criado_em: Date.now() });
+    localStorage.setItem('meus_codigos', JSON.stringify(meus));
+  }catch(e){}
+  // 2) GUARDA NO SUPABASE PARA O ADMIN VERIFICAR - só nome, email, o que comprou, o que pagou, o que falta + comprovativo
+  try{
+    if(typeof db !== 'undefined'){
+      let payload = { nome_cliente: nome, nome: nome, email: email, telefone: telefone, morada: moradaTxt, endereco: moradaTxt, itens: JSON.stringify(carrinho), produtos: JSON.stringify(carrinho), total: total, valor_total: total, valor_pago: pago, falta_pagar: falta, codigo: codigoRef, status: 'Novo', comprovativo_url: comprovativoData || '', tipo_entrega: modoEntrega, pagamento: pagamento };
+      let r = await db.from('pedidos').insert([payload]);
+      if(r.error){
+        // Se a tabela pedidos não tem alguma coluna nova, tenta só com o básico
+        console.log('Insert pedidos falhou, a tentar básico:', r.error.message);
+        let r2 = await db.from('pedidos').insert([{ nome_cliente: nome, email: email, telefone: telefone, morada: moradaTxt, itens: JSON.stringify(carrinho), total: total, codigo: codigoRef, status: 'Novo' }]);
+        if(r2.error) console.log('Insert básico também falhou:', r2.error.message);
+      }
+    }
+  }catch(e){ console.log('Erro ao gravar pedido:', e); }
+  // 3) MENSAGEM WHATSAPP
   let msg='';
   if(modoEntrega==='entrega'){
     let pais = document.getElementById('pais').value.trim();
     let cidade = document.getElementById('cidade').value.trim();
     let ref = document.getElementById('referenciaZona').value.trim();
-    let metade = Math.round(total/2);
-    msg = `🛒 *NOVO PEDIDO - CASA NOVA*\n\n🚚 *ENTREGA A DOMICÍLIO*\n👤 Cliente: ${nome}\n📞 ${telefone}\n🌍 País: ${pais}\n🏙️ Cidade: ${cidade}\n📍 Referência Zona: ${ref}\n💳 Pagamento: ${pagamento}${detalhePag}\n✅ *Pagamento confirmado pelo cliente*\n📎 Comprovativo: ${comprovativoNome} (anexado)\n🔖 *Código ÚNICO de Referência: ${codigoRef}*\n⚠️ *Este código só foi gerado 1 vez. Não aceites outro código com este comprovativo.*\n\n📦 *Produtos:*\n` + carrinho.map(i=>`• ${i.nome} - ${Number(i.preco).toLocaleString()} Kz x ${i.qtd} = ${(Number(i.preco)*(i.qtd||1)).toLocaleString()} Kz`).join('\n') + `\n\n💰 *Total: ${total.toLocaleString()} Kz*\n✅ *Pago agora 50%: ${metade.toLocaleString()} Kz*\n📦 *Falta pagar na entrega: ${(total-metade).toLocaleString()} Kz*`;
+    msg = `🛒 *NOVO PEDIDO - CASA NOVA*\n\n🚚 *ENTREGA A DOMICÍLIO*\n👤 Cliente: ${nome}\n📧 ${email}\n📞 ${telefone}\n🌍 País: ${pais}\n🏙️ Cidade: ${cidade}\n📍 Referência Zona: ${ref}\n💳 Pagamento: ${pagamento}${detalhePag}\n✅ *Pagamento confirmado pelo cliente*\n📎 Comprovativo: ${comprovativoNome} (anexado)\n🔖 *Código ÚNICO: ${codigoRef}*\n⚠️ *Este código só foi gerado 1 vez. Não aceites outro código com este comprovativo.*\n\n📦 *Produtos:*\n` + carrinho.map(i=>`• ${i.nome} - ${Number(i.preco).toLocaleString()} Kz x ${i.qtd} = ${(Number(i.preco)*(i.qtd||1)).toLocaleString()} Kz`).join('\n') + `\n\n💰 *Total: ${total.toLocaleString()} Kz*\n✅ *Pago agora 50%: ${pago.toLocaleString()} Kz*\n📦 *Falta pagar na entrega: ${falta.toLocaleString()} Kz*`;
   } else {
-    msg = `🛒 *NOVO PEDIDO - CASA NOVA*\n\n🏪 *RECEBER NA LOJA*\n👤 Cliente: ${nome}\n📞 ${telefone}\n🏪 Loja: ${_lojaInfo.pais}, ${_lojaInfo.cidade}, ${_lojaInfo.bairro}\n💳 Pagamento: ${pagamento}${detalhePag}\n✅ *Pagamento confirmado pelo cliente*\n📎 Comprovativo: ${comprovativoNome} (anexado)\n🔖 *Código ÚNICO de Referência: ${codigoRef}*\n⚠️ *Este código só foi gerado 1 vez. Não aceites outro código com este comprovativo.*\n\n📦 *Produtos:*\n` + carrinho.map(i=>`• ${i.nome} - ${Number(i.preco).toLocaleString()} Kz x ${i.qtd} = ${(Number(i.preco)*(i.qtd||1)).toLocaleString()} Kz`).join('\n') + `\n\n💰 *Total pago: ${total.toLocaleString()} Kz*`;
+    msg = `🛒 *NOVO PEDIDO - CASA NOVA*\n\n🏪 *RECEBER NA LOJA*\n👤 Cliente: ${nome}\n📧 ${email}\n📞 ${telefone}\n🏪 Loja: ${_lojaInfo.pais}, ${_lojaInfo.cidade}, ${_lojaInfo.bairro}\n💳 Pagamento: ${pagamento}${detalhePag}\n✅ *Pagamento confirmado pelo cliente*\n📎 Comprovativo: ${comprovativoNome} (anexado)\n🔖 *Código ÚNICO: ${codigoRef}*\n⚠️ *Este código só foi gerado 1 vez. Não aceites outro código com este comprovativo.*\n\n📦 *Produtos:*\n` + carrinho.map(i=>`• ${i.nome} - ${Number(i.preco).toLocaleString()} Kz x ${i.qtd} = ${(Number(i.preco)*(i.qtd||1)).toLocaleString()} Kz`).join('\n') + `\n\n💰 *Total pago: ${total.toLocaleString()} Kz*`;
   }
   try{
     let refs = JSON.parse(localStorage.getItem('minhas_referencias')||'[]');
-    // Não deixa guardar 2 vezes o mesmo comprovativo + mesmo código
     let jaExiste = refs.some(r=>r.comprovativo===comprovativoNome && r.codigo===codigoRef);
     if(!jaExiste) refs.push({codigo: codigoRef, data: new Date().toISOString(), total, nome, telefone, tipo:modoEntrega, comprovativo: comprovativoNome, pagamento});
     localStorage.setItem('minhas_referencias', JSON.stringify(refs));
@@ -402,8 +427,9 @@ function confirmarFinalizar(){
   }catch(e){}
   let numero = getWhatsAppLoja();
   window.open('https://wa.me/'+numero+'?text='+encodeURIComponent(msg), '_blank');
-  mostrarToast('✅ Código ÚNICO gerado: ' + codigoRef + ' - Faz print!');
-  // NÃO chama gerarCodigo() aqui - se chamasse, ia gerar outro código e ele podia mentir
+  mostrarToast('✅ Código gerado: ' + codigoRef + ' - Aponta! Fica 24h.');
+  setCarrinho([]);
+  setTimeout(()=>{ location.href='meus-pedidos.html'; }, 1200);
 }
 async function carregarLogoTopo(){
   try{

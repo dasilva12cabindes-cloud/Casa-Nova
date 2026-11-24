@@ -93,14 +93,23 @@ async function carregar(){
         <option value="Entregue" ${status==='Entregue'?'selected':''}>✅ Entregue</option>
         <option value="Cancelado" ${status==='Cancelado'?'selected':''}>❌ Cancelado</option>
       </select>
-      <button class="btn btn-verde" style="margin-top:8px" onclick="window.open('https://wa.me/${tel.replace(/[^0-9]/g,'')}?text=${waMsg}','_blank')">💬 Falar no WhatsApp</button>
+      <button class="btn btn-verde" style="margin-top:8px" onclick="window.open('https://wa.me/${String(tel||'').replace(/[^0-9]/g,'')}?text=${waMsg}','_blank')">💬 Falar no WhatsApp</button>
     </div>`;
   }).join('');
 }
 async function mudarStatus(id,status,tabela){
-  let r=await db.from(tabela).update({status:status,estado:status}).eq('id',id);
-  if(r.error) return aviso('❌ '+r.error.message,'erro');
-  aviso('✅ Pedido atualizado para: '+status); carregar();
+  // CORRIGIDO: tenta só UMA coluna de cada vez
+  // 1º tenta 'status'
+  let r = await db.from(tabela).update({status: status}).eq('id', id);
+  if(!r.error){ aviso('✅ Pedido atualizado para: '+status); carregar(); return; }
+  // 2º se 'status' não existe, tenta 'estado'
+  if(r.error.message.includes('status') || r.error.message.includes('column')){
+    let r2 = await db.from(tabela).update({estado: status}).eq('id', id);
+    if(!r2.error){ aviso('✅ Pedido atualizado para: '+status); carregar(); return; }
+    // 3º se nenhuma existe, avisa para criar a coluna
+    return aviso('❌ Falta a coluna status/estado na tabela '+tabela+'. Vai ao Supabase > SQL e corre: ALTER TABLE '+tabela+' ADD COLUMN status TEXT DEFAULT \'Novo\';','erro');
+  }
+  return aviso('❌ '+r.error.message,'erro');
 }
 carregarLogoTopo(); carregar();
 </script></body></html>

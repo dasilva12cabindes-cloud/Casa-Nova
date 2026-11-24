@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vendas - Casa Nova</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
+.topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}
+.topo .logo{display:flex;align-items:center;gap:8px}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:#fff;border-radius:8px;padding:2px;display:none}
+.topo.tem-logo .logo-text{display:none}
+.topo a{color:#fff;text-decoration:none;font-weight:700}
+.caixa{background:#fff;padding:14px;border-radius:12px;margin-top:12px}
+input,select{width:100%;padding:11px;margin-bottom:8px;border:1px solid #cfd5df;border-radius:8px;font-size:15px}
+.btn{background:#0b5ed7;color:#fff;border:0;padding:11px;border-radius:8px;width:100%;font-weight:700;cursor:pointer}
+.resumo{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+.resumo div{background:#f8fafc;padding:12px;border-radius:10px;text-align:center}
+.resumo b{font-size:20px;display:block}
+.resumo small{color:#666}
+.linha{border-bottom:1px solid #eee;padding:10px 0;display:flex;justify-content:space-between;gap:8px}
+</style></head>
+<body>
+<div class="topo" id="topoSite"><div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>Casa Nova</b></span></div><a href="admin.html">← Voltar</a></div>
+
+<div class="caixa">
+<h3>💰 Relatório de Venda Diária</h3>
+<label style="font-size:13px;color:#666">Escolhe o dia:</label>
+<input type="date" id="dataDia">
+<button class="btn" onclick="carregarVendas()">📊 Ver Vendas do Dia</button>
+<button class="btn" onclick="hoje()" style="margin-top:8px;background:#16a34a">Hoje</button>
+
+<div class="resumo">
+  <div><b id="totalVendas">0 Kz</b><small>Total Vendido</small></div>
+  <div><b id="qtdPedidos">0</b><small>Pedidos</small></div>
+  <div><b id="qtdItens">0</b><small>Produtos Vendidos</small></div>
+</div>
+</div>
+
+<div class="caixa">
+<h3>📋 Detalhe do Dia <span id="dataLabel" style="font-size:13px;color:#666"></span></h3>
+<div id="lista">Escolhe um dia e clica em Ver Vendas.</div>
+</div>
+
+<div class="caixa">
+<h3>📅 Últimos 7 Dias</h3>
+<div id="ultimos7">A carregar...</div>
+</div>
+
+<script>
+async function carregarLogoTopo(){
+  try{let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();let logo=r.data?.logo_url;if(logo){let img=document.getElementById('logoTopo');img.src=logo;img.style.display='block';document.getElementById('topoSite').classList.add('tem-logo');}}catch(e){}
+}
+function hoje(){
+  let d=new Date(); let s=d.toISOString().slice(0,10);
+  document.getElementById('dataDia').value=s;
+  carregarVendas();
+}
+async function carregarVendas(){
+  let dia=document.getElementById('dataDia').value;
+  if(!dia) return alert('Escolhe o dia primeiro');
+  document.getElementById('dataLabel').textContent='- '+dia.split('-').reverse().join('/');
+  // Tenta buscar na tabela pedidos, se não existir usa encomendas
+  let lista=[]; let erro=null;
+  let r=await db.from('pedidos').select('*').order('created_at',{ascending:false});
+  if(!r.error) lista=r.data||[];
+  else {
+    let r2=await db.from('encomendas').select('*').order('created_at',{ascending:false});
+    if(!r2.error) lista=r2.data||[];
+    else erro=r2.error;
+  }
+  if(erro){ document.getElementById('lista').innerHTML='<p style="color:#dc2626">Ainda não tens tabela de pedidos. As vendas vão aparecer aqui quando o cliente fizer pedido no carrinho.</p>'; return; }
+
+  // Filtra pelo dia
+  let doDia=lista.filter(p=>{
+    let d=(p.created_at||'').slice(0,10);
+    return d===dia;
+  });
+
+  let total=0; let itens=0;
+  doDia.forEach(p=>{
+    let v=Number(p.total||p.valor_total||p.preco_total||0);
+    total+=v;
+    // tenta contar itens
+    try{
+      let it=p.itens||p.produtos||p.items;
+      if(typeof it==='string') it=JSON.parse(it);
+      if(Array.isArray(it)) itens+=it.reduce((s,i)=>s+(i.qtd||i.quantidade||1),0);
+      else itens+=1;
+    }catch(e){ itens+=1; }
+  });
+
+  document.getElementById('totalVendas').textContent=total.toLocaleString()+' Kz';
+  document.getElementById('qtdPedidos').textContent=doDia.length;
+  document.getElementById('qtdItens').textContent=itens;
+
+  if(!doDia.length){ document.getElementById('lista').innerHTML='<p style="text-align:center;color:#888;padding:20px">Nenhuma venda neste dia.</p>'; return; }
+  document.getElementById('lista').innerHTML=doDia.map(p=>{
+    let nome=p.nome_cliente||p.cliente_nome||p.nome||p.telefone||'Cliente';
+    let tel=p.telefone||p.whatsapp||'';
+    let valor=Number(p.total||p.valor_total||p.preco_total||0).toLocaleString();
+    let status=p.status||p.estado||'Novo';
+    let hora=(p.created_at||'').slice(11,16);
+    return `<div class="linha"><div><b>${nome}</b><br><small>${tel} • ${hora} • ${status}</small></div><b style="color:#0b5ed7">${valor} Kz</b></div>`;
+  }).join('') + `<div style="text-align:center;margin-top:10px"><a href="admin-pedidos.html" style="color:#0b5ed7;font-weight:700">Ver todos os pedidos →</a></div>`;
+}
+async function ultimos7Dias(){
+  let r=await db.from('pedidos').select('*');
+  let lista=r.data||[];
+  if(!lista.length){
+    let r2=await db.from('encomendas').select('*');
+    lista=r2.data||[];
+  }
+  let dias={};
+  for(let i=0;i<7;i++){
+    let d=new Date(); d.setDate(d.getDate()-i);
+    let s=d.toISOString().slice(0,10);
+    dias[s]=0;
+  }
+  lista.forEach(p=>{
+    let d=(p.created_at||'').slice(0,10);
+    if(dias[d]!==undefined) dias[d]+=Number(p.total||p.valor_total||p.preco_total||0);
+  });
+  document.getElementById('ultimos7').innerHTML=Object.keys(dias).map(d=>{
+    let label=d.split('-').reverse().join('/');
+    return `<div class="linha"><span>${label}</span><b>${dias[d].toLocaleString()} Kz</b></div>`;
+  }).join('');
+}
+carregarLogoTopo(); hoje(); ultimos7Dias();
+</script></body></html>

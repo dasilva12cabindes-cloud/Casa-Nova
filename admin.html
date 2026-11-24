@@ -1,302 +1,32 @@
 <!DOCTYPE html>
 <html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Admin - Casa Nova</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js"></script>
-<script src="js/supabase.js"></script>
-<style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
-.topo{background:#2563eb;color:#fff;padding:12px;border-radius:10px;display:flex;justify-content:space-between}
-.topo a{color:#fff;text-decoration:none;font-weight:700}
-.caixa{background:#fff;padding:14px;border-radius:12px;margin-top:12px}
-input,select,textarea{width:100%;padding:11px;margin-bottom:8px;border:1px solid #cfd5df;border-radius:8px;font-size:15px}
-textarea{min-height:70px}
-label{font-size:13px;color:#555;font-weight:700}
-.btn{background:#2563eb;color:#fff;border:0;padding:11px;border-radius:8px;width:100%;font-weight:700;cursor:pointer}
-.btn-verde{background:#16a34a;color:#fff;border:0;padding:11px;border-radius:8px;width:100%;font-weight:700;cursor:pointer}
-.btn-vermelho{background:#dc2626;color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
-.btn-cinza{background:#e5e7eb;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
-.item{display:flex;gap:10px;align-items:center;border-top:1px solid #eee;padding:10px 0}
-.item img{width:80px;height:80px;object-fit:cover;border-radius:8px;background:#f8f8f8;display:block}
-.preview{width:100%;margin-top:8px}
-.cat-item{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;padding:8px 0}
-#toast{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:14px 18px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:9999;font-size:15px;font-weight:700;max-width:92%;text-align:center;transition:.35s;opacity:0;pointer-events:none}
-#toast.mostrar{transform:translateX(-50%) translateY(0);opacity:1}
-#toast.sucesso{background:#16a34a}
-#toast.erro{background:#dc2626}
-#toast.aviso{background:#f59e0b;color:#111}
-#modalFundo{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9998;padding:16px}
-#modalFundo.mostrar{display:flex}
-#modalCaixa{background:#fff;width:100%;max-width:360px;border-radius:18px;padding:20px;text-align:center}
-#modalCaixa h3{margin:0 0 8px}
-#modalCaixa p{color:#555;font-size:14px}
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6}
+.topo{background:#2563eb;color:#fff;padding:14px;display:flex;justify-content:space-between;align-items:center}
+.topo b{font-size:19px}
+.topo a{color:#fff;text-decoration:none;font-weight:700;font-size:14px}
+.titulo{padding:16px 14px 4px;font-size:22px;font-weight:800}
+.sub{padding:0 14px 12px;color:#666;font-size:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px}
+.card{background:#fff;border-radius:16px;padding:20px 12px;text-align:center;text-decoration:none;color:#111;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.card span{font-size:38px;display:block;margin-bottom:8px}
+.card b{display:block;font-size:15px}
+.card small{color:#666;font-size:12px;line-height:1.4;display:block;margin-top:4px}
+.card:active{transform:scale(.97)}
 </style></head>
 <body>
-<div id="toast"></div>
-<div id="modalFundo"><div id="modalCaixa"><h3>Confirmar?</h3><p id="modalTexto"></p><button class="btn-verde" id="modalSim" style="margin-top:10px">✅ Sim, continuar</button><button class="btn-cinza" onclick="fecharModal(false)" style="margin-top:8px">Cancelar</button></div></div>
+<div class="topo"><b>🏠 Casa Nova - Admin</b><a href="index.html">Ver Loja →</a></div>
+<div class="titulo">Painel do Administrador</div>
+<div class="sub">Escolhe o que queres gerir:</div>
 
-<div class="topo"><b>Admin Casa Nova</b><div><a href="sobre.html" style="margin-right:10px">Ver Sobre</a><a href="index.html">Ver Loja</a></div></div>
-
-<div class="caixa"><h3>🏠 Logotipo da Loja</h3>
-<p style="color:#666;font-size:14px">Este logotipo aparece sozinho no topo do site, com fundo azul.</p>
-<div id="logoAtual">A carregar...</div>
-<input type="file" id="fileLogo" accept="image/*">
-<button class="btn" onclick="subirLogo()">📤 Subir Logotipo</button>
+<div class="grid">
+  <a class="card" href="admin-logo.html"><span>🖼️</span><b>Logotipo & Banner</b><small>Logo da loja + publicidade</small></a>
+  <a class="card" href="admin-sobre.html"><span>🏠</span><b>Sobre a Minha Loja</b><small>Sobre, visão, missão</small></a>
+  <a class="card" href="admin-categorias.html"><span>📂</span><b>Categorias & Produtos</b><small>Adicionar / Editar</small></a>
+  <a class="card" href="admin-produtos.html"><span>🛍️</span><b>Produtos</b><small>Todos os produtos da loja</small></a>
+  <a class="card" href="admin-vendas.html"><span>💰</span><b>Vendas</b><small>Relatório de venda diária</small></a>
+  <a class="card" href="admin-pedidos.html"><span>📦</span><b>Pedidos</b><small>Pedidos recebidos</small></a>
 </div>
 
-<div class="caixa"><h3>🖼️ Banners / Publicidade</h3>
-<p style="color:#666;font-size:14px">Estas fotos vão passar sozinhas no topo da loja.</p>
-<input id="urlBanner" placeholder="Cola o link da foto aqui... Ex: https://.../banner.jpg">
-<button class="btn" onclick="adicionarBanner()">+ Adicionar Banner</button>
-<p style="text-align:center;color:#888">OU</p>
-<input type="file" id="fileBanner" accept="image/*">
-<button class="btn" onclick="subirBanner()">📤 Subir Foto do Telefone</button>
-<div id="listaBanners">A carregar...</div>
-</div>
-
-<div class="caixa"><h3>🏪 Sobre a Minha Loja - TU MODIFICAS AQUI</h3>
-<p style="color:#666;font-size:14px">Isto aparece na página <b>sobre.html</b> para o cliente ver.</p>
-<label>🏠 Sobre a loja</label>
-<textarea id="fSobre" placeholder="Ex: Somos uma loja em Luanda, vendemos eletrodomésticos e telemóveis novos com garantia..."></textarea>
-<label>👁️ Visão</label>
-<textarea id="fVisao" placeholder="Ex: Ser a melhor loja de eletrodomésticos em Angola..."></textarea>
-<label>🎯 Missão</label>
-<textarea id="fMissao" placeholder="Ex: Levar produtos de qualidade a todas as famílias..."></textarea>
-<label>📍 Endereço</label>
-<input id="fEndereco" placeholder="Ex: Luanda, Viana, Rua...">
-<label>📞 Telefone</label>
-<input id="fTelefone" placeholder="Ex: 923 000 000">
-<label>💬 WhatsApp (só números, ex: 244923000000)</label>
-<input id="fWhatsapp" placeholder="Ex: 244923000000">
-<label>🕒 Horário</label>
-<input id="fHorario" placeholder="Ex: Seg - Sáb: 08h00 - 19h00">
-<label>📧 Email da loja</label>
-<input id="fEmail" placeholder="Ex: casa.nova@gmail.com">
-<button class="btn-verde" onclick="salvarSobre()">💾 Guardar Informações da Loja</button>
-<a href="sobre.html" style="display:block;text-align:center;margin-top:10px;color:#2563eb;font-weight:700">👀 Ver como ficou a página Sobre</a>
-</div>
-
-<div class="caixa"><h3>📁 Gerir Categorias - ÉS TU QUE ADICIONAS</h3>
-<p style="color:#666;font-size:14px">Escreve a categoria e clica em Adicionar.</p>
-<input id="novaCategoria" placeholder="Ex: Arca, Geladeira, Coluna...">
-<button class="btn" onclick="adicionarCategoria()">+ Adicionar Categoria</button>
-<div id="listaCategorias" style="margin-top:10px">A carregar...</div>
-</div>
-
-<div class="caixa"><h3>➕ Adicionar / Editar Produto</h3>
-<input type="hidden" id="editId" value="">
-<label>Nome do produto</label>
-<input id="fNome" placeholder="Ex: Samsung Galaxy A51">
-<label>Categoria</label>
-<select id="fCategoria"></select>
-<label>Preço (Kz)</label>
-<input id="fPreco" type="number" placeholder="Ex: 8000">
-<label>Descrição</label>
-<textarea id="fDesc" placeholder="Ex: Samsung A51, novo, com garantia..."></textarea>
-<label>Foto - link ou subir do telefone</label>
-<input id="fImagem" placeholder="Cola o link da foto ou sobe em baixo">
-<input type="file" id="fileProduto" accept="image/*">
-<button class="btn-verde" onclick="salvarProduto()">💾 Guardar Produto</button>
-<button class="btn-cinza" style="margin-top:8px" onclick="limparForm()">Limpar / Novo</button>
-</div>
-
-<div class="caixa"><h3>🛍️ Produtos</h3><div id="listaProdutos">A carregar...</div></div>
-
-<script>
-let toastTimer;
-function aviso(msg, tipo){
-  let t=document.getElementById('toast');
-  t.textContent=msg;
-  t.className='mostrar '+(tipo||'sucesso');
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>{ t.className=''; }, 3000);
-}
-let resolverModal=null;
-function perguntar(texto){
-  return new Promise(res=>{
-    resolverModal=res;
-    document.getElementById('modalTexto').textContent=texto;
-    document.getElementById('modalFundo').classList.add('mostrar');
-  });
-}
-function fecharModal(v){
-  document.getElementById('modalFundo').classList.remove('mostrar');
-  if(resolverModal){ resolverModal(v); resolverModal=null; }
-}
-document.getElementById('modalSim').onclick=()=>fecharModal(true);
-
-let banners=[];
-let produtos=[];
-let categorias=['Arca','Ar Condicionado','Telemóveis','Máquina de Lavar','Ferro de Engomar','Eletrodomésticos','TV e Som','Informática','Outros'];
-try{
-  let salvas=JSON.parse(localStorage.getItem('categorias_casanova')||'[]');
-  salvas.forEach(c=>{ if(c && !categorias.includes(c)) categorias.push(c); });
-}catch(e){}
-function guardarCategorias(){ localStorage.setItem('categorias_casanova', JSON.stringify(categorias)); }
-function mostrarCategorias(){
-  document.getElementById('listaCategorias').innerHTML=categorias.map((c,i)=>'<div class="cat-item"><b>📁 '+c+'</b><button class="btn-vermelho" onclick="apagarCategoria('+i+')">🗑️ Apagar</button></div>').join('')||'Sem categorias';
-  let sel=document.getElementById('fCategoria');
-  let atual=sel.value;
-  sel.innerHTML=categorias.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
-  if(atual && categorias.includes(atual)) sel.value=atual;
-}
-function adicionarCategoria(){
-  let v=document.getElementById('novaCategoria').value.trim();
-  if(!v) return aviso('⚠️ Escreve a categoria primeiro','aviso');
-  if(categorias.includes(v)) return aviso('⚠️ Essa categoria já existe','aviso');
-  categorias.push(v); guardarCategorias(); mostrarCategorias();
-  document.getElementById('novaCategoria').value='';
-  document.getElementById('fCategoria').value=v;
-  aviso('✅ Categoria "'+v+'" adicionada!');
-}
-async function apagarCategoria(i){
-  let ok=await perguntar('Apagar a categoria "'+categorias[i]+'"?');
-  if(!ok) return;
-  categorias.splice(i,1); guardarCategorias(); mostrarCategorias();
-  aviso('🗑️ Categoria apagada');
-}
-// ===== SOBRE A LOJA =====
-async function salvarSobre(){
-  let dados={
-    sobre: document.getElementById('fSobre').value.trim(),
-    visao: document.getElementById('fVisao').value.trim(),
-    missao: document.getElementById('fMissao').value.trim(),
-    endereco: document.getElementById('fEndereco').value.trim(),
-    telefone: document.getElementById('fTelefone').value.trim(),
-    whatsapp: document.getElementById('fWhatsapp').value.trim(),
-    horario: document.getElementById('fHorario').value.trim(),
-    email_loja: document.getElementById('fEmail').value.trim()
-  };
-  let r=await db.from('loja_config').update(dados).eq('id',1);
-  if(r.error) return aviso('❌ Erro: '+r.error.message,'erro');
-  aviso('✅ Informações da loja guardadas!');
-}
-async function carregarSobreAdmin(){
-  let r=await db.from('loja_config').select('*').eq('id',1).maybeSingle();
-  let c=r.data||{};
-  if(document.getElementById('fSobre')){
-    document.getElementById('fSobre').value=c.sobre||'';
-    document.getElementById('fVisao').value=c.visao||'';
-    document.getElementById('fMissao').value=c.missao||'';
-    document.getElementById('fEndereco').value=c.endereco||'';
-    document.getElementById('fTelefone').value=c.telefone||'';
-    document.getElementById('fWhatsapp').value=c.whatsapp||'';
-    document.getElementById('fHorario').value=c.horario||'';
-    document.getElementById('fEmail').value=c.email_loja||'';
-  }
-}
-function mostrarBanners(){
-  let div=document.getElementById('listaBanners');
-  if(!banners.length){div.innerHTML='<p>Nenhum banner ainda.</p>';return}
-  div.innerHTML=banners.map((b,i)=>'<div style="border-top:1px solid #eee;padding:10px 0"><div class="preview"><img src="'+b+'" style="width:100%;height:auto;object-fit:contain;border-radius:8px"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><b>Banner '+(i+1)+'</b><button class="btn-vermelho" onclick="apagarBanner('+i+')">🗑️ Apagar</button></div><small style="word-break:break-all;color:#888">'+b+'</small></div>').join('');
-}
-async function carregarTudo(){
-  const r=await db.from('loja_config').select('*').eq('id',1).maybeSingle();
-  let cfg=r.data||{};
-  if(cfg.logo_url){
-    document.getElementById('logoAtual').innerHTML='<img src="'+cfg.logo_url+'" style="width:100%;max-height:150px;object-fit:contain;background:#2563eb;border-radius:8px"><p style="text-align:center;color:green">✅ Logotipo atual</p>';
-  } else {
-    document.getElementById('logoAtual').innerHTML='<p>Sem logotipo ainda.</p>';
-  }
-  try{banners=typeof cfg.banners==='string'?JSON.parse(cfg.banners||'[]'):(cfg.banners||[])}catch(e){banners=[]}
-  if(!banners.length && cfg.banner_url) banners=[cfg.banner_url];
-  mostrarBanners();
-}
-async function subirLogo(){
-  const f=document.getElementById('fileLogo').files[0];
-  if(!f) return aviso('⚠️ Escolhe o logotipo primeiro','aviso');
-  const nome='logo_'+Date.now()+'_'+f.name.replace(/\s/g,'_');
-  const up=await db.storage.from('produtos').upload(nome,f,{upsert:true});
-  if(up.error) return aviso('❌ Erro: '+up.error.message,'erro');
-  const pub=db.storage.from('produtos').getPublicUrl(nome);
-  const url=pub.data.publicUrl;
-  const r=await db.from('loja_config').update({logo_url:url}).eq('id',1);
-  if(r.error) return aviso('❌ Erro: '+r.error.message,'erro');
-  aviso('✅ Logotipo guardado!'); carregarTudo();
-}
-async function guardar(){
-  const r=await db.from('loja_config').update({banners:JSON.stringify(banners), banner_url:banners[0]||null}).eq('id',1);
-  if(r.error) return aviso('❌ Erro: '+r.error.message,'erro');
-  mostrarBanners(); aviso('✅ Guardado!');
-}
-async function adicionarBanner(){
-  const v=document.getElementById('urlBanner').value.trim();
-  if(!v) return aviso('⚠️ Cola o link primeiro','aviso');
-  banners.push(v); document.getElementById('urlBanner').value=''; await guardar();
-}
-async function subirBanner(){
-  const f=document.getElementById('fileBanner').files[0];
-  if(!f) return aviso('⚠️ Escolhe uma foto','aviso');
-  const nome='banner_'+Date.now()+'_'+f.name.replace(/\s/g,'_');
-  const up=await db.storage.from('produtos').upload(nome,f,{upsert:true});
-  if(up.error) return aviso('❌ Erro: '+up.error.message,'erro');
-  const pub=db.storage.from('produtos').getPublicUrl(nome);
-  banners.push(pub.data.publicUrl); await guardar();
-}
-async function apagarBanner(i){
-  let ok=await perguntar('Apagar este banner?');
-  if(!ok) return;
-  banners.splice(i,1); await guardar();
-}
-function limparForm(){
-  document.getElementById('editId').value='';
-  document.getElementById('fNome').value='';
-  document.getElementById('fPreco').value='';
-  document.getElementById('fDesc').value='';
-  document.getElementById('fImagem').value='';
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-async function salvarProduto(){
-  let id=document.getElementById('editId').value;
-  let nome=document.getElementById('fNome').value.trim();
-  let preco=Number(document.getElementById('fPreco').value);
-  let categoria=document.getElementById('fCategoria').value;
-  let descricao=document.getElementById('fDesc').value.trim();
-  let imagem=document.getElementById('fImagem').value.trim();
-  let f=document.getElementById('fileProduto').files[0];
-  if(!nome || !preco) return aviso('⚠️ Preenche o nome e o preço','aviso');
-  if(f){
-    let nomeF='prod_'+Date.now()+'_'+f.name.replace(/\s/g,'_');
-    let up=await db.storage.from('produtos').upload(nomeF,f,{upsert:true});
-    if(up.error) return aviso('❌ Erro foto: '+up.error.message,'erro');
-    imagem=db.storage.from('produtos').getPublicUrl(nomeF).data.publicUrl;
-  }
-  if(!imagem && !id) return aviso('⚠️ Cola o link da foto ou sobe uma foto','aviso');
-  let dados={nome:nome, preco:preco, categoria:categoria, descricao:descricao};
-  if(imagem) { dados.imagem=imagem; dados.imagem_url=imagem; }
-  let r;
-  if(id) r=await db.from('produtos').update(dados).eq('id',id);
-  else r=await db.from('produtos').insert([dados]);
-  if(r.error) return aviso('❌ Erro: '+r.error.message,'erro');
-  aviso('✅ Produto guardado: '+nome);
-  limparForm(); carregarProdutos();
-}
-function editarProduto(id){
-  let p=produtos.find(x=>x.id==id); if(!p) return;
-  if(p.categoria && !categorias.includes(p.categoria)){ categorias.push(p.categoria); guardarCategorias(); mostrarCategorias(); }
-  document.getElementById('editId').value=p.id;
-  document.getElementById('fNome').value=p.nome||'';
-  document.getElementById('fPreco').value=p.preco||'';
-  document.getElementById('fCategoria').value=p.categoria||'Outros';
-  document.getElementById('fDesc').value=p.descricao||p.detalhes||'';
-  document.getElementById('fImagem').value=p.imagem||p.imagem_url||'';
-  window.scrollTo({top:0,behavior:'smooth'});
-  aviso('✏️ Agora edita em cima e clica em Guardar');
-}
-async function apagarProduto(id){
-  let ok=await perguntar('Apagar este produto?');
-  if(!ok) return;
-  let r=await db.from('produtos').delete().eq('id',id);
-  if(r.error) return aviso('❌ Erro: '+r.error.message,'erro');
-  aviso('🗑️ Produto apagado');
-  carregarProdutos();
-}
-async function carregarProdutos(){
-  const r=await db.from('produtos').select('*').order('id',{ascending:false});
-  produtos=r.data||[];
-  produtos.forEach(p=>{ if(p.categoria && !categorias.includes(p.categoria)) categorias.push(p.categoria); });
-  guardarCategorias(); mostrarCategorias();
-  document.getElementById('listaProdutos').innerHTML=produtos.map(x=>'<div class="item"><img src="'+(x.imagem||x.imagem_url||'')+'"><div style="flex:1"><b>'+x.nome+'</b><br><small style="color:#2563eb;font-weight:700">📁 '+(x.categoria||'Sem categoria')+'</small><br>'+Number(x.preco).toLocaleString()+' Kz<br><button class="btn-cinza" style="margin-top:6px" onclick="editarProduto('+x.id+')">✏️ Editar</button> <button class="btn-vermelho" onclick="apagarProduto('+x.id+')">🗑️ Apagar</button></div></div>').join('')||'Sem produtos';
-}
-mostrarCategorias();
-carregarTudo(); carregarProdutos(); carregarSobreAdmin();
-</script></body></html>
+</body></html>

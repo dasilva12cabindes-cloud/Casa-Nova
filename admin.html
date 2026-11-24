@@ -20,9 +20,7 @@
 .card b{display:block;font-size:15px}
 .card small{color:#666;font-size:12px;line-height:1.4;display:block;margin-top:4px}
 .card:active{transform:scale(.97)}
-/* Destaque para pagamento e WhatsApp */
 .card-pagamento{border:2px solid #0b5ed7}
-.card-whats{border:2px solid #16a34a}
 </style></head>
 <body>
 <div class="topo" id="topoSite">
@@ -43,14 +41,11 @@
   <a class="card" href="admin-vendas.html"><span>💰</span><b>Vendas</b><small>Relatório de venda diária</small></a>
   <a class="card" href="admin-pedidos.html"><span>📦</span><b>Pedidos</b><small>Pedidos recebidos</small></a>
   <a class="card" href="admin-clientes.html"><span>👥</span><b>Clientes Cadastrados</b><small>Ver todos os clientes</small></a>
-
-  <!-- RETIFICADO: NOVOS BOTÕES -->
-  <a class="card card-pagamento" href="admin-pagamento.html"><span>💳</span><b>Sistema de Pagamento</b><small>Multicaixa Express, PayPay, IBAN</small></a>
-  <a class="card card-whats" href="admin-pagamento.html#whatsapp"><span>📱</span><b>WhatsApp da Loja</b><small>Número para cliente falar contigo</small></a>
+  <a class="card card-pagamento" href="admin-pagamento.html"><span>💳</span><b>Sistema de Pagamento</b><small>Multicaixa Express, PayPay, IBAN + WhatsApp</small></a>
+  <!-- BOTÃO WHATSAPP RETIRADO - já está dentro do Sistema de Pagamento -->
 </div>
 
 <script>
-// LOGOTIPO NO TOPO - aparece em todas as telas do Admin
 async function carregarLogoTopo(){
   try{
     let r = await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();

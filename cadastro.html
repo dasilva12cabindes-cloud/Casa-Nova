@@ -12,12 +12,27 @@
 body{font-family:system-ui,Arial,sans-serif;background:#f5f6f8;color:#1d2330}
 .topo{display:flex;justify-content:space-between;align-items:center;padding:8px 16px;background:#0b5ed7;color:#fff;height:72px}
 .topo .logo{display:flex;align-items:center}
-.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:none}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
 .topo.tem-logo .logo-text{display:none}
 .topo .logo-text{font-size:1.3rem;font-weight:700}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
+/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
+@keyframes logoZoom{
+  0%{transform:scale(0.7) translateY(0) rotate(0deg)}
+  25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
+  40%{transform:scale(1.45) translateY(0) rotate(0deg)}
+  48%{transform:scale(1.45) translateY(0) rotate(-6deg)}
+  56%{transform:scale(1.45) translateY(0) rotate(6deg)}
+  64%{transform:scale(1.45) translateY(0) rotate(-5deg)}
+  72%{transform:scale(1.45) translateY(0) rotate(4deg)}
+  80%{transform:scale(1.25) translateY(4px) rotate(0deg)}
+  88%{transform:scale(1.08) translateY(-3px) rotate(0deg)}
+  94%{transform:scale(0.96) translateY(2px) rotate(0deg)}
+  100%{transform:scale(1) translateY(0) rotate(0deg)}
+}
 .container{max-width:480px;margin:0 auto;padding:16px}
 .card{background:#fff;border-radius:16px;padding:20px;margin-top:16px}
+.card h1{background:#fff;border:2px solid #0b5ed7;border-radius:999px;padding:12px 16px;font-size:1.4rem;text-align:center;margin-bottom:6px}
 .abas{display:flex;background:#eef2ff;border-radius:12px;padding:4px;margin-bottom:16px}
 .aba{flex:1;padding:12px;border:0;border-radius:9px;background:transparent;font-weight:700;cursor:pointer}
 .aba.ativa{background:#0b5ed7;color:#fff}
@@ -41,11 +56,11 @@ small{color:#666;font-size:13px}
 </div>
 
 <div class="container">
-  <h1 style="font-size:1.4rem">Minha Conta</h1>
-  <p style="color:#666;font-size:13px;margin-top:4px">Cria conta ou entra para comprar mais rápido.</p>
-
   <div class="card">
-    <div class="abas">
+  <h1>Minha Conta</h1>
+  <p style="color:#666;font-size:13px;margin-top:4px;text-align:center">Cria conta ou entra para comprar mais rápido.</p>
+
+    <div class="abas" style="margin-top:14px">
       <button class="aba ativa" id="abaCriar" onclick="trocarAba('criar')">Criar Conta</button>
       <button class="aba" id="abaEntrar" onclick="trocarAba('entrar')">Entrar</button>
     </div>
@@ -91,7 +106,6 @@ function trocarAba(aba){
   document.getElementById('boxCriar').style.display = aba==='criar' ? 'block' : 'none';
   document.getElementById('boxEntrar').style.display = aba==='entrar' ? 'block' : 'none';
 }
-// Se veio do carrinho: cadastro.html?aba=entrar
 let params = new URLSearchParams(location.search);
 if(params.get('aba')==='entrar') trocarAba('entrar');
 
@@ -107,10 +121,8 @@ async function criarConta(){
   if(senha.length < 4){ mostrarErro('⚠️ Senha muito curta, usa 4+ caracteres!'); return; }
 
   let cliente = {nome, telefone, email, morada, senha};
-  // Guarda no telemóvel - é isto que o carrinho lê
   localStorage.setItem('cliente_casa_nova', JSON.stringify(cliente));
 
-  // Tenta guardar também no Supabase (se a tabela existir)
   try{
     if(typeof db !== 'undefined'){
       await db.from('clientes').insert([{nome, telefone, email, morada, senha}]);
@@ -127,7 +139,6 @@ async function entrar(){
   let senha = document.getElementById('senhaEntrar').value;
   if(!email || !senha){ mostrarErro('⚠️ Preenche email e senha!'); return; }
 
-  // 1. Tenta no telemóvel
   try{
     let salvo = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null');
     if(salvo && salvo.email === email && salvo.senha === senha){
@@ -137,7 +148,6 @@ async function entrar(){
     }
   }catch(e){}
 
-  // 2. Tenta no Supabase
   try{
     if(typeof db !== 'undefined'){
       let {data} = await db.from('clientes').select('*').eq('email', email).eq('senha', senha).maybeSingle();

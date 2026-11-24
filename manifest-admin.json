@@ -1,0 +1,15 @@
+{
+  "name": "Casa Nova - Admin",
+  "short_name": "Admin Casa Nova",
+  "start_url": "/admin.html",
+  "display": "standalone",
+  "background_color": "#0b5ed7",
+  "theme_color": "#0b5ed7",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/609/609803.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

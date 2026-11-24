@@ -1,9 +1,15 @@
 <!DOCTYPE html>
 <html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Admin - Casa Nova</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6}
-.topo{background:#2563eb;color:#fff;padding:14px;display:flex;justify-content:space-between;align-items:center}
+.topo{background:#0b5ed7;color:#fff;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;height:72px}
+.topo .logo{display:flex;align-items:center;gap:10px}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:#fff;border-radius:8px;padding:2px;display:none}
+.topo.tem-logo .logo-text{display:none}
 .topo b{font-size:19px}
 .topo a{color:#fff;text-decoration:none;font-weight:700;font-size:14px}
 .titulo{padding:16px 14px 4px;font-size:22px;font-weight:800}
@@ -16,7 +22,13 @@
 .card:active{transform:scale(.97)}
 </style></head>
 <body>
-<div class="topo"><b>🏠 Casa Nova - Admin</b><a href="index.html">Ver Loja →</a></div>
+<div class="topo" id="topoSite">
+  <div class="logo">
+    <img id="logoTopo" class="logo-img" src="">
+    <span class="logo-text"><b>🏠 Casa Nova - Admin</b></span>
+  </div>
+  <a href="index.html">Ver Loja →</a>
+</div>
 <div class="titulo">Painel do Administrador</div>
 <div class="sub">Escolhe o que queres gerir:</div>
 
@@ -29,4 +41,20 @@
   <a class="card" href="admin-pedidos.html"><span>📦</span><b>Pedidos</b><small>Pedidos recebidos</small></a>
 </div>
 
+<script>
+// LOGOTIPO NO TOPO - aparece em todas as telas do Admin
+async function carregarLogoTopo(){
+  try{
+    let r = await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();
+    let logo = r.data?.logo_url;
+    if(logo){
+      let img = document.getElementById('logoTopo');
+      img.src = logo;
+      img.style.display = 'block';
+      document.getElementById('topoSite').classList.add('tem-logo');
+    }
+  }catch(e){}
+}
+carregarLogoTopo();
+</script>
 </body></html>

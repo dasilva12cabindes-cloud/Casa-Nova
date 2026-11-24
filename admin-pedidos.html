@@ -10,10 +10,18 @@
 .caixa b{font-size:1.05rem}
 .caixa small{color:#666}
 .linha{padding:6px 0;border-top:1px solid #eef0f4}
+.logo-topo{height:42px;max-width:160px;object-fit:contain;background:transparent;display:none}
+.logo-texto{font-weight:800;font-size:18px;color:#fff}
 </style>
 </head>
 <body>
-<header class="topo"><a href="index.html" class="logo">Casa Nova</a><nav><a href="admin.html">Admin</a></nav></header>
+<header class="topo" style="display:flex;justify-content:space-between;align-items:center">
+  <a href="index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none">
+    <img id="logoTopo" class="logo-topo" src="">
+    <span id="logoTexto" class="logo-texto">Casa Nova</span>
+  </a>
+  <nav><a href="admin.html">Admin</a></nav>
+</header>
 <main class="container">
 <h2 style="margin:12px 0">Pedidos Recebidos</h2>
 <p id="msg">A carregar...</p>
@@ -23,6 +31,16 @@
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
 <script>
+async function carregarLogo(){
+  try{
+    var r = await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();
+    if(r.data && r.data.logo_url){
+      var lt = document.getElementById('logoTopo');
+      lt.src = r.data.logo_url; lt.style.display='block';
+      document.getElementById('logoTexto').style.display='none';
+    }
+  }catch(e){}
+}
 async function carregar(){
   var r = await db.from("pedidos").select("*").order("criado_em", {ascending:false});
   if(r.error){ document.getElementById("msg").textContent = "Erro: " + r.error.message; return; }
@@ -37,6 +55,7 @@ async function carregar(){
     return "<div class='caixa'><b>"+(p.nome||"Cliente")+"</b> <small>"+new Date(p.criado_em).toLocaleString("pt-AO")+"</small><br>📞 "+(p.telefone||"")+"<br>📍 "+(p.morada||"")+"<br><br>"+itens+"<br><b>Total: "+kz(p.total)+"</b></div>";
   }).join("");
 }
+carregarLogo();
 carregar();
 </script>
 </body>

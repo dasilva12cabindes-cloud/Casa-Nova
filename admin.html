@@ -12,7 +12,6 @@
 .topo.tem-logo .logo-text{display:none}
 .topo b{font-size:19px}
 .topo a{color:#fff;text-decoration:none;font-weight:700;font-size:14px}
-/* PAINEL DO ADMIN - COM BORDER-RADIUS TIPO CÁPSULA REDONDA */
 .titulo{background:#fff;border:2px solid #0b5ed7;border-radius:999px;padding:14px 20px;margin:14px 14px 6px;font-size:24px;font-weight:900;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.08)}
 .sub{padding:0 14px 12px;color:#666;font-size:14px;text-align:center}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px}
@@ -20,56 +19,23 @@
 .card span{font-size:38px;display:block;margin-bottom:8px;transition:transform .15s ease}
 .card b{display:block;font-size:15px}
 .card small{color:#666;font-size:12px;line-height:1.4;display:block;margin-top:4px}
-.grid .card:nth-child(1){animation-delay:0s}
-.grid .card:nth-child(2){animation-delay:.3s}
-.grid .card:nth-child(3){animation-delay:.6s}
-.grid .card:nth-child(4){animation-delay:.9s}
-.grid .card:nth-child(5){animation-delay:1.2s}
-.grid .card:nth-child(6){animation-delay:1.5s}
-.grid .card:nth-child(7){animation-delay:.2s}
-.grid .card:nth-child(8){animation-delay:.8s}
-.grid .card:nth-child(9){animation-delay:1.1s}
-.grid .card:nth-child(10){animation-delay:.5s}
+.grid .card:nth-child(1){animation-delay:0s}.grid .card:nth-child(2){animation-delay:.3s}.grid .card:nth-child(3){animation-delay:.6s}.grid .card:nth-child(4){animation-delay:.9s}.grid .card:nth-child(5){animation-delay:1.2s}.grid .card:nth-child(6){animation-delay:1.5s}.grid .card:nth-child(7){animation-delay:.2s}.grid .card:nth-child(8){animation-delay:.8s}.grid .card:nth-child(9){animation-delay:1.1s}.grid .card:nth-child(10){animation-delay:.5s}
 @keyframes flutuar{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-/* LOGOTIPO - ZOOM BEM MAIOR, AGITA, VOLTA COMO AMORTECEDOR */
-@keyframes logoZoom{
-  0%{transform:scale(0.7) translateY(0) rotate(0deg)}
-  25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
-  40%{transform:scale(1.45) translateY(0) rotate(0deg)}
-  48%{transform:scale(1.45) translateY(0) rotate(-6deg)}
-  56%{transform:scale(1.45) translateY(0) rotate(6deg)}
-  64%{transform:scale(1.45) translateY(0) rotate(-5deg)}
-  72%{transform:scale(1.45) translateY(0) rotate(4deg)}
-  80%{transform:scale(1.25) translateY(4px) rotate(0deg)}
-  88%{transform:scale(1.08) translateY(-3px) rotate(0deg)}
-  94%{transform:scale(0.96) translateY(2px) rotate(0deg)}
-  100%{transform:scale(1) translateY(0) rotate(0deg)}
-}
+@keyframes logoZoom{0%{transform:scale(0.7) translateY(0) rotate(0deg)}25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}40%{transform:scale(1.45) translateY(0) rotate(0deg)}48%{transform:scale(1.45) translateY(0) rotate(-6deg)}56%{transform:scale(1.45) translateY(0) rotate(6deg)}64%{transform:scale(1.45) translateY(0) rotate(-5deg)}72%{transform:scale(1.45) translateY(0) rotate(4deg)}80%{transform:scale(1.25) translateY(4px) rotate(0deg)}88%{transform:scale(1.08) translateY(-3px) rotate(0deg)}94%{transform:scale(0.96) translateY(2px) rotate(0deg)}100%{transform:scale(1) translateY(0) rotate(0deg)}}
 .card:active, .card.zoom{animation:none !important;transform:scale(1.12) !important;box-shadow:0 12px 22px rgba(0,0,0,.25)}
 .card:active span, .card.zoom span{transform:scale(1.3)}
-.card-pagamento{border:2px solid #1e3a8a;background:#eff6ff}
-.card-verificar{border:2px solid #16a34a;background:#f0fdf4}
-.card-verificar b{color:#166534}
-.card-conta{border:2px solid #f97316;background:#fff7ed}
-.card-pedidos{border:2px solid #6b7280;background:#f9fafb}
-.card-logo{border:2px solid #eab308;background:#fefce8}
-.card-sobre{border:2px solid #dc2626;background:#fef2f2}
-.card-categorias{border:2px solid #0b5ed7;background:#eff6ff}
-.card-produtos{border:2px solid #ec4899;background:#fdf2f8}
-.card-vendas{border:2px solid #f59e0b;background:#fffbeb}
-.card-clientes{border:2px solid #06b6d4;background:#ecfeff}
-.btn-sair{background:#dc2626;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer;font-size:14px;transition:transform .15s ease}
-.btn-sair:active{transform:scale(1.1)}
-#telaLogin{position:fixed;inset:0;background:#0b5ed7;z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
-#telaLogin.aberto{display:flex}
+.card-pagamento{border:2px solid #1e3a8a;background:#eff6ff}.card-verificar{border:2px solid #16a34a;background:#f0fdf4}.card-verificar b{color:#166534}.card-conta{border:2px solid #f97316;background:#fff7ed}.card-pedidos{border:2px solid #6b7280;background:#f9fafb}.card-logo{border:2px solid #eab308;background:#fefce8}.card-sobre{border:2px solid #dc2626;background:#fef2f2}.card-categorias{border:2px solid #0b5ed7;background:#eff6ff}.card-produtos{border:2px solid #ec4899;background:#fdf2f8}.card-vendas{border:2px solid #f59e0b;background:#fffbeb}.card-clientes{border:2px solid #06b6d4;background:#ecfeff}
+.btn-sair{background:#dc2626;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer;font-size:14px;transition:transform .15s ease}.btn-sair:active{transform:scale(1.1)}
+#telaLogin{position:fixed;inset:0;background:#0b5ed7;z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}#telaLogin.aberto{display:flex}
 .login-box{background:#fff;width:100%;max-width:340px;border-radius:20px;padding:24px;text-align:center}
 .login-box .logo-login{height:90px;width:auto;max-width:230px;object-fit:contain;display:none;margin:0 auto 8px;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
 .login-box input{width:100%;padding:14px;border:1px solid #cfd5df;border-radius:10px;margin-top:10px;font-size:16px;text-align:center;box-sizing:border-box}
-.login-box button{background:#0b5ed7;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;margin-top:12px;cursor:pointer;transition:transform .15s ease}
-.login-box button:active{transform:scale(1.05)}
+.login-box button{background:#0b5ed7;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;margin-top:12px;cursor:pointer;transition:transform .15s ease}.login-box button:active{transform:scale(1.05)}
 .link-peq{color:#0b5ed7;font-size:13px;font-weight:700;cursor:pointer;display:block;margin-top:10px}
-#telaConta{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:3000;display:none;align-items:center;justify-content:center;padding:20px}
-#telaConta.aberto{display:flex}
+#telaConta{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:3000;display:none;align-items:center;justify-content:center;padding:20px}#telaConta.aberto{display:flex}
+/* CAIXAS BONITAS - SEM CONFIRM / ALERT FEIO */
+.modal-fundo{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;display:none;align-items:center;justify-content:center;padding:20px}.modal-fundo.aberto{display:flex}.modal-box{background:#fff;width:100%;max-width:360px;border-radius:24px;overflow:hidden;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.35);animation:pop .25s ease}@keyframes pop{from{transform:scale(.85) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}.modal-topo{padding:22px 18px 16px;color:#fff}.modal-topo .emoji{font-size:48px;display:block;margin-bottom:6px}.modal-topo h3{margin:0;font-size:19px}.modal-corpo{padding:18px}.modal-corpo input{width:100%;padding:14px;border:1px solid #cfd5df;border-radius:10px;margin-top:10px;font-size:15px;text-align:center;box-sizing:border-box}.modal-botoes{display:flex;gap:10px;padding:0 18px 18px}.modal-botoes button{flex:1;border:0;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer}.btn-sim{background:#16a34a;color:#fff}.btn-nao{background:#eef2ff;color:#111}.btn-vermelho{background:#dc2626;color:#fff}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:999px;font-size:14px;font-weight:700;z-index:6000;display:none;max-width:90%;text-align:center}
 </style></head>
 <body>
 <div id="telaLogin"><div class="login-box">
@@ -81,7 +47,7 @@
   <input id="senhaAdmin" type="password" placeholder="Tua senha" onkeydown="if(event.key==='Enter') entrarAdmin()">
   <button onclick="entrarAdmin()">Entrar</button>
   <p id="erroLogin" style="color:#dc2626;font-size:13px;display:none;margin-top:8px"></p>
-  <span class="link-peq" onclick="esqueciSenha()">🔑 Esqueci a senha - Criar nova senha</span>
+  <span class="link-peq" onclick="abrirEsqueci()">🔑 Esqueci a senha - Criar nova senha</span>
   <a href="index.html" style="display:block;margin-top:14px;color:#0b5ed7;font-weight:700;font-size:14px">← Voltar à Loja</a>
 </div></div>
 <div id="telaConta"><div class="login-box">
@@ -94,14 +60,21 @@
   <button onclick="salvarConta()" style="background:#16a34a">💾 Guardar Novo E-mail e Senha</button>
   <button onclick="fecharConta()" style="background:#eee;color:#111">Fechar</button>
 </div></div>
+
+<!-- MODAL SAIR BONITO -->
+<div id="modalSair" class="modal-fundo" onclick="if(event.target.id==='modalSair') fecharModalSair()"><div class="modal-box"><div class="modal-topo" style="background:linear-gradient(135deg,#dc2626,#b91c1c)"><span class="emoji">🚪</span><h3>Queres mesmo sair do Admin?</h3></div><div class="modal-corpo"><p style="color:#666;font-size:14px;margin:0">Vais ter que entrar de novo com e-mail e senha.</p></div><div class="modal-botoes"><button class="btn-nao" onclick="fecharModalSair()">❌ Cancelar</button><button class="btn-vermelho" onclick="confirmarSair()">✅ Sim, Sair</button></div></div></div>
+
+<!-- MODAL ESQUECI SENHA BONITO -->
+<div id="modalEsqueci" class="modal-fundo" onclick="if(event.target.id==='modalEsqueci') fecharEsqueci()"><div class="modal-box"><div class="modal-topo" style="background:linear-gradient(135deg,#0b5ed7,#1e40af)"><span class="emoji">🔑</span><h3>Criar nova senha</h3></div><div class="modal-corpo"><p style="color:#666;font-size:13px;margin:0">Escreve a tua nova senha:</p><input id="novaSenhaEsqueci" type="password" placeholder="Nova senha (mínimo 4)"><p id="erroEsqueci" style="color:#dc2626;font-size:13px;display:none"></p></div><div class="modal-botoes"><button class="btn-nao" onclick="fecharEsqueci()">❌ Cancelar</button><button class="btn-sim" onclick="confirmarEsqueci()">💾 Guardar</button></div></div></div>
+
 <div class="topo" id="topoSite">
   <div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>🏠 Casa Nova - Admin</b></span></div>
-  <div style="display:flex;gap:8px;align-items:center"><a href="index.html">Ver Loja →</a><button class="btn-sair" onclick="sairAdmin()">🚪 Sair</button></div>
+  <div style="display:flex;gap:8px;align-items:center"><a href="index.html">Ver Loja →</a><button class="btn-sair" onclick="abrirModalSair()">🚪 Sair</button></div>
 </div>
 <div class="titulo">Painel do Administrador</div>
 <div class="sub">Escolhe o que queres gerir:</div>
 <div class="grid">
-  <a class="card card-verificar" href="admin-verificar.html"><span>🔍</span><b>Verificar Comprovativo e Código</b><small>Nome, e-mail, o que comprou, o que pagou, o que falta + comprovativo</small></a>
+  <a class="card card-verificar" href="verificar-novo.html"><span>🔍</span><b>Verificar Comprovativo e Código</b><small>Nome, e-mail, o que comprou, o que pagou, o que falta + comprovativo</small></a>
   <a class="card card-pedidos" href="admin-pedidos.html"><span>📦</span><b>Pedidos</b><small>Pedidos recebidos</small></a>
   <a class="card card-logo" href="admin-logo.html"><span>🖼️</span><b>Logotipo & Banner</b><small>Logo da loja + publicidade</small></a>
   <a class="card card-sobre" href="admin-sobre.html"><span>🏠</span><b>Sobre a Minha Loja</b><small>Sobre, visão, missão</small></a>
@@ -112,19 +85,18 @@
   <a class="card card-pagamento" href="admin-pagamento.html"><span>💳</span><b>Sistema de Pagamento</b><small>Multicaixa Express, PayPay, IBAN + WhatsApp</small></a>
   <a class="card card-conta" href="#" onclick="abrirConta();return false"><span>⚙️</span><b>Minha Conta</b><small>Trocar e-mail e senha</small></a>
 </div>
+<div id="toast"></div>
 <script>
 const EMAIL_PADRAO = 'admin@casanova.co.ao';
 const SENHA_PADRAO = '1234';
+function mostrarToast(txt){var t=document.getElementById('toast');t.textContent=txt;t.style.display='block';setTimeout(function(){t.style.display='none';},2500);}
 document.querySelectorAll('.card').forEach(function(c){
   c.addEventListener('touchstart', function(){ c.classList.add('zoom'); }, {passive:true});
   c.addEventListener('touchend', function(){ setTimeout(function(){ c.classList.remove('zoom'); }, 150); }, {passive:true});
   c.addEventListener('mousedown', function(){ c.classList.add('zoom'); });
   c.addEventListener('mouseup', function(){ setTimeout(function(){ c.classList.remove('zoom'); }, 150); });
 });
-function getConta(){
-  try{ let c=JSON.parse(localStorage.getItem('conta_admin')||'null'); if(c&&c.email&&c.senha) return c; }catch(e){}
-  return {email:EMAIL_PADRAO, senha:SENHA_PADRAO};
-}
+function getConta(){ try{ let c=JSON.parse(localStorage.getItem('conta_admin')||'null'); if(c&&c.email&&c.senha) return c; }catch(e){} return {email:EMAIL_PADRAO, senha:SENHA_PADRAO}; }
 function mostrarLogin(){ document.getElementById('telaLogin').classList.add('aberto'); }
 function esconderLogin(){ document.getElementById('telaLogin').classList.remove('aberto'); }
 function entrarAdmin(){
@@ -141,19 +113,25 @@ function entrarAdmin(){
     erro.style.display='block';
   }
 }
-function esqueciSenha(){
+function abrirEsqueci(){ document.getElementById('novaSenhaEsqueci').value=''; document.getElementById('erroEsqueci').style.display='none'; document.getElementById('modalEsqueci').classList.add('aberto'); }
+function fecharEsqueci(){ document.getElementById('modalEsqueci').classList.remove('aberto'); }
+function confirmarEsqueci(){
   let email=document.getElementById('emailAdmin').value.trim().toLowerCase();
-  if(!email){ alert('Escreve primeiro o teu e-mail em cima.'); return; }
-  let nova=prompt('Escreve a tua NOVA senha para '+email);
-  if(!nova||nova.length<4){ alert('Senha tem que ter no mínimo 4 caracteres.'); return; }
+  let nova=document.getElementById('novaSenhaEsqueci').value.trim();
+  let erro=document.getElementById('erroEsqueci');
+  if(!email){ erro.textContent='Escreve primeiro o teu e-mail em cima.'; erro.style.display='block'; return; }
+  if(!nova||nova.length<4){ erro.textContent='Senha tem que ter no mínimo 4 caracteres.'; erro.style.display='block'; return; }
   localStorage.setItem('conta_admin',JSON.stringify({email:email,senha:nova}));
   localStorage.setItem('admin_logado','sim');
   localStorage.setItem('admin_email',email);
-  alert('✅ Nova senha criada!\nE-mail: '+email+'\nSenha: '+nova);
+  fecharEsqueci();
+  mostrarToast('✅ Nova senha criada!');
   esconderLogin();
 }
-function sairAdmin(){
-  if(!confirm('Queres mesmo sair do Admin?')) return;
+function abrirModalSair(){ document.getElementById('modalSair').classList.add('aberto'); }
+function fecharModalSair(){ document.getElementById('modalSair').classList.remove('aberto'); }
+function confirmarSair(){
+  fecharModalSair();
   localStorage.removeItem('admin_logado');
   document.getElementById('senhaAdmin').value='';
   document.getElementById('emailAdmin').value=getConta().email;
@@ -174,12 +152,12 @@ function salvarConta(){
   let email=document.getElementById('novoEmail').value.trim().toLowerCase();
   let s1=document.getElementById('novaSenha').value.trim();
   let s2=document.getElementById('confirmarSenha').value.trim();
-  if(!email || !email.includes('@')){ alert('Escreve um e-mail válido.'); return; }
-  if(s1.length<4){ alert('Senha tem que ter no mínimo 4 caracteres.'); return; }
-  if(s1!==s2){ alert('As senhas não são iguais!'); return; }
+  if(!email || !email.includes('@')){ mostrarToast('⚠️ Escreve um e-mail válido.'); return; }
+  if(s1.length<4){ mostrarToast('⚠️ Senha tem que ter no mínimo 4.'); return; }
+  if(s1!==s2){ mostrarToast('⚠️ As senhas não são iguais!'); return; }
   localStorage.setItem('conta_admin',JSON.stringify({email:email,senha:s1}));
   localStorage.setItem('admin_email',email);
-  alert('✅ Guardado!\nNovo e-mail: '+email+'\nNova senha: '+s1);
+  mostrarToast('✅ Guardado! Novo e-mail: '+email);
   fecharConta();
 }
 if(localStorage.getItem('admin_logado')==='sim'){ esconderLogin(); }

@@ -19,7 +19,6 @@
 .card span{font-size:38px;display:block;margin-bottom:8px;transition:transform .15s ease}
 .card b{display:block;font-size:15px}
 .card small{color:#666;font-size:12px;line-height:1.4;display:block;margin-top:4px}
-/* CADA BOTÃO FLUTUA NUM TEMPO DIFERENTE - FICA MAIS VIVO */
 .grid .card:nth-child(1){animation-delay:0s}
 .grid .card:nth-child(2){animation-delay:.3s}
 .grid .card:nth-child(3){animation-delay:.6s}
@@ -31,9 +30,9 @@
 .grid .card:nth-child(9){animation-delay:1.1s}
 .grid .card:nth-child(10){animation-delay:.5s}
 @keyframes flutuar{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-/* QUANDO CLICAS - AUMENTA LOGO E ABRE */
-.card:active{transform:scale(1.08) translateY(-2px) !important;box-shadow:0 10px 20px rgba(0,0,0,.20);animation-play-state:paused}
-.card:active span{transform:scale(1.25)}
+/* CORRIGIDO: AO CLICAR PARA A FLUTUAÇÃO E FAZ ZOOM */
+.card:active, .card.zoom{animation:none !important;transform:scale(1.12) !important;box-shadow:0 12px 22px rgba(0,0,0,.25)}
+.card:active span, .card.zoom span{transform:scale(1.3)}
 .card-pagamento{border:2px solid #1e3a8a;background:#eff6ff}
 .card-verificar{border:2px solid #16a34a;background:#f0fdf4}
 .card-verificar b{color:#166534}
@@ -104,6 +103,13 @@
 <script>
 const EMAIL_PADRAO = 'admin@casanova.co.ao';
 const SENHA_PADRAO = '1234';
+// CORRIGIDO: ZOOM NO TOQUE - FUNCIONA NO TELEMÓVEL
+document.querySelectorAll('.card').forEach(function(c){
+  c.addEventListener('touchstart', function(){ c.classList.add('zoom'); }, {passive:true});
+  c.addEventListener('touchend', function(){ setTimeout(function(){ c.classList.remove('zoom'); }, 150); }, {passive:true});
+  c.addEventListener('mousedown', function(){ c.classList.add('zoom'); });
+  c.addEventListener('mouseup', function(){ setTimeout(function(){ c.classList.remove('zoom'); }, 150); });
+});
 function getConta(){
   try{ let c=JSON.parse(localStorage.getItem('conta_admin')||'null'); if(c&&c.email&&c.senha) return c; }catch(e){}
   return {email:EMAIL_PADRAO, senha:SENHA_PADRAO};

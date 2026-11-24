@@ -16,7 +16,6 @@ body{font-family:system-ui,Arial,sans-serif;background:#f5f6f8;color:#1d2330;ove
 .topo .logo-text{font-size:1.3rem;font-weight:700}
 .topo.tem-logo .logo-text{display:none}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
-/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
 @keyframes logoZoom{
   0%{transform:scale(0.7) translateY(0) rotate(0deg)}
   25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
@@ -247,7 +246,7 @@ function mostrarInfoPagamento(){
   txt += `<br><br>💰 <b>${modoEntrega==='entrega'?'Pagas agora 50%':'Pagas agora 100%'}: ${aPagar.toLocaleString()} Kz</b>`;
   div.innerHTML=txt; div.style.display='block';
 }
-function getWhatsAppLoja(){ return _whatsLoja || localStorage.getItem('whatsapp_loja') || '244942788931'; }
+function getWhatsAppLoja(){ return _whatsLoja || localStorage.getItem('whatsapp_loja') || '244972370499'; }
 async function corrigirItensAntigos(){
   let carrinho = getCarrinho();
   let precisa = carrinho.some(i=>!i.nome || !i.preco);
@@ -323,7 +322,8 @@ function finalizar(){
   else { cliente.email = email; localStorage.setItem('cliente_casa_nova', JSON.stringify(cliente)); }
   let total = carrinho.reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
   let aPagar = modoEntrega==='entrega' ? Math.round(total/2) : total;
-  document.getElementById('textoFinalizar').textContent = `Pagaste ${aPagar.toLocaleString()} Kz • Vais receber o teu código ÚNICO depois de confirmar • Vais ser levado para o WhatsApp e para Meus Códigos.`;
+  // SEM WHATSAPP - vai direto para o sistema
+  document.getElementById('textoFinalizar').textContent = `Pagaste ${aPagar.toLocaleString()} Kz • Vais receber o teu código ÚNICO e ir para Meus Códigos. O código fica visível 5 minutos.`;
   document.getElementById('modalFinalizar').classList.add('aberto');
 }
 function fecharFinalizar(){ document.getElementById('modalFinalizar').classList.remove('aberto'); }
@@ -340,13 +340,6 @@ async function confirmarFinalizar(){
   let total = carrinho.reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
   let pago = modoEntrega==='entrega' ? Math.round(total/2) : total;
   let falta = total - pago;
-  let pag = _pagAtivos.find(x=>x.tipo===pagamento);
-  let detalhePag='';
-  if(pag){
-    if(pag.tipo==='Multicaixa Express') detalhePag=`\n📱 Multicaixa: ${pag.telefone||''} (${pag.nome||''})`;
-    else if(pag.tipo==='PayPay') detalhePag=`\n💸 PayPay - Ref: ${pag.referencia||pag.conta||''} | Tel: ${pag.telefone||''}`;
-    else if(pag.tipo==='IBAN') detalhePag=`\n🏦 IBAN: ${pag.iban||pag.conta||''} (${pag.nome||pag.titular||''})`;
-  }
   let moradaTxt = modoEntrega==='entrega' ? `${document.getElementById('pais').value.trim()}, ${document.getElementById('cidade').value.trim()}, ${document.getElementById('referenciaZona').value.trim()}` : `${_lojaInfo.pais}, ${_lojaInfo.cidade}, ${_lojaInfo.bairro} (Receber na Loja)`;
   try{
     let meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]');
@@ -382,15 +375,6 @@ async function confirmarFinalizar(){
     }
   }catch(e){ erroSupabase = e.message; console.log('Erro ao gravar pedido:', e); }
   if(!gravouNoSupabase){ alert('⚠️ ATENÇÃO: O pedido NÃO foi gravado no sistema do admin!\n\nErro: ' + erroSupabase); }
-  let msg='';
-  if(modoEntrega==='entrega'){
-    let pais = document.getElementById('pais').value.trim();
-    let cidade = document.getElementById('cidade').value.trim();
-    let ref = document.getElementById('referenciaZona').value.trim();
-    msg = `🛒 *NOVO PEDIDO - CASA NOVA*\n\n🚚 *ENTREGA A DOMICÍLIO*\n👤 Cliente: ${nome}\n📧 ${email}\n📞 ${telefone}\n🌍 País: ${pais}\n🏙️ Cidade: ${cidade}\n📍 Referência Zona: ${ref}\n💳 Pagamento: ${pagamento}${detalhePag}\n✅ *Pagamento confirmado pelo cliente*\n📎 Comprovativo: ${comprovativoNome} (anexado)\n🔖 *Código ÚNICO: ${codigoRef}*\n⚠️ *Este código só foi gerado 1 vez. Não aceites outro código com este comprovativo.*\n\n📦 *Produtos:*\n` + carrinho.map(i=>`• ${i.nome} - ${Number(i.preco).toLocaleString()} Kz x ${i.qtd} = ${(Number(i.preco)*(i.qtd||1)).toLocaleString()} Kz`).join('\n') + `\n\n💰 *Total: ${total.toLocaleString()} Kz*\n✅ *Pago agora 50%: ${pago.toLocaleString()} Kz*\n📦 *Falta pagar na entrega: ${falta.toLocaleString()} Kz*`;
-  } else {
-    msg = `🛒 *NOVO PEDIDO - CASA NOVA*\n\n🏪 *RECEBER NA LOJA*\n👤 Cliente: ${nome}\n📧 ${email}\n📞 ${telefone}\n🏪 Loja: ${_lojaInfo.pais}, ${_lojaInfo.cidade}, ${_lojaInfo.bairro}\n💳 Pagamento: ${pagamento}${detalhePag}\n✅ *Pagamento confirmado pelo cliente*\n📎 Comprovativo: ${comprovativoNome} (anexado)\n🔖 *Código ÚNICO: ${codigoRef}*\n⚠️ *Este código só foi gerado 1 vez. Não aceites outro código com este comprovativo.*\n\n📦 *Produtos:*\n` + carrinho.map(i=>`• ${i.nome} - ${Number(i.preco).toLocaleString()} Kz x ${i.qtd} = ${(Number(i.preco)*(i.qtd||1)).toLocaleString()} Kz`).join('\n') + `\n\n💰 *Total pago: ${total.toLocaleString()} Kz*`;
-  }
   try{
     let refs = JSON.parse(localStorage.getItem('minhas_referencias')||'[]');
     let jaExiste = refs.some(r=>r.comprovativo===comprovativoNome && r.codigo===codigoRef);
@@ -398,8 +382,7 @@ async function confirmarFinalizar(){
     localStorage.setItem('minhas_referencias', JSON.stringify(refs));
     localStorage.setItem('ultimo_comprovativo', comprovativoData||'');
   }catch(e){}
-  let numero = getWhatsAppLoja();
-  window.open('https://wa.me/'+numero+'?text='+encodeURIComponent(msg), '_blank');
+  // ✅ SEM WHATSAPP - NÃO abre mais o WhatsApp. Vai direto para Meus Códigos onde o código fica 5 min
   mostrarToast('✅ Código gerado: ' + codigoRef + ' - Aponta! Fica 5 minutos.');
   setCarrinho([]);
   setTimeout(()=>{ location.href='meus-pedidos.html'; }, 1200);

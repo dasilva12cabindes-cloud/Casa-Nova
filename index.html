@@ -51,7 +51,6 @@ input,select,textarea{font-size:16px !important}
 .menu-secao { padding:12px 16px 4px; font-size:12px; font-weight:800; color:#888; text-transform:uppercase; }
 .menu-detalhe { margin:12px 16px; background:#f8fafc; border-radius:12px; padding:12px; font-size:13px; line-height:1.7; word-break:break-word; }
 .menu-detalhe b { color:#0b5ed7; }
-/* BOLINHA VERMELHA A PISCAR - ONLINE */
 .ponto-online{display:inline-block;width:11px;height:11px;background:#dc2626;border-radius:50%;margin-left:4px;vertical-align:middle;box-shadow:0 0 0 3px #fee2e2;animation:piscarOnline 1s infinite}
 @keyframes piscarOnline{0%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}100%{opacity:1;transform:scale(1)}}
 .ponto-flutuante{position:absolute;top:6px;right:6px;width:14px;height:14px;background:#dc2626;border:2px solid #fff;border-radius:50%;animation:piscarOnline 1s infinite}
@@ -71,6 +70,10 @@ input,select,textarea{font-size:16px !important}
 .banner-slide p{margin:0;font-size:13px;color:#cbd5e1}
 .banner-slide .preco{font-size:18px;font-weight:900;color:#fbbf24;margin-top:4px}
 .banner-slide button{background:#fff;color:#111;border:0;padding:8px 14px;border-radius:20px;font-weight:900;margin-top:6px;cursor:pointer}
+/* PROMOÇÃO - PREÇO ANTIGO RISCADO + % VERMELHA PEQUENA */
+.preco-antigo{color:#999;text-decoration:line-through;font-size:12px;font-weight:400;margin-right:6px}
+.desconto{color:#dc2626;font-size:11px;font-weight:800}
+.selo-promo{background:#dc2626;color:#fff;font-size:11px;font-weight:900;padding:3px 8px;border-radius:20px;display:inline-block;margin-bottom:4px}
 .banner-dots{display:flex;justify-content:center;gap:6px;padding:8px 0 0}
 .banner-dots span{width:8px;height:8px;border-radius:50%;background:#ddd;display:block;cursor:pointer}
 .banner-dots span.ativo{background:#0b5ed7;width:22px;border-radius:10px}
@@ -81,7 +84,8 @@ input,select,textarea{font-size:16px !important}
 .chip.ativo { background: #0b5ed7; color: #fff; border-color: #0b5ed7; }
 .grade { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 @media (min-width: 700px) { .grade { grid-template-columns: repeat(4, 1fr); } }
-.card { background: #fff; border-radius: 20px; padding: 10px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.08); cursor: pointer; }
+.card { background: #fff; border-radius: 20px; padding: 10px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.08); cursor: pointer; position:relative }
+.card.promo{border:2px solid #dc2626}
 .card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 14px; background: #eef0f4; }
 .card h3 { font-size: .95rem; font-weight: 600; }
 .preco { font-weight: 700; color: #0b5ed7; }
@@ -157,6 +161,7 @@ input,select,textarea{font-size:16px !important}
     <img id="dImg" src="">
     <h2 id="dNome"></h2>
     <div class="modal-cat" id="dCat"></div>
+    <div id="dPromo" style="margin:8px 0"></div>
     <div class="modal-preco" id="dPreco"></div>
     <div class="modal-desc" id="dDesc"></div>
     <button class="btn" style="width:100%" id="dBtn">Adicionar ao Carrinho</button>
@@ -254,6 +259,25 @@ input,select,textarea{font-size:16px !important}
 let todosProdutos = [];
 let categoriaAtual = 'Todas';
 let lojaCfgGlobal = {};
+// ===== PROMOÇÃO: CALCULA % AUTOMATICAMENTE =====
+function dadosPromo(p){
+  let precoNovo = Number(p.preco||0);
+  let precoAntigo = Number(p.preco_antigo||p.preco_antes||p.preco_original||p.preco_normal||0);
+  // Se tem desconto direto na tabela (ex: 25)
+  let descDireto = Number(p.desconto||p.percentual||0);
+  if(!precoAntigo && descDireto > 0 && descDireto < 90 && precoNovo){
+    precoAntigo = Math.round(precoNovo / (1 - descDireto/100));
+  }
+  if(!precoAntigo || precoAntigo <= precoNovo) return null;
+  let perc = Math.round((1 - precoNovo / precoAntigo) * 100);
+  if(perc <= 0) return null;
+  return {antigo: precoAntigo, novo: precoNovo, perc};
+}
+function htmlPreco(p){
+  let promo = dadosPromo(p);
+  if(!promo) return `<div class="preco">${Number(p.preco).toLocaleString()} Kz</div>`;
+  return `<div><span class="preco-antigo">${promo.antigo.toLocaleString()} Kz</span> <span class="desconto">-${promo.perc}%</span><div class="preco">${promo.novo.toLocaleString()} Kz</div></div>`;
+}
 function categoriaAuto(p){
   if(p.categoria && p.categoria.trim() !== '' && p.categoria !== 'Outros' && p.categoria !== 'Eletrodomésticos') return p.categoria.trim();
   let n = (p.nome||'').toLowerCase();
@@ -324,7 +348,6 @@ async function confirmarNoSistema(){
 function clienteLogado(){
   try{ return JSON.parse(localStorage.getItem('cliente_casa_nova') || 'null'); }catch(e){ return null; }
 }
-// MOSTRA NOME + BOLINHA VERMELHA SE ESTÁ LIGADO, SENÃO MOSTRA CADASTRAR
 function atualizarMenuConta(){
   let area = document.getElementById('menuContaArea');
   if(!area) return;
@@ -386,7 +409,14 @@ function abrirDetalhe(id){
   document.getElementById('dImg').src = p.imagem || p.imagem_url || 'https://via.placeholder.com/300';
   document.getElementById('dNome').textContent = p.nome;
   document.getElementById('dCat').textContent = categoriaAuto(p);
-  document.getElementById('dPreco').textContent = Number(p.preco).toLocaleString() + ' Kz';
+  let promo = dadosPromo(p);
+  if(promo){
+    document.getElementById('dPromo').innerHTML = `<span class="selo-promo">🔥 PROMOÇÃO -${promo.perc}%</span><br><span class="preco-antigo" style="font-size:14px">${promo.antigo.toLocaleString()} Kz</span> <span class="desconto">-${promo.perc}%</span>`;
+    document.getElementById('dPreco').textContent = promo.novo.toLocaleString() + ' Kz';
+  } else {
+    document.getElementById('dPromo').innerHTML = '';
+    document.getElementById('dPreco').textContent = Number(p.preco).toLocaleString() + ' Kz';
+  }
   document.getElementById('dDesc').textContent = p.descricao || p.detalhes || 'Produto de qualidade da Casa Nova. Disponível para entrega em Luanda. Para mais informações, fala connosco no WhatsApp.';
   document.getElementById('dBtn').onclick = (e)=>{ adicionarCarrinho(p.id, e); fecharDetalhe(); };
   document.getElementById('modal').classList.add('aberto');
@@ -410,14 +440,17 @@ function filtrar(){
 function mostrarProdutos(lista){
   let grade = document.getElementById('grade');
   if(!lista.length){ grade.innerHTML='<div class="aviso">Nenhum produto encontrado.</div>'; return; }
-  grade.innerHTML = lista.map(p=>`
-    <div class="card" onclick="abrirDetalhe(${p.id})">
+  grade.innerHTML = lista.map(p=>{
+    let promo = dadosPromo(p);
+    return `
+    <div class="card ${promo ? 'promo' : ''}" onclick="abrirDetalhe(${p.id})">
       <img src="${p.imagem || p.imagem_url || ''}" onerror="this.src='https://via.placeholder.com/300'">
+      ${promo ? `<div><span class="selo-promo">🔥 -${promo.perc}%</span></div>` : ''}
       <h3>${p.nome}</h3>
-      <div class="preco">${Number(p.preco).toLocaleString()} Kz</div>
+      ${htmlPreco(p)}
       <button class="btn" onclick="adicionarCarrinho(${p.id}, event)">Adicionar</button>
     </div>
-  `).join('');
+  `}).join('');
 }
 function saudacaoPorHora(){
   let h = new Date().getHours();
@@ -475,7 +508,7 @@ async function carregarMaisVendidos(){
         try{ if(typeof it==='string') it=JSON.parse(it); }catch(e){}
         if(Array.isArray(it)) it.forEach(i=>{
           let nome = i.nome||i.produto||'Produto';
-          if(!vendas[nome]) vendas[nome] = {nome, qtd:0, preco: Number(i.preco||0), img: i.imagem||i.foto||i.img||'', id:null};
+          if(!vendas[nome]) vendas[nome] = {nome, qtd:0, preco: Number(i.preco||0), img: i.imagem||i.foto||i.img||'', id:null, preco_antigo: Number(i.preco_antigo||0)};
           vendas[nome].qtd += Number(i.qtd||i.quantidade||1);
           if(Number(i.preco||0)) vendas[nome].preco = Number(i.preco);
           if(i.imagem||i.foto||i.img) vendas[nome].img = i.imagem||i.foto||i.img;
@@ -485,27 +518,30 @@ async function carregarMaisVendidos(){
     let lista = Object.values(vendas).sort((a,b)=> b.qtd - a.qtd).slice(0,5);
     lista = lista.map(v=>{
       let real = todosProdutos.find(p=> (p.nome||'').toLowerCase() === v.nome.toLowerCase());
-      if(real) return {...v, id: real.id, img: real.imagem||real.imagem_url||v.img, preco: Number(real.preco)||v.preco};
+      if(real) return {...v, id: real.id, img: real.imagem||real.imagem_url||v.img, preco: Number(real.preco)||v.preco, preco_antigo: Number(real.preco_antigo||real.preco_antes||0)};
       return v;
     });
     if(!lista.length){
-      lista = todosProdutos.slice(0,5).map(p=>({nome:p.nome, qtd:0, preco:Number(p.preco), img:p.imagem||p.imagem_url||'', id:p.id}));
+      lista = todosProdutos.slice(0,5).map(p=>({nome:p.nome, qtd:0, preco:Number(p.preco), preco_antigo:Number(p.preco_antigo||0), img:p.imagem||p.imagem_url||'', id:p.id}));
     }
     if(!lista.length) return;
     let track = document.getElementById('bannerTrack');
     let dots = document.getElementById('bannerDots');
     if(!track) return;
-    track.innerHTML = lista.map((v,i)=>`
+    track.innerHTML = lista.map((v,i)=>{
+      let promo = dadosPromo(v);
+      let precoHtml = promo ? `<span style="text-decoration:line-through;color:#ddd;font-size:12px">${promo.antigo.toLocaleString()} Kz</span> <span style="color:#ff6b6b;font-size:11px;font-weight:800">-${promo.perc}%</span><div class="preco">${promo.novo.toLocaleString()} Kz</div>` : `<div class="preco">${Number(v.preco||0).toLocaleString()} Kz</div>`;
+      return `
       <div class="banner-slide">
         <img src="${v.img||'https://via.placeholder.com/90'}" onerror="this.src='https://via.placeholder.com/90'">
         <div class="info">
-          <span class="selo">🔥 ${i===0 ? 'Nº1 MAIS VENDIDO' : 'MAIS VENDIDO'}</span>
+          <span class="selo">${promo ? '🔥 PROMOÇÃO '+promo.perc+'% OFF' : (i===0 ? '🔥 Nº1 MAIS VENDIDO' : '🔥 MAIS VENDIDO')}</span>
           <h3>${v.nome}</h3>
           <p>${v.qtd>0 ? v.qtd+' vendidos' : 'Em destaque na Casa Nova'}</p>
-          <div class="preco">${Number(v.preco||0).toLocaleString()} Kz</div>
+          ${precoHtml}
           <button onclick="comprarMaisVendido(${v.id||0},'${String(v.nome).replace(/'/g,"")}')">🛒 Comprar Agora</button>
         </div>
-      </div>`).join('');
+      </div>`}).join('');
     dots.innerHTML = lista.map((_,i)=>`<span class="${i===0?'ativo':''}" onclick="irParaSlideVendidos(${i})"></span>`).join('');
     document.getElementById('bannerVendidos').classList.add('mostrar');
     clearInterval(timerBannerVendidos);

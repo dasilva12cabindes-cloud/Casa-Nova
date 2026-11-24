@@ -122,7 +122,6 @@ function mostrarToast(msg){
   t.classList.add('mostrar');
   setTimeout(()=>t.classList.remove('mostrar'), 2500);
 }
-// ===== VERIFICA SE ESTÁ CADASTRADO =====
 function clienteLogado(){
   try{ return JSON.parse(localStorage.getItem('cliente_casa_nova') || 'null'); }catch(e){ return null; }
 }
@@ -140,10 +139,24 @@ function atualizarCarrinho(){
 function adicionarCarrinho(id, event){
   if(event) event.stopPropagation();
   if(!exigirCadastro()) return;
+  let p = todosProdutos.find(x=>x.id==id);
+  if(!p) return;
   let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
   let achou = carrinho.find(i=>i.id==id);
-  if(achou) achou.qtd = (achou.qtd||1)+1;
-  else carrinho.push({id:id, qtd:1});
+  if(achou){
+    achou.qtd = (achou.qtd||1)+1;
+    achou.nome = p.nome;
+    achou.preco = Number(p.preco);
+    achou.imagem = p.imagem || p.imagem_url || '';
+  } else {
+    carrinho.push({
+      id: p.id,
+      nome: p.nome,
+      preco: Number(p.preco),
+      imagem: p.imagem || p.imagem_url || '',
+      qtd: 1
+    });
+  }
   localStorage.setItem('carrinho', JSON.stringify(carrinho));
   atualizarCarrinho();
   mostrarToast('✅ Adicionado ao carrinho!');

@@ -4,13 +4,13 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
-<style>body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}.topo{background:#0b5ed7;color:#fff;padding:14px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}.topo a{color:#fff;text-decoration:none;font-weight:700}.caixa{background:#fff;padding:16px;border-radius:12px;margin-top:12px}input{width:100%;padding:14px;border:1px solid #cfd5df;border-radius:10px;font-size:18px;text-align:center;letter-spacing:2px;text-transform:uppercase;box-sizing:border-box}.btn{border:0;padding:14px;border-radius:10px;width:100%;font-weight:700;cursor:pointer;margin-top:10px}.btn-azul{background:#0b5ed7;color:#fff}.linha{padding:10px 0;border-bottom:1px solid #eee;font-size:15px}img.comp{width:100%;border-radius:12px;margin-top:10px}</style></head>
+<style>body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}.topo{background:#0b5ed7;color:#fff;padding:14px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}.topo a{color:#fff;text-decoration:none;font-weight:700}.caixa{background:#fff;padding:16px;border-radius:12px;margin-top:12px}input{width:100%;padding:14px;border:1px solid #cfd5df;border-radius:10px;font-size:18px;text-align:center;letter-spacing:2px;text-transform:uppercase;box-sizing:border-box}.btn{border:0;padding:14px;border-radius:10px;width:100%;font-weight:700;cursor:pointer;margin-top:10px}.btn-azul{background:#0b5ed7;color:#fff}.linha{padding:10px 0;border-bottom:1px solid #eee;font-size:15px}img.comp{width:100%;border-radius:12px;margin-top:10px;cursor:pointer}</style></head>
 <body>
 <div class="topo"><b>🔍 Verificar Pedido</b><a href="admin.html">← Voltar</a></div>
 <div class="caixa">
   <h3 style="margin:0">🔖 Verificação de Comprovativo e Código</h3>
-  <p style="color:#666;font-size:13px">Escreve o código que o cliente te deu (ex: CN-1234)</p>
-  <input id="codigoInput" placeholder="CN-1234">
+  <p style="color:#666;font-size:13px">Escreve o código que o cliente te deu (ex: CN-123456)</p>
+  <input id="codigoInput" placeholder="CN-123456">
   <button class="btn btn-azul" onclick="verificar()">🔍 VERIFICAR PEDIDO</button>
 </div>
 <div id="resultado"></div>
@@ -21,12 +21,26 @@ async function verificar(){
   document.getElementById('resultado').innerHTML = '<p style="text-align:center">A procurar...</p>';
   let r = await db.from('pedidos').select('*').eq('codigo', cod).maybeSingle();
   if(r.error || !r.data){
-    document.getElementById('resultado').innerHTML = `<div class="caixa" style="text-align:center;color:#dc2626"><h3>❌ Código não encontrado</h3><p>Verifica se o cliente escreveu bem o código.</p></div>`;
+    document.getElementById('resultado').innerHTML = `<div class="caixa" style="text-align:center;color:#dc2626"><h3>❌ Código não encontrado</h3><p>Verifica se o cliente escreveu bem o código.<br><small>${r.error ? r.error.message : ''}</small></p></div>`;
     return;
   }
   let p = r.data;
+
+  // NOVO: SE JÁ FOI ENTREGUE, O CÓDIGO JÁ NÃO VALE - NÃO ENTREGA DE NOVO
+  let st = String(p.status || p.estado || '').toLowerCase();
+  if(st === 'entregue'){
+    document.getElementById('resultado').innerHTML = `<div class="caixa" style="text-align:center;border:2px solid #dc2626">
+      <h3 style="color:#dc2626;font-size:22px;margin:0">🚫 CÓDIGO JÁ USADO - JÁ FOI ENTREGUE</h3>
+      <p style="margin:12px 0">Código: <b>${p.codigo}</b></p>
+      <p>Cliente: <b>${p.nome_cliente || p.nome || '-'}</b></p>
+      <p style="color:#dc2626;font-weight:700">Este pedido já foi entregue.<br>Não entregues de novo!<br>Se o cliente insistir, está a tentar mentir.</p>
+    </div>`;
+    return;
+  }
+
   let nome = p.nome_cliente || p.nome || '-';
   let email = p.email || '-';
+  let telefone = p.telefone || '-';
   let total = Number(p.total || p.valor_total || 0);
   let pago = Number(p.valor_pago || 0);
   let falta = Number(p.falta_pagar || (total - pago));
@@ -37,17 +51,42 @@ async function verificar(){
     if(Array.isArray(it)) itens = it.map(i=>`• ${i.nome||i.produto} x${i.qtd||i.quantidade||1} - ${Number(i.preco||0).toLocaleString()} Kz`).join('<br>');
     else itens = it || '-';
   }catch(e){ itens = p.itens || '-'; }
-  let comp = p.comprovativo_url ? `<h3>🧾 Comprovativo</h3><img class="comp" src="${p.comprovativo_url}" onclick="window.open('${p.comprovativo_url}','_blank')"><p style="color:#666;font-size:12px">Clica na imagem para ampliar</p>` : `<p style="color:#999">Sem comprovativo enviado</p>`;
+
+  // NOVO: COMPROVATIVO - só mostra imagem se for link http, senão mostra aviso
+  let comp = '';
+  if(p.comprovativo_url && String(p.comprovativo_url).startsWith('http')){
+    comp = `<h3>🧾 Comprovativo</h3><img class="comp" src="${p.comprovativo_url}" onclick="window.open('${p.comprovativo_url}','_blank')"><p style="color:#666;font-size:12px">Clica na imagem para ampliar</p>`;
+  } else if(p.comprovativo_url){
+    comp = `<h3>🧾 Comprovativo</h3><p>📎 Ficheiro: ${p.comprovativo_url}<br><small style="color:#999">Este pedido foi feito antes da correção do Storage, por isso a foto não ficou guardada. Pede ao cliente para mostrar o comprovativo no WhatsApp.</small></p>`;
+  } else {
+    comp = `<p style="color:#999">Sem comprovativo enviado</p>`;
+  }
+
   document.getElementById('resultado').innerHTML = `<div class="caixa">
     <div style="text-align:center"><span style="background:#dcfce7;color:#166534;padding:6px 14px;border-radius:20px;font-weight:700">✅ PEDIDO ENCONTRADO - ${p.codigo}</span></div>
     <div class="linha">👤 <b>Nome:</b> ${nome}</div>
     <div class="linha">📧 <b>E-mail:</b> ${email}</div>
+    <div class="linha">📞 <b>Telefone:</b> ${telefone}</div>
+    <div class="linha">📍 <b>Morada:</b> ${p.morada || '-'}</div>
+    <div class="linha">🚚 <b>Tipo:</b> ${p.tipo_entrega || '-'}</div>
+    <div class="linha">💳 <b>Pagamento:</b> ${p.pagamento || '-'}</div>
     <div class="linha">🛒 <b>O que comprou:</b><br>${itens}</div>
     <div class="linha">💰 <b>Total:</b> ${total.toLocaleString()} Kz</div>
     <div class="linha">✅ <b>O que pagou:</b> <span style="color:#16a34a;font-weight:700">${pago.toLocaleString()} Kz</span></div>
     <div class="linha">❗ <b>O que falta pagar:</b> <span style="color:#dc2626;font-weight:700">${falta.toLocaleString()} Kz</span></div>
     <div class="linha">📊 <b>Estado:</b> ${p.status || p.estado || 'Novo'}</div>
     ${comp}
+    <button onclick="marcarEntregue('${p.codigo}')" style="background:#16a34a;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;margin-top:14px;cursor:pointer">✅ MARCAR COMO ENTREGUE - Invalidar Código</button>
+    <p style="text-align:center;color:#dc2626;font-size:12px;margin-top:8px">⚠️ Depois de clicares, este código nunca mais vai funcionar.</p>
   </div>`;
+}
+
+// NOVO: MARCA COMO ENTREGUE E INVALIDA O CÓDIGO
+async function marcarEntregue(cod){
+  if(!confirm('Tens a certeza que já entregaste este pedido?\n\nDepois disso o código ' + cod + ' NUNCA mais vai funcionar.')) return;
+  let r1 = await db.from('pedidos').update({status:'Entregue', estado:'Entregue'}).eq('codigo', cod);
+  if(r1.error){ alert('Erro: ' + r1.error.message); return; }
+  alert('✅ Pedido marcado como ENTREGUE!\nO código ' + cod + ' já não funciona.');
+  verificar();
 }
 </script></body></html>

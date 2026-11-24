@@ -12,7 +12,8 @@ input{width:100%;padding:11px;margin-bottom:8px;border:1px solid #cfd5df;border-
 .btn{background:#2563eb;color:#fff;border:0;padding:11px;border-radius:8px;width:100%;font-weight:700;cursor:pointer}
 .btn-vermelho{background:#dc2626;color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
 .item{display:flex;gap:10px;align-items:center;border-top:1px solid #eee;padding:10px 0}
-.item img{width:90px;height:60px;object-fit:cover;border-radius:8px}
+.item img{width:100%;height:auto;max-height:220px;object-fit:contain;border-radius:8px;background:#f8f8f8;display:block}
+.preview{width:100%;margin-top:8px}
 </style></head>
 <body>
 <div class="topo"><b>Admin Casa Nova</b><a href="index.html">Ver Loja</a></div>
@@ -31,19 +32,22 @@ input{width:100%;padding:11px;margin-bottom:8px;border:1px solid #cfd5df;border-
 
 <script>
 let banners=[];
+function mostrarBanners(){
+  let div=document.getElementById('listaBanners');
+  if(!banners.length){div.innerHTML='<p>Nenhum banner ainda.</p>';return}
+  div.innerHTML=banners.map((b,i)=>'<div style="border-top:1px solid #eee;padding:10px 0"><div class="preview"><img src="'+b+'" style="width:100%;height:auto;object-fit:contain;border-radius:8px"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><b>Banner '+(i+1)+'</b><button class="btn-vermelho" onclick="apagarBanner('+i+')">🗑️ Apagar</button></div><small style="word-break:break-all;color:#888">'+b+'</small></div>').join('');
+}
 async function carregarBanners(){
   const r=await db.from('loja_config').select('*').eq('id',1).maybeSingle();
   let cfg=r.data||{};
   try{banners=typeof cfg.banners==='string'?JSON.parse(cfg.banners||'[]'):(cfg.banners||[])}catch(e){banners=[]}
   if(!banners.length && cfg.banner_url) banners=[cfg.banner_url];
-  let div=document.getElementById('listaBanners');
-  if(!banners.length){div.innerHTML='<p>Nenhum banner ainda.</p>';return}
-  div.innerHTML=banners.map((b,i)=>'<div class="item"><img src="'+b+'"><div style="flex:1"><b>Banner '+(i+1)+'</b><br><small style="word-break:break-all">'+b+'</small></div><button class="btn-vermelho" onclick="apagarBanner('+i+')">🗑️ Apagar</button></div>').join('');
+  mostrarBanners();
 }
 async function guardar(){
   const r=await db.from('loja_config').update({banners:JSON.stringify(banners), banner_url:banners[0]||null}).eq('id',1);
-  if(r.error) return alert('Erro: '+r.error.message+' - Cria a coluna banners tipo text no Supabase');
-  carregarBanners(); alert('✅ Guardado!');
+  if(r.error) return alert('Erro: '+r.error.message);
+  mostrarBanners(); alert('✅ Guardado! Vai ver na loja.');
 }
 async function adicionarBanner(){
   const v=document.getElementById('urlBanner').value.trim();
@@ -55,8 +59,8 @@ async function subirBanner(){
   if(!f) return alert('Escolhe uma foto');
   const nome='banner_'+Date.now()+'_'+f.name.replace(/\s/g,'_');
   const up=await db.storage.from('produtos').upload(nome,f,{upsert:true});
-if(up.error) return alert('Erro: '+up.error.message);
-const pub=db.storage.from('produtos').getPublicUrl(nome);
+  if(up.error) return alert('Erro: '+up.error.message);
+  const pub=db.storage.from('produtos').getPublicUrl(nome);
   banners.push(pub.data.publicUrl); await guardar();
 }
 async function apagarBanner(i){

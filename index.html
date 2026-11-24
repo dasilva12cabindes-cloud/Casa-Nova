@@ -7,7 +7,12 @@
 <style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6}
 .topo{background:#2563eb;color:#fff;padding:12px;display:flex;justify-content:space-between;align-items:center}
 .topo a{color:#fff;text-decoration:none;font-weight:700}.logo-img{height:38px;border-radius:6px}
-.banner{width:100%;max-height:220px;object-fit:cover;display:none}
+.banner-wrap{position:relative;width:100%;height:220px;overflow:hidden;background:#000;display:none}
+.banner-wrap img{position:absolute;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s}
+.banner-wrap img.ativo{opacity:1}
+.pontos{position:absolute;bottom:10px;left:0;right:0;text-align:center;z-index:2}
+.pontos span{display:inline-block;width:9px;height:9px;background:#fff;opacity:.5;border-radius:50%;margin:0 3px}
+.pontos span.ativo{opacity:1;background:#2563eb}
 .publicidade{background:#ffcc00;padding:10px;overflow:hidden;white-space:nowrap}
 .publicidade span{display:inline-block;animation:passar 18s linear infinite;font-weight:700}
 @keyframes passar{from{transform:translateX(100%)}to{transform:translateX(-100%)}}
@@ -19,12 +24,34 @@
 </style></head>
 <body>
 <header class="topo"><div style="display:flex;align-items:center;gap:8px"><img id="logoTopo" class="logo-img" style="display:none"><b id="nomeTopo">Casa Nova</b></div><a href="carrinho.html">🛒 Carrinho (<span id="qtd">0</span>)</a></header>
-<img id="bannerTopo" class="banner">
+
+<div class="banner-wrap" id="bannerWrap"><div id="bannerFotos"></div><div class="pontos" id="pontos"></div></div>
+
 <div class="publicidade"><span id="pubTexto">🔥 PROMOÇÃO CASA NOVA - Entrega rápida em Luanda 🔥</span></div>
 <div class="sobre"><h3>🏪 <span id="nomeSobre">Sobre a Casa Nova</span></h3><p id="textoSobre">A carregar...</p>
 <a id="btnWpp" href="https://wa.me/244972370499" target="_blank"><button class="btn">💬 Falar no WhatsApp</button></a></div>
 <main class="container"><h3>🛍️ Produtos</h3><div class="grid" id="lista">A carregar...</div></main>
 <script>
+let bannerAtual=0, bannerTimer=null;
+function mostrarBanner(i){
+  const imgs=document.querySelectorAll('#bannerFotos img');
+  const pts=document.querySelectorAll('#pontos span');
+  if(!imgs.length) return;
+  bannerAtual=i%imgs.length;
+  imgs.forEach((im,idx)=>im.classList.toggle('ativo',idx===bannerAtual));
+  pts.forEach((p,idx)=>p.classList.toggle('ativo',idx===bannerAtual));
+}
+function iniciarBanner(fotos){
+  const wrap=document.getElementById('bannerWrap');
+  const div=document.getElementById('bannerFotos');
+  const pontos=document.getElementById('pontos');
+  if(!fotos.length){wrap.style.display='none';return}
+  wrap.style.display='block';
+  div.innerHTML=fotos.map((f,i)=>'<img src="'+f+'" class="'+(i==0?'ativo':'')+'">').join('');
+  pontos.innerHTML=fotos.map((f,i)=>'<span class="'+(i==0?'ativo':'')+'" onclick="mostrarBanner('+i+')"></span>').join('');
+  if(bannerTimer) clearInterval(bannerTimer);
+  if(fotos.length>1) bannerTimer=setInterval(()=>mostrarBanner(bannerAtual+1),4000);
+}
 function lerCarrinho(){try{return JSON.parse(localStorage.getItem('carrinho')||'[]')}catch(e){return[]}}
 function atualizarQtd(){document.getElementById('qtd').textContent=lerCarrinho().reduce((s,i)=>s+(i.qtd||1),0)}
 function foto(p){return p.imagem||p.foto||p.imagem_url||p.foto_url||p.image_url||p.image||p.url||'https://via.placeholder.com/300'}
@@ -37,11 +64,18 @@ async function carregar(){
       document.getElementById('nomeSobre').textContent='Sobre a '+(cfg.nome_loja||'Casa Nova');
       document.getElementById('textoSobre').textContent=cfg.sobre||'';
       if(cfg.logo_url){var l=document.getElementById('logoTopo');l.src=cfg.logo_url;l.style.display='block'}
-      if(cfg.banner_url){var b=document.getElementById('bannerTopo');b.src=cfg.banner_url;b.style.display='block'}
       if(cfg.whatsapp) document.getElementById('btnWpp').href='https://wa.me/'+cfg.whatsapp;
     }
     const prodR=await db.from('produtos').select('*').order('id',{ascending:false});
     const prod=prodR.data||[];
+    // --- AQUI MUDAS AS FOTOS DO BANNER ---
+    // 1ª foto = banner do Supabase, as outras são ficheiros no GitHub
+    let fotosBanner=[];
+    if(cfg && cfg.banner_url) fotosBanner.push(cfg.banner_url);
+    fotosBanner.push('banner2.jpg','banner3.jpg','banner4.jpg');
+    // Se quiseres usar fotos dos produtos, descomenta a linha abaixo:
+    // prod.slice(0,4).forEach(p=>fotosBanner.push(foto(p)));
+    iniciarBanner(fotosBanner);
     if(!prod.length){document.getElementById('lista').innerHTML='Nenhum produto ainda.';return}
     document.getElementById('pubTexto').textContent='🔥 '+prod.slice(0,3).map(p=>p.nome+' - '+Number(p.preco).toLocaleString()+' Kz').join('  |  ')+' 🔥';
     document.getElementById('lista').innerHTML=prod.map(p=>'<div class="card"><img src="'+foto(p)+'"><b>'+p.nome+'</b><br>'+Number(p.preco).toLocaleString()+' Kz<br><br><button class="btn" onclick="add('+p.id+')">Adicionar</button></div>').join('');

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quem Está Online - Casa Nova</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script><script src="js/supabase.js"></script>
+<style>body{font-family:system-ui;background:#f5f6f8;padding:16px}h1{font-size:20px}.card{background:#fff;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 1px 4px rgba(0,0,0,.1)} .btn{background:#0b5ed7;color:#fff;border:0;padding:12px;border-radius:10px;width:100%;font-weight:800;margin-bottom:10px} .btn-wpp{background:#25D366;color:#fff;border:0;padding:8px 12px;border-radius:8px;font-weight:800;margin-top:6px}</style>
+</head><body>
+<h1>👀 Quem Está na Loja</h1>
+<p id="resumo">A carregar...</p>
+<button class="btn" onclick="carregar()">🔄 Atualizar Agora</button>
+<h2>🟢 Online Agora</h2><div id="online"></div>
+<h2>🔴 Saiu Recentemente</h2><div id="saiu"></div>
+<h2>⚪ Cadastrados que ainda não entraram hoje</h2><div id="nunca"></div>
+<script>
+async function carregar(){
+  let hoje = new Date(); hoje.setHours(0,0,0,0);
+  let r = await db.from('presenca').select('*').order('ultima_vez',{ascending:false}).limit(100);
+  let lista = r.data||[];
+  let online = lista.filter(p=>{ let d = new Date(p.ultima_vez); return (Date.now()-d.getTime()) < 60000; });
+  let saiu = lista.filter(p=> !online.includes(p));
+  document.getElementById('resumo').innerHTML = `🟢 <b>${online.length} online agora</b> | 🔴 ${saiu.length} já saíram hoje`;
+  document.getElementById('online').innerHTML = online.length ? online.map(p=>`<div class="card">🟢 <b>${p.nome}</b><br>📱 ${p.telefone||'Visitante sem conta'}<br><small>Entrou: ${new Date(p.entrou_em).toLocaleTimeString('pt-PT')} - Está em: ${p.pagina}</small><br>${p.telefone?`<button class="btn-wpp" onclick="window.open('https://wa.me/244${p.telefone.replace(/[^0-9]/g,'').slice(-9)}?text='+encodeURIComponent('Olá '+p.nome+', vi que estás na Casa Nova! Precisas de ajuda?'),' _blank')">💬 Falar no WhatsApp</button>`:''}</div>`).join('') : '<p>Ninguém online agora.</p>';
+  document.getElementById('saiu').innerHTML = saiu.slice(0,20).map(p=>`<div class="card">🔴 <b>${p.nome}</b><br><small>Saiu: ${p.saiu_em?new Date(p.saiu_em).toLocaleTimeString('pt-PT') : new Date(p.ultima_vez).toLocaleTimeString('pt-PT')} - Estava em: ${p.pagina||''}</small></div>`).join('') || '<p>Ninguém saiu ainda.</p>';
+  try{
+    let rc = await db.from('clientes').select('*').limit(100);
+    let clientes = rc.data||[];
+    let entraramHoje = new Set(lista.filter(p=> new Date(p.entrou_em) >= hoje).map(p=>p.telefone));
+    let nunca = clientes.filter(c=> !entraramHoje.has(c.telefone));
+    document.getElementById('nunca').innerHTML = nunca.length ? nunca.map(c=>`<div class="card">⚪ <b>${c.nome||c.nome_cliente}</b><br>📱 ${c.telefone||''}<br><small style="color:#888">Ainda não entrou hoje</small></div>`).join('') : '<p>Todos os clientes já entraram hoje! 🎉</p>';
+  }catch(e){ document.getElementById('nunca').innerHTML = '<p>Não consegui ler tabela clientes. Se a tua tabela tem outro nome, diz-me.</p>'; }
+}
+carregar(); setInterval(carregar, 10000);
+</script></body></html>

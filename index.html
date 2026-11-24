@@ -11,7 +11,6 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: system-ui, -apple-system, Arial, sans-serif; background: #f5f6f8; color: #1d2330; overflow-x:hidden; }
 a { color: inherit; text-decoration: none; }
-/* TIRA O ZOOM QUANDO CLICA PARA ESCREVER */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 input,select,textarea{font-size:16px !important}
 #vNome,#vWhats,#vCodigo{font-size:16px !important}
@@ -52,10 +51,13 @@ input,select,textarea{font-size:16px !important}
 .menu-secao { padding:12px 16px 4px; font-size:12px; font-weight:800; color:#888; text-transform:uppercase; }
 .menu-detalhe { margin:12px 16px; background:#f8fafc; border-radius:12px; padding:12px; font-size:13px; line-height:1.7; word-break:break-word; }
 .menu-detalhe b { color:#0b5ed7; }
+/* BOLINHA VERMELHA A PISCAR - ONLINE */
+.ponto-online{display:inline-block;width:11px;height:11px;background:#dc2626;border-radius:50%;margin-left:4px;vertical-align:middle;box-shadow:0 0 0 3px #fee2e2;animation:piscarOnline 1s infinite}
+@keyframes piscarOnline{0%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}100%{opacity:1;transform:scale(1)}}
+.ponto-flutuante{position:absolute;top:6px;right:6px;width:14px;height:14px;background:#dc2626;border:2px solid #fff;border-radius:50%;animation:piscarOnline 1s infinite}
 .banners { width: 100%; max-width: 1100px; margin: 12px auto 0; padding: 0 16px; display: none; }
 .banners img { width: 100%; height: 220px; object-fit: contain; display: block; border-radius: 26px; background: #fff; }
 @media (max-width: 700px){ .banners img{ height: 220px; } }
-/* 🔥 PUBLICIDADE - MAIS VENDIDOS */
 .banner-vendidos{width:100%;max-width:1100px;margin:12px auto 0;padding:0 16px;display:none}
 .banner-vendidos.mostrar{display:block}
 .banner-vendidos-titulo{font-size:14px;font-weight:900;margin:0 0 8px}
@@ -102,7 +104,7 @@ input,select,textarea{font-size:16px !important}
 #modalCliente{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:flex-end;justify-content:center}
 #modalCliente.aberto{display:flex}
 .modal-cliente-box{background:#fff;width:100%;max-width:500px;border-radius:22px 22px 0 0;padding:20px;max-height:88vh;overflow-y:auto;text-align:center}
-.avatar-cliente{width:80px;height:80px;border-radius:50%;background:#0b5ed7;color:#fff;display:flex;align-items:center;justify-content:center;font-size:38px;margin:0 auto 10px}
+.avatar-cliente{width:80px;height:80px;border-radius:50%;background:#0b5ed7;color:#fff;display:flex;align-items:center;justify-content:center;font-size:38px;margin:0 auto 10px;position:relative}
 .linha-cli{padding:10px 0;border-bottom:1px solid #eee;font-size:15px;text-align:left}
 .btn-sair{background:#dc2626;color:#fff;border:0;padding:13px;border-radius:10px;width:100%;font-weight:700;font-size:15px;cursor:pointer;margin-top:14px}
 .btn-fechar-cliente{background:#e5e7eb;border:0;padding:13px;border-radius:10px;width:100%;font-weight:700;margin-top:8px;cursor:pointer}
@@ -137,7 +139,6 @@ input,select,textarea{font-size:16px !important}
 </div>
 <div id="toast">✅ Adicionado ao carrinho!</div>
 <div class="banners" id="banners"><img src="" id="bannerImg" alt="Publicidade"></div>
-<!-- 🔥 PUBLICIDADE - MAIS VENDIDOS - PASSA SOZINHO -->
 <div class="banner-vendidos" id="bannerVendidos">
   <p class="banner-vendidos-titulo">🔥 Mais Vendidos da Semana - Casa Nova</p>
   <div class="banner-vendidos-box"><div class="banner-track" id="bannerTrack"></div></div>
@@ -164,7 +165,7 @@ input,select,textarea{font-size:16px !important}
 <div id="modalCliente" onclick="if(event.target.id==='modalCliente') fecharCliente()">
   <div class="modal-cliente-box">
     <button class="fechar" onclick="fecharCliente()">✕</button>
-    <div class="avatar-cliente" id="avatarCliente">👤</div>
+    <div class="avatar-cliente" id="avatarCliente">👤<span class="ponto-flutuante" id="pontoAvatar"></span></div>
     <h2 id="saudacaoCliente" style="margin:0"></h2>
     <p id="subSaudacao" style="color:#16a34a;font-weight:700;margin:6px 0 14px">✅ Já estás conectado na Casa Nova</p>
     <div id="dadosCliente"></div>
@@ -188,19 +189,16 @@ input,select,textarea{font-size:16px !important}
     <button onclick="fecharMenu()">✕</button>
   </div>
   <div class="menu-secao">Minha Conta</div>
-  <a class="menu-item" href="cadastro.html"><span>👤</span> Cadastrar / Entrar</a>
+  <div id="menuContaArea"></div>
   <a class="menu-item" href="carrinho.html"><span>🛒</span> Meu Carrinho</a>
   <a class="menu-item" href="meus-pedidos.html"><span>🔖</span> Meus Códigos / Pedidos</a>
   <div class="menu-secao">Área Detalhes</div>
   <a class="menu-item" href="#" onclick="abrirSobre();return false"><span>🏪</span> Sobre a Nossa Loja</a>
-  <a class="menu-item" href="#" onclick="abrirSobre();return false"><span>📍</span> Localização da Loja</a>
   <a class="menu-item" href="carrinho.html"><span>💳</span> Formas de Pagamento</a>
-  <a class="menu-item" href="carrinho.html"><span>🚚</span> Entrega a Domicílio</a>
   <div class="menu-detalhe" id="menuDetalhe">
-    <b>🏪 Localização da Nossa Loja</b><br>
-    🌍 Angola<br>🏙️ Cabinda<br>📍 Mbaca, Ref: bar matondo<br><br>
+    <b>🔒 Segurança</b><br>
+    A tua segurança é a nossa prioridade. Os teus dados são protegidos e nunca são partilhados.<br><br>
     <b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br>
-    <b>🚚 Entrega</b><br>✅ Paga 50% agora<br>📦 Paga 50% na entrega<br>🏪 Receber na loja - paga 100%<br><br>
     <b>📞 Contacto</b><br>WhatsApp: +244 972 370 499
   </div>
   <div class="menu-secao">Ajuda</div>
@@ -220,17 +218,10 @@ input,select,textarea{font-size:16px !important}
       Levar qualidade e preço justo a todas as casas de Cabinda e Angola, com entrega rápida e pagamento fácil.<br><br>
       <b>🔒 Política de Segurança da Nossa Loja</b><br>
       A tua segurança é a nossa prioridade. Os teus dados são protegidos e nunca são partilhados. Todos os pagamentos são verificados antes da entrega.<br><br>
-      <b>📍 Localização</b><br>
-      🌍 Angola<br>
-      🏙️ Cabinda<br>
-      📍 Mbaca, Ref: bar matondo<br><br>
       <b>💳 Pagamento</b><br>
       📱 Multicaixa Express<br>
       💸 PayPay - Ref: 10116<br>
       🏦 IBAN<br><br>
-      <b>🚚 Entrega</b><br>
-      ✅ Entrega a Domicílio - Paga 50% agora, 50% na entrega<br>
-      🏪 Receber na Loja - Paga 100%<br><br>
       <b>📞 Contacto</b><br>
       WhatsApp: +244 972 370 499
     </div>
@@ -282,7 +273,7 @@ function mostrarToast(msg){
   t.classList.add('mostrar');
   setTimeout(()=>t.classList.remove('mostrar'), 2500);
 }
-function abrirMenu(){ document.getElementById('menuLateral').classList.add('aberto'); document.getElementById('fundoMenu').classList.add('aberto'); }
+function abrirMenu(){ atualizarMenuConta(); document.getElementById('menuLateral').classList.add('aberto'); document.getElementById('fundoMenu').classList.add('aberto'); }
 function fecharMenu(){ document.getElementById('menuLateral').classList.remove('aberto'); document.getElementById('fundoMenu').classList.remove('aberto'); }
 function abrirSobre(){ fecharMenu(); document.getElementById('modalSobre').classList.add('aberto'); }
 function fecharSobre(){ document.getElementById('modalSobre').classList.remove('aberto'); }
@@ -332,6 +323,32 @@ async function confirmarNoSistema(){
 }
 function clienteLogado(){
   try{ return JSON.parse(localStorage.getItem('cliente_casa_nova') || 'null'); }catch(e){ return null; }
+}
+// MOSTRA NOME + BOLINHA VERMELHA SE ESTÁ LIGADO, SENÃO MOSTRA CADASTRAR
+function atualizarMenuConta(){
+  let area = document.getElementById('menuContaArea');
+  if(!area) return;
+  let c = clienteLogado();
+  if(c){
+    let nome = c.nome || c.nome_cliente || 'Cliente';
+    let primeiro = nome.split(' ')[0];
+    area.innerHTML = `<a class="menu-item" href="#" onclick="fecharMenu();abrirCliente();return false" style="background:#f0fdf4;border:2px solid #16a34a;border-radius:12px;margin:0 10px;padding:12px 14px"><span style="position:relative">👤</span><span><b>${nome}</b> <span class="ponto-online"></span><br><small style="color:#16a34a;font-weight:800">● Online - Clica para ver teus dados</small></span></a>`;
+    let btn = document.querySelector('.btn-cadastro-flutuante');
+    if(btn){
+      let sm = btn.querySelector('small');
+      if(sm) sm.textContent = primeiro;
+      if(!btn.querySelector('.ponto-flutuante')){ let p=document.createElement('span'); p.className='ponto-flutuante'; btn.appendChild(p); }
+    }
+  } else {
+    area.innerHTML = `<a class="menu-item" href="cadastro.html"><span>👤</span> Cadastrar / Entrar</a>`;
+    let btn = document.querySelector('.btn-cadastro-flutuante');
+    if(btn){
+      let sm = btn.querySelector('small');
+      if(sm) sm.textContent = 'Cadastrar';
+      let p = btn.querySelector('.ponto-flutuante');
+      if(p) p.remove();
+    }
+  }
 }
 function exigirCadastro(){
   if(clienteLogado()) return true;
@@ -413,7 +430,7 @@ function abrirCliente(){
   if(!salvo){ location.href='cadastro.html'; return; }
   let c = JSON.parse(salvo);
   let nome = c.nome || c.nome_cliente || 'Cliente';
-  document.getElementById('avatarCliente').textContent = nome.charAt(0).toUpperCase();
+  document.getElementById('avatarCliente').firstChild.textContent = nome.charAt(0).toUpperCase();
   document.getElementById('saudacaoCliente').textContent = saudacaoPorHora() + ', ' + nome + '!';
   document.getElementById('dadosCliente').innerHTML = `
     <div class="linha-cli">👤 <b>Nome:</b> ${nome}</div>
@@ -431,33 +448,21 @@ function confirmarSair(){
   fecharConfirmarSair();
   fecharCliente();
   mostrarToast('👋 Saíste da tua conta. Até já!');
-  let sm = document.querySelector('.btn-cadastro-flutuante small');
-  if(sm) sm.textContent = 'Cadastrar';
+  atualizarMenuConta();
   atualizarCarrinho();
 }
-(function(){
-  let c = localStorage.getItem('cliente_casa_nova');
-  if(c){
-    let el = document.querySelector('.btn-cadastro-flutuante small');
-    if(el) el.textContent = JSON.parse(c).nome?.split(' ')[0] || 'Minha Conta';
-  }
-})();
 function atualizarSobre(cfg){
   let sobre = cfg.sobre || 'A Casa Nova é a tua loja de confiança em Cabinda. Vendemos eletrodomésticos de qualidade: arcas, geleiras, ar condicionado, máquinas de lavar, fogões, TVs, telemóveis e muito mais.';
   let visao = cfg.visao || 'Levar qualidade e preço justo a todas as casas de Cabinda e Angola, com entrega rápida e pagamento fácil.';
   let missao = cfg.missao || '';
   let politica = cfg.politica_seguranca || cfg.politica || cfg.seguranca || 'A tua segurança é a nossa prioridade. Os teus dados são protegidos e nunca são partilhados. Todos os pagamentos são verificados antes da entrega.';
-  let pais = cfg.loja_pais || 'Angola';
-  let cidade = cfg.loja_cidade || 'Cabinda';
-  let bairro = cfg.loja_bairro || cfg.endereco || 'Mbaca, Ref: bar matondo';
   let whats = cfg.whatsapp || localStorage.getItem('whatsapp_loja') || '244972370499';
   let html = `<b>🏪 Quem Somos</b><br>${sobre}<br><br><b>👁️ Nossa Visão</b><br>${visao}<br><br>`;
   if(missao) html += `<b>🎯 Nossa Missão</b><br>${missao}<br><br>`;
-  html += `<b>🔒 Política de Segurança da Nossa Loja</b><br>${politica}<br><br><b>📍 Localização</b><br>🌍 ${pais}<br>🏙️ ${cidade}<br>📍 ${bairro}<br><br><b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br><b>🚚 Entrega</b><br>✅ Entrega a Domicílio - Paga 50% agora, 50% na entrega<br>🏪 Receber na Loja - Paga 100%<br><br><b>📞 Contacto</b><br>WhatsApp: +${whats}`;
+  html += `<b>🔒 Política de Segurança da Nossa Loja</b><br>${politica}<br><br><b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br><b>📞 Contacto</b><br>WhatsApp: +${whats}`;
   document.getElementById('sobreDetalhe').innerHTML = html;
-  document.getElementById('menuDetalhe').innerHTML = `<b>🏪 Localização da Nossa Loja</b><br>🌍 ${pais}<br>🏙️ ${cidade}<br>📍 ${bairro}<br><br><b>🔒 Segurança</b><br>${politica}<br><br><b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br><b>🚚 Entrega</b><br>✅ Paga 50% agora<br>📦 Paga 50% na entrega<br>🏪 Receber na loja - paga 100%<br><br><b>📞 Contacto</b><br>WhatsApp: +${whats}`;
+  document.getElementById('menuDetalhe').innerHTML = `<b>🔒 Segurança</b><br>${politica}<br><br><b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br><b>📞 Contacto</b><br>WhatsApp: +${whats}`;
 }
-// 🔥 CARROSSEL MAIS VENDIDOS - PASSA SOZINHO
 let slideAtual = 0;
 let timerBannerVendidos = null;
 async function carregarMaisVendidos(){
@@ -536,6 +541,7 @@ document.addEventListener('touchend', e=>{
   }
 }, {passive:true});
 async function carregarLoja(){
+  atualizarMenuConta();
   let cfg = {};
   try{
     const r = await db.from('loja_config').select('*').eq('id',1).maybeSingle();

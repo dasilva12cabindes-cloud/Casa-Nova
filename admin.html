@@ -8,11 +8,15 @@
 .topo{background:#2563eb;color:#fff;padding:12px;border-radius:10px;display:flex;justify-content:space-between}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
 .caixa{background:#fff;padding:14px;border-radius:12px;margin-top:12px}
-input{width:100%;padding:11px;margin-bottom:8px;border:1px solid #cfd5df;border-radius:8px}
+input,select,textarea{width:100%;padding:11px;margin-bottom:8px;border:1px solid #cfd5df;border-radius:8px;font-size:15px}
+textarea{min-height:70px}
+label{font-size:13px;color:#555;font-weight:700}
 .btn{background:#2563eb;color:#fff;border:0;padding:11px;border-radius:8px;width:100%;font-weight:700;cursor:pointer}
+.btn-verde{background:#16a34a;color:#fff;border:0;padding:11px;border-radius:8px;width:100%;font-weight:700;cursor:pointer}
 .btn-vermelho{background:#dc2626;color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
+.btn-cinza{background:#e5e7eb;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
 .item{display:flex;gap:10px;align-items:center;border-top:1px solid #eee;padding:10px 0}
-.item img{width:100%;height:auto;max-height:220px;object-fit:contain;border-radius:8px;background:#f8f8f8;display:block}
+.item img{width:80px;height:80px;object-fit:cover;border-radius:8px;background:#f8f8f8;display:block}
 .preview{width:100%;margin-top:8px}
 </style></head>
 <body>
@@ -35,10 +39,38 @@ input{width:100%;padding:11px;margin-bottom:8px;border:1px solid #cfd5df;border-
 <div id="listaBanners">A carregar...</div>
 </div>
 
+<div class="caixa"><h3>➕ Adicionar / Editar Produto</h3>
+<input type="hidden" id="editId" value="">
+<label>Nome do produto</label>
+<input id="fNome" placeholder="Ex: Arca Oux 200L">
+<label>Categoria - AGORA APARECE TUDO</label>
+<select id="fCategoria">
+  <option value="Arca">Arca</option>
+  <option value="Ar Condicionado">Ar Condicionado</option>
+  <option value="Telemóveis">Telemóveis</option>
+  <option value="Máquina de Lavar">Máquina de Lavar</option>
+  <option value="Ferro de Engomar">Ferro de Engomar</option>
+  <option value="Eletrodomésticos">Eletrodomésticos</option>
+  <option value="TV e Som">TV e Som</option>
+  <option value="Informática">Informática</option>
+  <option value="Outros">Outros</option>
+</select>
+<label>Preço (Kz)</label>
+<input id="fPreco" type="number" placeholder="Ex: 8000">
+<label>Descrição</label>
+<textarea id="fDesc" placeholder="Ex: Arca 200L, nova, com garantia..."></textarea>
+<label>Foto - link ou subir do telefone</label>
+<input id="fImagem" placeholder="Cola o link da foto ou sobe em baixo">
+<input type="file" id="fileProduto" accept="image/*">
+<button class="btn-verde" onclick="salvarProduto()">💾 Guardar Produto</button>
+<button class="btn-cinza" style="margin-top:8px" onclick="limparForm()">Limpar / Novo</button>
+</div>
+
 <div class="caixa"><h3>🛍️ Produtos</h3><div id="listaProdutos">A carregar...</div></div>
 
 <script>
 let banners=[];
+let produtos=[];
 function mostrarBanners(){
   let div=document.getElementById('listaBanners');
   if(!banners.length){div.innerHTML='<p>Nenhum banner ainda.</p>';return}
@@ -47,13 +79,11 @@ function mostrarBanners(){
 async function carregarTudo(){
   const r=await db.from('loja_config').select('*').eq('id',1).maybeSingle();
   let cfg=r.data||{};
-  // LOGO
   if(cfg.logo_url){
     document.getElementById('logoAtual').innerHTML='<img src="'+cfg.logo_url+'" style="width:100%;max-height:150px;object-fit:contain;background:#2563eb;border-radius:8px"><p style="text-align:center;color:green">✅ Logotipo atual</p>';
   } else {
     document.getElementById('logoAtual').innerHTML='<p>Sem logotipo ainda.</p>';
   }
-  // BANNERS
   try{banners=typeof cfg.banners==='string'?JSON.parse(cfg.banners||'[]'):(cfg.banners||[])}catch(e){banners=[]}
   if(!banners.length && cfg.banner_url) banners=[cfg.banner_url];
   mostrarBanners();
@@ -93,10 +123,61 @@ async function apagarBanner(i){
   if(!confirm('Apagar este banner?')) return;
   banners.splice(i,1); await guardar();
 }
+function limparForm(){
+  document.getElementById('editId').value='';
+  document.getElementById('fNome').value='';
+  document.getElementById('fPreco').value='';
+  document.getElementById('fDesc').value='';
+  document.getElementById('fImagem').value='';
+  document.getElementById('fCategoria').value='Arca';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function salvarProduto(){
+  let id=document.getElementById('editId').value;
+  let nome=document.getElementById('fNome').value.trim();
+  let preco=Number(document.getElementById('fPreco').value);
+  let categoria=document.getElementById('fCategoria').value;
+  let descricao=document.getElementById('fDesc').value.trim();
+  let imagem=document.getElementById('fImagem').value.trim();
+  let f=document.getElementById('fileProduto').files[0];
+  if(!nome || !preco) return alert('Preenche o nome e o preço');
+  if(f){
+    let nomeF='prod_'+Date.now()+'_'+f.name.replace(/\s/g,'_');
+    let up=await db.storage.from('produtos').upload(nomeF,f,{upsert:true});
+    if(up.error) return alert('Erro foto: '+up.error.message);
+    imagem=db.storage.from('produtos').getPublicUrl(nomeF).data.publicUrl;
+  }
+  if(!imagem && !id) return alert('Cola o link da foto ou sobe uma foto');
+  let dados={nome:nome, preco:preco, categoria:categoria, descricao:descricao};
+  if(imagem) { dados.imagem=imagem; dados.imagem_url=imagem; }
+  let r;
+  if(id) r=await db.from('produtos').update(dados).eq('id',id);
+  else r=await db.from('produtos').insert([dados]);
+  if(r.error) return alert('Erro: '+r.error.message);
+  alert('✅ Produto guardado com categoria: '+categoria);
+  limparForm(); carregarProdutos();
+}
+function editarProduto(id){
+  let p=produtos.find(x=>x.id==id); if(!p) return;
+  document.getElementById('editId').value=p.id;
+  document.getElementById('fNome').value=p.nome||'';
+  document.getElementById('fPreco').value=p.preco||'';
+  document.getElementById('fCategoria').value=p.categoria||'Outros';
+  document.getElementById('fDesc').value=p.descricao||p.detalhes||'';
+  document.getElementById('fImagem').value=p.imagem||p.imagem_url||'';
+  window.scrollTo({top:0,behavior:'smooth'});
+  alert('Agora edita em cima e clica em Guardar. Categoria atual: '+(p.categoria||'sem categoria'));
+}
+async function apagarProduto(id){
+  if(!confirm('Apagar este produto?')) return;
+  let r=await db.from('produtos').delete().eq('id',id);
+  if(r.error) return alert('Erro: '+r.error.message);
+  carregarProdutos();
+}
 async function carregarProdutos(){
   const r=await db.from('produtos').select('*').order('id',{ascending:false});
-  const p=r.data||[];
-  document.getElementById('listaProdutos').innerHTML=p.map(x=>'<div class="item"><img src="'+(x.imagem||x.imagem_url||'')+'"><div style="flex:1"><b>'+x.nome+'</b><br>'+Number(x.preco).toLocaleString()+' Kz</div></div>').join('')||'Sem produtos';
+  produtos=r.data||[];
+  document.getElementById('listaProdutos').innerHTML=produtos.map(x=>'<div class="item"><img src="'+(x.imagem||x.imagem_url||'')+'"><div style="flex:1"><b>'+x.nome+'</b><br><small style="color:#2563eb;font-weight:700">📁 '+(x.categoria||'Sem categoria')+'</small><br>'+Number(x.preco).toLocaleString()+' Kz<br><button class="btn-cinza" style="margin-top:6px" onclick="editarProduto('+x.id+')">✏️ Editar</button> <button class="btn-vermelho" onclick="apagarProduto('+x.id+')">🗑️ Apagar</button></div></div>').join('')||'Sem produtos';
 }
 carregarTudo(); carregarProdutos();
 </script></body></html>

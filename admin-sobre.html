@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sobre a Loja - Admin - Casa Nova</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
+.topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}
+.topo .logo{display:flex;align-items:center;gap:8px}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none}
+.topo.tem-logo .logo-text{display:none}
+.topo a{color:#fff;text-decoration:none;font-weight:700}
+.caixa{background:#fff;padding:14px;border-radius:12px;margin-top:12px}
+label{font-size:13px;font-weight:700;color:#333;display:block;margin:12px 0 4px}
+input,textarea{width:100%;padding:11px;border:1px solid #cfd5df;border-radius:8px;font-size:15px}
+textarea{resize:vertical}
+.btn{border:0;padding:12px;border-radius:8px;width:100%;font-weight:700;cursor:pointer;font-size:15px}
+.btn-verde{background:#16a34a;color:#fff}
+.btn-azul{background:#0b5ed7;color:#fff}
+#toast{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:14px 18px;border-radius:14px;z-index:9999;font-weight:700;max-width:92%;text-align:center;transition:.35s;opacity:0;pointer-events:none}
+#toast.mostrar{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.sucesso{background:#16a34a}
+#toast.erro{background:#dc2626}
+</style></head>
+<body>
+<div id="toast"></div>
+<div class="topo" id="topoSite"><div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>Casa Nova</b></span></div><a href="admin.html">← Voltar</a></div>
+
+<div class="caixa">
+<h3 style="margin:0">🏠 Sobre a Minha Loja</h3>
+<p style="color:#666;font-size:13px">Edita aqui o que aparece na página Sobre para os clientes.</p>
+
+<label>🏠 Sobre Nós</label>
+<textarea id="sobre" rows="4" placeholder="Ex: Bem-vindo à Casa Nova..."></textarea>
+
+<label>👁️ Visão</label>
+<textarea id="visao" rows="3" placeholder="Ex: Ser a melhor loja..."></textarea>
+
+<label>🎯 Missão</label>
+<textarea id="missao" rows="3" placeholder="Ex: Levar produtos de qualidade..."></textarea>
+
+<label>📍 Endereço</label>
+<input id="endereco" placeholder="Ex: Luanda, Angola">
+
+<label>📞 Telefone</label>
+<input id="telefone" placeholder="Ex: 923 000 000">
+
+<label>💬 WhatsApp</label>
+<input id="whatsapp" placeholder="Ex: 244923000000">
+
+<label>🕒 Horário</label>
+<input id="horario" placeholder="Ex: Seg - Sáb: 08h00 - 19h00">
+
+<label>📧 Email da Loja</label>
+<input id="email" placeholder="Ex: casanova@gmail.com">
+
+<button class="btn btn-verde" onclick="salvar()" style="margin-top:16px">💾 Guardar Alterações</button>
+<button class="btn btn-azul" onclick="location.href='sobre.html'" style="margin-top:8px">👀 Ver Página Sobre</button>
+</div>
+
+<script>
+let toastTimer;
+function aviso(msg,tipo){let t=document.getElementById('toast');t.textContent=msg;t.className='mostrar '+(tipo||'sucesso');clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='';},3000);}
+async function carregarLogoTopo(){
+  try{let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();let logo=r.data?.logo_url;if(logo){let img=document.getElementById('logoTopo');img.src=logo;img.style.display='block';document.getElementById('topoSite').classList.add('tem-logo');}}catch(e){}
+}
+async function carregar(){
+  let r=await db.from('loja_config').select('*').eq('id',1).maybeSingle();
+  let c=r.data||{};
+  document.getElementById('sobre').value=c.sobre||'';
+  document.getElementById('visao').value=c.visao||'';
+  document.getElementById('missao').value=c.missao||'';
+  document.getElementById('endereco').value=c.endereco||'';
+  document.getElementById('telefone').value=c.telefone||'';
+  document.getElementById('whatsapp').value=c.whatsapp||'';
+  document.getElementById('horario').value=c.horario||'';
+  document.getElementById('email').value=c.email_loja||'';
+}
+async function salvar(){
+  let dados={
+    sobre:document.getElementById('sobre').value.trim(),
+    visao:document.getElementById('visao').value.trim(),
+    missao:document.getElementById('missao').value.trim(),
+    endereco:document.getElementById('endereco').value.trim(),
+    telefone:document.getElementById('telefone').value.trim(),
+    whatsapp:document.getElementById('whatsapp').value.trim(),
+    horario:document.getElementById('horario').value.trim(),
+    email_loja:document.getElementById('email').value.trim()
+  };
+  let r=await db.from('loja_config').update(dados).eq('id',1);
+  if(r.error) return aviso('❌ '+r.error.message,'erro');
+  aviso('✅ Sobre a Loja atualizado!');
+}
+carregarLogoTopo(); carregar();
+</script></body></html>

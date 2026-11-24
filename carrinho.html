@@ -36,7 +36,6 @@ h1{font-size:1.4rem;margin-bottom:12px}
 .btn-whats{background:#0b5ed7;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;cursor:pointer}
 .btn-whats:disabled{background:#9ca3af;cursor:not-allowed}
 .btn-limpar{background:#eee;border:0;padding:10px;border-radius:10px;width:100%;margin-top:8px;cursor:pointer}
-.btn-verde{background:#16a34a;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;cursor:pointer}
 .vazio{text-align:center;padding:30px;color:#666}
 .erro{background:#fee2e2;color:#dc2626;padding:10px;border-radius:10px;font-size:13px;margin-bottom:10px;display:none;word-break:break-word}
 .aviso-unico{background:#fee2e2;border:1px solid #fca5a5;padding:12px;border-radius:12px;font-size:13px;margin:10px 0;display:none;line-height:1.6}
@@ -69,10 +68,7 @@ h1{font-size:1.4rem;margin-bottom:12px}
 </head>
 <body>
 <div class="topo" id="topoSite">
-  <a class="logo" href="index.html">
-    <img id="logoTopo" class="logo-img" src="" alt="Casa Nova" style="display:none">
-    <span class="logo-text" id="nomeTopo">⬅ Casa Nova</span>
-  </a>
+  <a class="logo" href="index.html"><img id="logoTopo" class="logo-img" src="" alt="Casa Nova" style="display:none"><span class="logo-text" id="nomeTopo">⬅ Casa Nova</span></a>
   <a href="meus-pedidos.html">🔖 Meus Códigos</a>
 </div>
 <div class="container">
@@ -104,41 +100,21 @@ h1{font-size:1.4rem;margin-bottom:12px}
     <textarea id="referenciaZona" rows="2" placeholder="Ex: 4 de Fevereiro, Cabinda - ao lado da farmácia, casa azul"></textarea>
   </div>
   <div id="boxLoja" style="display:none">
-    <div class="box-loja" id="infoLoja">
-      <b>🏪 Localização da Nossa Loja</b><br>
-      🌍 País: <b id="lojaPaisTxt">Angola</b><br>
-      🏙️ Cidade: <b id="lojaCidadeTxt">Luanda</b><br>
-      📍 Bairro / Referência: <b id="lojaBairroTxt">Viana</b>
-    </div>
+    <div class="box-loja" id="infoLoja"><b>🏪 Localização da Nossa Loja</b><br>🌍 País: <b id="lojaPaisTxt">Angola</b><br>🏙️ Cidade: <b id="lojaCidadeTxt">Luanda</b><br>📍 Bairro / Referência: <b id="lojaBairroTxt">Viana</b></div>
     <p style="color:#666;font-size:13px">💰 Pagas agora para levantar. Sobe o comprovativo em baixo.</p>
   </div>
-  <div class="passo">
-    <div id="p1" class="ativo">1º PAGAR</div>
-    <div id="p2">2º COMPROVATIVO</div>
-    <div id="p3">3º CONFIRMAR</div>
-    <div id="p4">4º CÓDIGO</div>
-  </div>
+  <div class="passo"><div id="p1" class="ativo">1º PAGAR</div><div id="p2">2º COMPROVATIVO</div><div id="p3">3º CONFIRMAR</div><div id="p4">4º CÓDIGO</div></div>
   <label>💳 1º - Faz o pagamento aqui</label>
   <select id="pagamento" onchange="mostrarInfoPagamento()"></select>
   <div id="infoPagamento"></div>
   <label>📎 2º - Sobe o comprovativo</label>
   <div class="upload-box" id="boxUpload" onclick="document.getElementById('comprovativo').click()">
-    <div style="font-size:32px" id="iconeUpload">📎</div>
-    <b id="textoUpload">Clica para subir o comprovativo</b>
-    <small style="color:#666">PDF, PNG, JPG ou Foto</small>
-    <small style="color:#16a34a;font-weight:700;display:none" id="nomeFicheiro">✅ Adicionado</small>
+    <div style="font-size:32px" id="iconeUpload">📎</div><b id="textoUpload">Clica para subir o comprovativo</b><small style="color:#666">PDF, PNG, JPG ou Foto</small><small style="color:#16a34a;font-weight:700;display:none" id="nomeFicheiro">✅ Adicionado</small>
     <input type="file" id="comprovativo" accept=".pdf,.png,.jpg,.jpeg,.webp,image/*,application/pdf" onchange="lerComprovativo(event)">
   </div>
   <label>✅ 3º - Confirma o pagamento</label>
   <label class="check-pago"><input type="checkbox" id="checkPago" onchange="atualizarPassos()"> <span><b>Confirmo que já fiz o pagamento</b><br><small>Já paguei o valor indicado e subi o comprovativo.</small></span></label>
-  <div id="boxCodigo" style="display:none">
-    <div class="box-ref">
-      <div style="font-size:13px;opacity:.8">✅ PAGAMENTO CONFIRMADO</div>
-      <div style="font-size:13px;opacity:.8;margin-top:6px">TUA REFERÊNCIA - GUARDA BEM, É ÚNICA</div>
-      <b id="codigoRef">---</b>
-      <div style="font-size:12px;opacity:.8">⚠️ Aponta! Fica visível só 24h em Meus Códigos, depois apaga.</div>
-    </div>
-  </div>
+  <div id="boxCodigo" style="display:none"><div class="box-ref"><div style="font-size:13px;opacity:.8">✅ PAGAMENTO CONFIRMADO</div><div style="font-size:13px;opacity:.8;margin-top:6px">TUA REFERÊNCIA - GUARDA BEM, É ÚNICA</div><b id="codigoRef">---</b><div style="font-size:12px;opacity:.8">⚠️ Aponta! Fica visível só 24h em Meus Códigos, depois apaga.</div></div></div>
   <div class="total" id="total">Total: 0 Kz</div>
   <div id="total50" style="font-weight:700;color:#b45309;margin-bottom:8px"></div>
   <button class="btn-whats" id="btnFinalizar" onclick="finalizar()">✅ Confirmar Pedido e Receber Código</button>
@@ -146,12 +122,8 @@ h1{font-size:1.4rem;margin-bottom:12px}
 </div>
 <div id="vazio" class="vazio" style="display:none">O teu carrinho está vazio.<br><br><a href="index.html" style="color:#0b5ed7;font-weight:700">⬅ Voltar à Loja</a></div>
 </div>
-<div id="modalLimpar" class="modal-fundo" onclick="if(event.target.id==='modalLimpar') fecharLimpar()">
-  <div class="modal-box"><div style="font-size:40px">🗑️</div><h3 style="margin:8px 0">Limpar todo o carrinho?</h3><button class="btn-whats" style="background:#dc2626" onclick="confirmarLimpar()">Sim, Limpar</button><button class="btn-limpar" onclick="fecharLimpar()">Cancelar</button></div>
-</div>
-<div id="modalFinalizar" class="modal-fundo" onclick="if(event.target.id==='modalFinalizar') fecharFinalizar()">
-  <div class="modal-box"><div style="font-size:40px">⚠️</div><h3 style="margin:8px 0">Confirmar só 1 vez?</h3><p style="color:#666;font-size:14px;margin-bottom:16px" id="textoFinalizar">Vais receber o código de referência.</p><p style="color:#dc2626;font-size:13px;font-weight:700">⚠️ ATENÇÃO: Só podes confirmar 1 vez! Guarda o código, faz print. O código fica visível só 24h, depois apaga. Aponta num caderno!</p><button class="btn-whats" onclick="confirmarFinalizar()">Sim, Confirmar 1 Única Vez</button><button class="btn-limpar" onclick="fecharFinalizar()">Cancelar</button></div>
-</div>
+<div id="modalLimpar" class="modal-fundo" onclick="if(event.target.id==='modalLimpar') fecharLimpar()"><div class="modal-box"><div style="font-size:40px">🗑️</div><h3 style="margin:8px 0">Limpar todo o carrinho?</h3><button class="btn-whats" style="background:#dc2626" onclick="confirmarLimpar()">Sim, Limpar</button><button class="btn-limpar" onclick="fecharLimpar()">Cancelar</button></div></div>
+<div id="modalFinalizar" class="modal-fundo" onclick="if(event.target.id==='modalFinalizar') fecharFinalizar()"><div class="modal-box"><div style="font-size:40px">⚠️</div><h3 style="margin:8px 0">Confirmar só 1 vez?</h3><p style="color:#666;font-size:14px;margin-bottom:16px" id="textoFinalizar">Vais receber o código de referência.</p><p style="color:#dc2626;font-size:13px;font-weight:700">⚠️ ATENÇÃO: Só podes confirmar 1 vez! Guarda o código, faz print. O código fica visível só 24h, depois apaga. Aponta num caderno!</p><button class="btn-whats" onclick="confirmarFinalizar()">Sim, Confirmar 1 Única Vez</button><button class="btn-limpar" onclick="fecharFinalizar()">Cancelar</button></div></div>
 <div id="toast"></div>
 <script>
 function mostrarToast(m){ let t=document.getElementById('toast'); t.textContent=m; t.classList.add('mostrar'); setTimeout(()=>t.classList.remove('mostrar'),2500); }
@@ -164,9 +136,9 @@ let codigoRef = '';
 let comprovativoData = null;
 let comprovativoNome = '';
 let comprovativoTipo = '';
+let comprovativoFicheiro = null;
 let pedidoJaConfirmado = false;
 let codigoJaGerado = '';
-// CORRIGIDO: NÃO gera código ao abrir a página. Só gera DEPOIS de confirmar.
 function gerarCodigo(){
   if(codigoJaGerado) { codigoRef = codigoJaGerado; return codigoRef; }
   codigoRef = 'CN-' + Math.floor(100000 + Math.random()*900000);
@@ -175,7 +147,6 @@ function gerarCodigo(){
   if(el) el.textContent = codigoRef;
   return codigoRef;
 }
-// NÃO chama gerarCodigo() aqui - antes chamava e mostrava o código no modal
 function bloquearPedido(){
   pedidoJaConfirmado = true;
   document.getElementById('btnFinalizar').disabled = true;
@@ -208,10 +179,7 @@ function atualizarTotais(){
     let metade = Math.round(total/2);
     box50.innerHTML = `💰 <b>Entrega a Domicílio - Paga 50% agora</b><br>Total: <b>${total.toLocaleString()} Kz</b><br>✅ Pagas agora: <b>${metade.toLocaleString()} Kz (50%)</b><br>📦 Pagas na entrega: <b>${(total-metade).toLocaleString()} Kz (50%)</b>`;
     t50.textContent = '💰 Pagas agora: ' + metade.toLocaleString() + ' Kz (50%)';
-  } else {
-    box50.innerHTML = ``;
-    t50.textContent = '💰 Pagas agora na loja: ' + total.toLocaleString() + ' Kz (100%)';
-  }
+  } else { box50.innerHTML = ``; t50.textContent = '💰 Pagas agora na loja: ' + total.toLocaleString() + ' Kz (100%)'; }
 }
 function atualizarPassos(){
   let temComp = !!comprovativoData;
@@ -225,7 +193,7 @@ function lerComprovativo(e){
   if(pedidoJaConfirmado){ mostrarToast('🔒 Pedido já confirmado'); return; }
   let f = e.target.files[0];
   if(!f) return;
-  comprovativoNome = f.name; comprovativoTipo = f.type;
+  comprovativoNome = f.name; comprovativoTipo = f.type; comprovativoFicheiro = f;
   let reader = new FileReader();
   reader.onload = function(ev){
     comprovativoData = ev.target.result;
@@ -233,8 +201,7 @@ function lerComprovativo(e){
     document.getElementById('iconeUpload').textContent = '✅';
     document.getElementById('textoUpload').textContent = 'Comprovativo adicionado';
     let nf = document.getElementById('nomeFicheiro');
-    nf.style.display = 'block';
-    nf.textContent = '✅ Adicionado - clica para trocar';
+    nf.style.display = 'block'; nf.textContent = '✅ Adicionado - clica para trocar';
     atualizarPassos(); mostrarToast('✅ Comprovativo adicionado');
   };
   reader.readAsDataURL(f);
@@ -246,9 +213,7 @@ function carregarPagamentosCarrinho(){
   let select = document.getElementById('pagamento');
   let lista = [];
   try{ lista = JSON.parse(localStorage.getItem('pagamentos_casa_nova')||'[]'); }catch(e){}
-  if(!lista.length){
-    lista = [{tipo:'Multicaixa Express', telefone:'', nome:'', ativo:true},{tipo:'PayPay', referencia:'10116', telefone:'942788931', ativo:true},{tipo:'IBAN', iban:'', nome:'', ativo:true},{tipo:'Dinheiro na Entrega', ativo:true}];
-  }
+  if(!lista.length){ lista = [{tipo:'Multicaixa Express', telefone:'', nome:'', ativo:true},{tipo:'PayPay', referencia:'10116', telefone:'942788931', ativo:true},{tipo:'IBAN', iban:'', nome:'', ativo:true},{tipo:'Dinheiro na Entrega', ativo:true}]; }
   _pagAtivos = lista.filter(p=>p.ativo);
   select.innerHTML = _pagAtivos.map(p=>`<option value="${p.tipo}">${p.tipo}</option>`).join('');
   mostrarInfoPagamento();
@@ -276,14 +241,7 @@ async function corrigirItensAntigos(){
     try{
       let ids = carrinho.map(i=>i.id);
       let { data } = await db.from('produtos').select('id,nome,preco,imagem,imagem_url').in('id', ids);
-      if(data){
-        carrinho = carrinho.map(item=>{
-          let p = data.find(x=>x.id==item.id);
-          if(p) return {...item, nome:p.nome, preco:Number(p.preco), imagem:p.imagem||p.imagem_url||''};
-          return item;
-        });
-        setCarrinho(carrinho);
-      }
+      if(data){ carrinho = carrinho.map(item=>{ let p = data.find(x=>x.id==item.id); if(p) return {...item, nome:p.nome, preco:Number(p.preco), imagem:p.imagem||p.imagem_url||''}; return item; }); setCarrinho(carrinho); }
     }catch(e){}
   }
   return carrinho;
@@ -301,32 +259,22 @@ async function renderizar(){
     document.getElementById('telefone').value = cliente.telefone||'';
     if(cliente.morada) document.getElementById('referenciaZona').value = cliente.morada;
     document.getElementById('avisoLogin').style.display='none';
-  } else {
-    document.getElementById('infoCliente').style.display='none';
-    document.getElementById('avisoLogin').style.display='block';
-  }
+  } else { document.getElementById('infoCliente').style.display='none'; document.getElementById('avisoLogin').style.display='block'; }
   if(!carrinho.length){ lista.innerHTML=''; formBox.style.display='none'; vazio.style.display='block'; return; }
   vazio.style.display='none'; formBox.style.display='block';
-  let total = 0;
   lista.innerHTML = carrinho.map((item, idx)=>{
-    let preco = Number(item.preco||0); let qtd = Number(item.qtd||1); total += preco*qtd;
+    let preco = Number(item.preco||0); let qtd = Number(item.qtd||1);
     return `<div class="item"><img src="${item.imagem||'https://via.placeholder.com/100'}" onerror="this.src='https://via.placeholder.com/100'"><div class="item-info"><b>${item.nome||'Produto'}</b><span>${preco.toLocaleString()} Kz x ${qtd}</span><br><small>= ${(preco*qtd).toLocaleString()} Kz</small></div><div class="qtd"><button onclick="mudarQtd(${idx},1)">+</button><button onclick="mudarQtd(${idx},-1)">-</button><button class="remover" onclick="remover(${idx})">X</button></div></div>`;
   }).join('');
   atualizarTotais();
 }
-function mudarQtd(idx, delta){
-  if(pedidoJaConfirmado){ mostrarToast('🔒 Pedido já confirmado'); return; }
-  let c = getCarrinho(); c[idx].qtd = (c[idx].qtd||1) + delta; if(c[idx].qtd <= 0) c.splice(idx,1); setCarrinho(c); renderizar();
-}
-function remover(idx){
-  if(pedidoJaConfirmado){ mostrarToast('🔒 Pedido já confirmado'); return; }
-  let c = getCarrinho(); c.splice(idx,1); setCarrinho(c); renderizar();
-}
+function mudarQtd(idx, delta){ if(pedidoJaConfirmado){ mostrarToast('🔒 Pedido já confirmado'); return; } let c = getCarrinho(); c[idx].qtd = (c[idx].qtd||1) + delta; if(c[idx].qtd <= 0) c.splice(idx,1); setCarrinho(c); renderizar(); }
+function remover(idx){ if(pedidoJaConfirmado){ mostrarToast('🔒 Pedido já confirmado'); return; } let c = getCarrinho(); c.splice(idx,1); setCarrinho(c); renderizar(); }
 function abrirLimpar(){ document.getElementById('modalLimpar').classList.add('aberto'); }
 function fecharLimpar(){ document.getElementById('modalLimpar').classList.remove('aberto'); }
 function confirmarLimpar(){
   fecharLimpar();
-  pedidoJaConfirmado = false; codigoJaGerado = ''; codigoRef = ''; comprovativoData = null; comprovativoNome = '';
+  pedidoJaConfirmado = false; codigoJaGerado = ''; codigoRef = ''; comprovativoData = null; comprovativoNome = ''; comprovativoFicheiro = null;
   document.getElementById('codigoRef').textContent = '---';
   document.getElementById('btnFinalizar').disabled = false;
   document.getElementById('btnFinalizar').textContent = '✅ Confirmar Pedido e Receber Código';
@@ -357,16 +305,10 @@ function finalizar(){
   }
   if(!comprovativoData){ erro.textContent='⚠️ 2º - Sobe o comprovativo! PDF, PNG ou foto.'; erro.style.display='block'; return; }
   if(!document.getElementById('checkPago').checked){ erro.textContent='⚠️ 3º - Marca "Confirmo que já fiz o pagamento"!'; erro.style.display='block'; return; }
-  if(!cliente){
-    let novoCliente = {nome, telefone, morada: document.getElementById('referenciaZona').value.trim(), email: email, senha:''};
-    localStorage.setItem('cliente_casa_nova', JSON.stringify(novoCliente)); cliente = novoCliente;
-  } else {
-    cliente.email = email;
-    localStorage.setItem('cliente_casa_nova', JSON.stringify(cliente));
-  }
+  if(!cliente){ let novoCliente = {nome, telefone, morada: document.getElementById('referenciaZona').value.trim(), email: email, senha:''}; localStorage.setItem('cliente_casa_nova', JSON.stringify(novoCliente)); cliente = novoCliente; }
+  else { cliente.email = email; localStorage.setItem('cliente_casa_nova', JSON.stringify(cliente)); }
   let total = carrinho.reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
   let aPagar = modoEntrega==='entrega' ? Math.round(total/2) : total;
-  // CORRIGIDO: modal NÃO mostra o código, só diz que vai receber
   document.getElementById('textoFinalizar').textContent = `Pagaste ${aPagar.toLocaleString()} Kz • Vais receber o teu código ÚNICO depois de confirmar • Vais ser levado para o WhatsApp e para Meus Códigos.`;
   document.getElementById('modalFinalizar').classList.add('aberto');
 }
@@ -374,7 +316,6 @@ function fecharFinalizar(){ document.getElementById('modalFinalizar').classList.
 async function confirmarFinalizar(){
   if(pedidoJaConfirmado){ fecharFinalizar(); mostrarToast('🔒 Já confirmaste!'); return; }
   fecharFinalizar();
-  // 1º GERA O CÓDIGO SÓ AGORA, depois de confirmar - antes era gerado ao abrir a página
   gerarCodigo();
   bloquearPedido();
   let carrinho = getCarrinho();
@@ -393,43 +334,42 @@ async function confirmarFinalizar(){
     else if(pag.tipo==='IBAN') detalhePag=`\n🏦 IBAN: ${pag.iban||pag.conta||''} (${pag.nome||pag.titular||''})`;
   }
   let moradaTxt = modoEntrega==='entrega' ? `${document.getElementById('pais').value.trim()}, ${document.getElementById('cidade').value.trim()}, ${document.getElementById('referenciaZona').value.trim()}` : `${_lojaInfo.pais}, ${_lojaInfo.cidade}, ${_lojaInfo.bairro} (Receber na Loja)`;
-  // 2) GUARDA NO TELEFONE DO CLIENTE POR 24H
   try{
     let meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]');
     meus.push({ codigo: codigoRef, nome: nome, email: email, telefone: telefone, itens: carrinho.map(i=>i.nome+' x'+i.qtd).join(', '), total: total, pago: pago, falta: falta, tipo: modoEntrega, criado_em: Date.now() });
     localStorage.setItem('meus_codigos', JSON.stringify(meus));
   }catch(e){}
-  // 3) GUARDA NO SUPABASE - CORRIGIDO: só colunas simples, SEM foto gigante
-  // Antes mandava comprovativo_url com a foto toda (base64) e o insert rebentava
+  // NOVO: SOBE O COMPROVATIVO PARA O STORAGE E PEGA O LINK REAL
+  let comprovativoURL = comprovativoNome || '';
+  try{
+    if(comprovativoFicheiro && typeof db !== 'undefined'){
+      mostrarToast('⏳ A subir comprovativo...');
+      let ext = (comprovativoNome.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
+      let caminho = 'comp_' + codigoRef + '_' + Date.now() + '.' + ext;
+      let up = await db.storage.from('comprovativos').upload(caminho, comprovativoFicheiro, { upsert: true });
+      if(!up.error){
+        let pub = db.storage.from('comprovativos').getPublicUrl(caminho);
+        comprovativoURL = pub.data.publicUrl;
+      } else { console.log('Upload comprovativo falhou:', up.error.message); }
+    }
+  }catch(e){ console.log('Erro upload comprovativo:', e); }
+  // GRAVA SÓ EM pedidos - SEM encomendas, porque essa tabela não existe
   let gravouNoSupabase = false;
   let erroSupabase = '';
   try{
     if(typeof db !== 'undefined'){
-      // Tentativa 1: com todas as colunas novas
-      let payload = { nome_cliente: nome, email: email, telefone: telefone, morada: moradaTxt, itens: JSON.stringify(carrinho), total: total, valor_pago: pago, falta_pagar: falta, codigo: codigoRef, status: 'Novo', comprovativo_url: comprovativoNome || 'comprovativo enviado', tipo_entrega: modoEntrega, pagamento: pagamento };
+      let payload = { nome_cliente: nome, email: email, telefone: telefone, morada: moradaTxt, itens: JSON.stringify(carrinho), total: total, valor_pago: pago, falta_pagar: falta, codigo: codigoRef, status: 'Novo', comprovativo_url: comprovativoURL, tipo_entrega: modoEntrega, pagamento: pagamento };
       let r = await db.from('pedidos').insert([payload]);
       if(!r.error){ gravouNoSupabase = true; }
       else {
         erroSupabase = r.error.message;
         console.log('Insert 1 falhou:', erroSupabase);
-        // Tentativa 2: só o básico que toda a tabela pedidos tem
-        let r2 = await db.from('pedidos').insert([{ nome_cliente: nome, email: email, telefone: telefone, morada: moradaTxt, itens: JSON.stringify(carrinho), total: total, codigo: codigoRef, status: 'Novo' }]);
-        if(!r2.error){ gravouNoSupabase = true; }
-        else {
-          erroSupabase = r2.error.message;
-          console.log('Insert 2 falhou:', erroSupabase);
-          // Tentativa 3: na tabela encomendas
-          let r3 = await db.from('encomendas').insert([{ nome_cliente: nome, email: email, telefone: telefone, morada: moradaTxt, itens: JSON.stringify(carrinho), total: total, codigo: codigoRef, status: 'Novo' }]);
-          if(!r3.error) gravouNoSupabase = true;
-          else erroSupabase = r3.error.message;
-        }
+        let r2 = await db.from('pedidos').insert([{ nome_cliente: nome, email: email, telefone: telefone, morada: moradaTxt, itens: JSON.stringify(carrinho), total: total, codigo: codigoRef, status: 'Novo', comprovativo_url: comprovativoURL }]);
+        if(!r2.error){ gravouNoSupabase = true; } else { erroSupabase = r2.error.message; console.log('Insert 2 falhou:', erroSupabase); }
       }
     }
   }catch(e){ erroSupabase = e.message; console.log('Erro ao gravar pedido:', e); }
-  if(!gravouNoSupabase){
-    alert('⚠️ ATENÇÃO: O pedido NÃO foi gravado no sistema do admin!\n\nErro: ' + erroSupabase + '\n\nVai ao Supabase > SQL e corre o SQL das colunas + RLS que te dei. Depois faz um pedido novo.');
-  }
-  // 4) MENSAGEM WHATSAPP
+  if(!gravouNoSupabase){ alert('⚠️ ATENÇÃO: O pedido NÃO foi gravado no sistema do admin!\n\nErro: ' + erroSupabase); }
   let msg='';
   if(modoEntrega==='entrega'){
     let pais = document.getElementById('pais').value.trim();

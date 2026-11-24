@@ -9,64 +9,46 @@ body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
 .topo{background:#0b5ed7;color:#fff;padding:14px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
 .caixa{background:#fff;padding:16px;border-radius:12px;margin-top:12px}
-.btn{border:0;padding:14px;border-radius:10px;width:100%;font-weight:700;cursor:pointer;margin-top:10px}
-.btn-azul{background:#0b5ed7;color:#fff}
 .btn-sair{background:#dc2626;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer}
-.btn-apagar{background:#111;color:#fff;border:0;padding:12px;border-radius:10px;width:100%;font-weight:700;cursor:pointer;margin-top:10px}
 .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-top:10px;line-height:1.7;font-size:14px}
 </style></head>
 <body>
 <div class="topo"><b>🔖 Meus Códigos</b><div style="display:flex;gap:8px"><a href="index.html">Loja →</a><button class="btn-sair" onclick="sairCliente()">🚪 Sair</button></div></div>
 
-<div id="infoCliente" class="caixa" style="display:none"></div>
+<!-- NÃO MOSTRA MAIS "LOGADO COMO" - RETIRADO -->
 
 <div class="caixa">
-  <h3 style="margin:0">Os teus códigos</h3>
-  <p style="color:#666;font-size:13px">Se atualizares a página, a informação some por segurança.<br>Aponta o código antes de sair.</p>
+  <h3 style="margin:0">Os teus códigos ficam aqui 5 minutos</h3>
+  <p style="color:#666;font-size:13px">Depois de 5 minutos o código some sozinho.<br>Aponta o código antes.</p>
   <div id="listaCodigos"></div>
-  <button class="btn-apagar" onclick="apagarTudo()">🗑️ Apagar toda a informação agora</button>
 </div>
 
 <script>
-// RETIFICADO: SE ATUALIZAR A PÁGINA, APAGA TUDO
-// Detecta se é atualização (refresh) e não primeira entrada
+// RETIFICADO: RETIRA A INFORMAÇÃO DO CLIENTE SE ATUALIZAR A PÁGINA
+// Se for atualização (refresh), apaga só o nome/e-mail/telefone, NÃO apaga o código
 if(performance.getEntriesByType('navigation')[0]?.type === 'reload'){
-  localStorage.removeItem('meus_codigos');
   localStorage.removeItem('cliente_casa_nova');
-  // Volta para a loja / login, sem mostrar nada
-  // Se quiseres ficar na mesma página vazia, apaga as 2 linhas abaixo
-  // location.href = 'index.html';
+  // O código continua até fazer 5 minutos
 }
 
-let cliente = null;
-try{ cliente = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){ cliente=null; }
-
 function sairCliente(){
-  if(!confirm('Queres mesmo sair? A informação vai ser apagada.')) return;
-  apagarTudo();
+  if(!confirm('Queres mesmo sair?')) return;
+  localStorage.removeItem('cliente_casa_nova');
+  localStorage.removeItem('meus_codigos');
   location.href = 'index.html';
 }
 
-function apagarTudo(){
-  localStorage.removeItem('cliente_casa_nova');
-  localStorage.removeItem('meus_codigos');
-  document.getElementById('infoCliente').style.display='none';
-  document.getElementById('listaCodigos').innerHTML = `<p style="color:#666">Informação apagada.<br><a href="index.html" style="color:#0b5ed7;font-weight:700">Fazer um novo pedido →</a></p>`;
-}
-
 function renderizar(){
-  if(cliente){
-    document.getElementById('infoCliente').style.display='block';
-    document.getElementById('infoCliente').innerHTML = `👤 Logado como: <b>${cliente.nome||''}</b><br>📧 ${cliente.email||''} • 📞 ${cliente.telefone||''}`;
-  }
+  // VOLTA COMO ESTAVA ANTES: código some depois de 5 MINUTOS
   let meus = [];
   try{ meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]'); }catch(e){}
   let agora = Date.now();
-  meus = meus.filter(m => (agora - (m.criado_em||0)) < 24*60*60*1000);
+  meus = meus.filter(m => (agora - (m.criado_em||0)) < 5*60*1000); // 5 minutos
   localStorage.setItem('meus_codigos', JSON.stringify(meus));
+
   let div = document.getElementById('listaCodigos');
   if(!meus.length){
-    div.innerHTML = `<p style="color:#666">Nenhuma informação.<br><a href="index.html" style="color:#0b5ed7;font-weight:700">Fazer um pedido →</a></p>`;
+    div.innerHTML = `<p style="color:#666">Nenhum código.<br>Os códigos somem depois de 5 minutos.<br><a href="index.html" style="color:#0b5ed7;font-weight:700">Fazer um pedido →</a></p>`;
     return;
   }
   div.innerHTML = meus.map(m => `

@@ -1,54 +1,175 @@
 <!DOCTYPE html>
-<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Promoção - Casa Nova</title>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>🔥 PROMOÇÃO - Casa Nova</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
-<style>body{margin:0;font-family:Arial;background:#f1f3f6;padding:14px}h2{text-align:center}input{width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;margin:6px 0;font-size:16px;box-sizing:border-box}button{background:#dc2626;color:#fff;border:0;padding:13px;border-radius:10px;width:100%;font-weight:800;font-size:15px;margin-top:6px}button.azul{background:#0b5ed7}.card{background:#fff;border-radius:14px;padding:12px;margin-bottom:12px;display:flex;gap:10px;align-items:center}.card img{width:70px;height:70px;object-fit:cover;border-radius:10px}.preco-antigo{color:#999;text-decoration:line-through;font-size:12px}.desconto{color:#dc2626;font-size:11px;font-weight:800}</style></head>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,Arial,sans-serif;background:#f5f6f8;color:#1d2330}
+.topo{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:8px 16px;background:#dc2626;color:#fff;height:72px}
+.topo a{color:#fff;text-decoration:none;font-weight:800}
+.topo .logo{font-size:20px;font-weight:800}
+.container{max-width:1100px;margin:0 auto;padding:16px}
+.banner-promo{background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;border-radius:20px;padding:20px;text-align:center;margin-bottom:16px}
+.banner-promo h1{font-size:24px;margin-bottom:6px}
+.banner-promo p{font-size:14px;opacity:.9}
+#contadorGeral{background:#fff;color:#dc2626;display:inline-block;padding:8px 16px;border-radius:20px;font-weight:900;margin-top:10px;font-size:14px}
+.grade{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:700px){.grade{grid-template-columns:repeat(4,1fr)}}
+.card{background:#fff;border-radius:20px;padding:10px;display:flex;flex-direction:column;gap:6px;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;border:2px solid #dc2626;position:relative}
+.card img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;background:#eef0f4}
+.card h3{font-size:.95rem;font-weight:600}
+.preco{font-weight:700;color:#0b5ed7;font-size:16px}
+.preco-antigo{color:#999;text-decoration:line-through;font-size:12px;margin-right:6px}
+.desconto{color:#dc2626;font-size:11px;font-weight:800}
+.selo-promo{background:#dc2626;color:#fff;font-size:11px;font-weight:900;padding:3px 8px;border-radius:20px;display:inline-block}
+.tempo{background:#fef2f2;color:#dc2626;font-size:12px;font-weight:800;padding:6px 8px;border-radius:10px;text-align:center}
+.btn{background:#0b5ed7;color:#fff;border:0;padding:11px;border-radius:14px;font-size:.95rem;cursor:pointer;margin-top:auto;width:100%;font-weight:800}
+.btn-vermelho{background:#dc2626}
+.aviso{grid-column:1/-1;text-align:center;padding:40px 10px;color:#667085;background:#fff;border-radius:20px}
+.aviso b{font-size:18px;color:#1d2330}
+#toast{position:fixed;top:82px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:30px;font-size:.9rem;z-index:100;opacity:0;pointer-events:none;transition:.3s}
+#toast.mostrar{opacity:1}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99;display:none;align-items:flex-end;justify-content:center}
+#modal.aberto{display:flex}
+.modal-box{background:#fff;width:100%;max-width:500px;border-radius:22px 22px 0 0;padding:16px;max-height:88vh;overflow-y:auto}
+.modal-box img{width:100%;border-radius:16px;aspect-ratio:1;object-fit:cover}
+.modal-box h2{margin:12px 0 4px}
+.fechar{float:right;font-size:1.4rem;border:0;background:#f0f0f0;width:32px;height:32px;border-radius:50%;cursor:pointer}
+</style>
+</head>
 <body>
-<h2>🔥 Promoção - Casa Nova</h2>
-<p style="text-align:center;color:#666;font-size:13px">Mete o preço antigo e ele calcula o % sozinho</p>
-<input id="busca" placeholder="🔍 Pesquisar produto..." oninput="filtrar()">
-<div id="lista">A carregar...</div>
+
+<div class="topo">
+  <a class="logo" href="index.html">🏠 Casa Nova</a>
+  <a href="index.html">← Voltar à Loja</a>
+</div>
+
+<div class="container">
+  <div class="banner-promo" id="bannerPromo">
+    <h1>🔥 PROMOÇÃO - Preços Baixos!</h1>
+    <p>Aproveita antes que termine! Cada produto tem a sua data.</p>
+    <div id="contadorGeral">A carregar...</div>
+  </div>
+
+  <div class="grade" id="grade"><div class="aviso">A carregar promoções...</div></div>
+</div>
+
+<div id="toast"></div>
+
+<div id="modal" onclick="if(event.target.id==='modal') fecharDetalhe()">
+  <div class="modal-box">
+    <button class="fechar" onclick="fecharDetalhe()">✕</button>
+    <img id="dImg" src="">
+    <h2 id="dNome"></h2>
+    <div id="dPromo" style="margin:8px 0"></div>
+    <div id="dPreco" style="color:#0b5ed7;font-weight:800;font-size:1.3rem;margin:10px 0"></div>
+    <div id="dDesc" style="color:#333;font-size:.95rem;line-height:1.5;margin-bottom:14px"></div>
+    <button class="btn" id="dBtn">Adicionar ao Carrinho</button>
+  </div>
+</div>
+
 <script>
 let todos=[];
+
+function mostrarToast(msg){
+  let t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('mostrar');
+  setTimeout(()=>t.classList.remove('mostrar'),2500);
+}
+
+// 🔥 MESMA LÓGICA DO INDEX: SÓ MOSTRA SE A DATA AINDA NÃO PASSOU
+function dadosPromo(p){
+  let novo=Number(p.preco||0);
+  let antigo=Number(p.preco_antigo||p.preco_antes||p.preco_original||0);
+  if(!antigo || antigo<=novo) return null;
+  if(p.promo_fim){
+    let hoje=new Date(); hoje.setHours(0,0,0,0);
+    let fim=new Date(p.promo_fim);
+    if(fim < hoje) return null; // JÁ TERMINOU - SOME SOZINHO
+    let dias=Math.ceil((fim-hoje)/(1000*60*60*24));
+    let dataBonita=new Date(p.promo_fim).toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric'});
+    let perc=Math.round((1-novo/antigo)*100);
+    return {antigo,novo,perc,diasFaltam:dias,dataBonita};
+  }
+  let perc=Math.round((1-novo/antigo)*100);
+  return {antigo,novo,perc,diasFaltam:null,dataBonita:''};
+}
+
 async function carregar(){
   let r=await db.from('produtos').select('*').order('id',{ascending:false});
   todos=r.data||[];
-  mostrar(todos);
-}
-function filtrar(){
-  let t=document.getElementById('busca').value.toLowerCase();
-  mostrar(todos.filter(p=>(p.nome||'').toLowerCase().includes(t)));
-}
-function mostrar(lista){
-  document.getElementById('lista').innerHTML=lista.map(p=>{
-    let antigo=Number(p.preco_antigo||0), novo=Number(p.preco||0);
-    let perc=(antigo>novo&&antigo>0)?Math.round((1-novo/antigo)*100):0;
-    return `<div class="card">
-      <img src="${p.imagem||p.imagem_url||''}" onerror="this.src='https://via.placeholder.com/70'">
-      <div style="flex:1">
-        <b>${p.nome}</b><br>
-        ${perc?`<span class="preco-antigo">${antigo.toLocaleString()} Kz</span> <span class="desconto">-${perc}%</span><br>`:''}
-        <b style="color:#0b5ed7">${novo.toLocaleString()} Kz</b><br>
-        <input id="ant-${p.id}" type="number" placeholder="Preço antigo (ex: 150000)" value="${antigo||''}">
-        <button onclick="salvar(${p.id})">💾 Guardar Promoção</button>
-        ${perc?`<button class="azul" onclick="tirar(${p.id})">❌ Tirar Promoção</button>`:''}
-      </div>
+  // SÓ OS QUE AINDA ESTÃO EM PROMOÇÃO E DENTRO DA DATA
+  let promos=todos.filter(p=>dadosPromo(p));
+  let g=document.getElementById('grade');
+  let banner=document.getElementById('bannerPromo');
+  let contador=document.getElementById('contadorGeral');
+
+  if(!promos.length){
+    // NENHUMA PROMOÇÃO ATIVA - BANNER SOME / MOSTRA MENSAGEM
+    banner.style.display='none';
+    g.innerHTML=`<div class="aviso"><div style="font-size:48px">🔥</div><br><b>Nenhuma promoção agora.</b><br><br>Volta mais tarde, a Casa Nova sempre tem preços baixos!<br><br><button class="btn" onclick="location.href='index.html'" style="max-width:250px">Ver Todos os Produtos</button></div>`;
+    return;
+  }
+
+  banner.style.display='block';
+  // A PROMOÇÃO QUE TERMINA MAIS CEDO É A QUE APARECE NO CONTADOR GERAL
+  let maisPerto=promos.map(p=>dadosPromo(p)).sort((a,b)=>a.diasFaltam-b.diasFaltam)[0];
+  contador.textContent = `⏰ A próxima promoção termina dia ${maisPerto.dataBonita} - Faltam ${maisPerto.diasFaltam} dia(s)`;
+
+  g.innerHTML=promos.map(p=>{
+    let promo=dadosPromo(p);
+    return `
+    <div class="card" onclick="abrirDetalhe(${p.id})">
+      <img src="${p.imagem||p.imagem_url||'https://via.placeholder.com/300'}" onerror="this.src='https://via.placeholder.com/300'">
+      <div><span class="selo-promo">🔥 PROMOÇÃO -${promo.perc}%</span></div>
+      <h3>${p.nome}</h3>
+      <div><span class="preco-antigo">${promo.antigo.toLocaleString()} Kz</span> <span class="desconto">-${promo.perc}%</span></div>
+      <div class="preco">${promo.novo.toLocaleString()} Kz</div>
+      ${promo.diasFaltam!==null?`<div class="tempo">⏰ Termina dia ${promo.dataBonita}<br>Faltam ${promo.diasFaltam} dia(s) - Aproveita!</div>`:''}
+      <button class="btn btn-vermelho" onclick="event.stopPropagation();adicionarCarrinho(${p.id})">🛒 Comprar Agora</button>
     </div>`;
-  }).join('')||'Nenhum produto';
+  }).join('');
 }
-async function salvar(id){
-  let v=Number(document.getElementById('ant-'+id).value||0);
-  if(!v){alert('Escreve o preço antigo! Ex: 150000');return;}
-  let r=await db.from('produtos').update({preco_antigo:v}).eq('id',id);
-  if(r.error){alert('Erro: '+r.error.message);return;}
-  alert('✅ Promoção guardada!'); carregar();
+
+function abrirDetalhe(id){
+  let p=todos.find(x=>x.id==id);
+  if(!p) return;
+  let promo=dadosPromo(p);
+  document.getElementById('dImg').src=p.imagem||p.imagem_url||'https://via.placeholder.com/300';
+  document.getElementById('dNome').textContent=p.nome;
+  if(promo){
+    document.getElementById('dPromo').innerHTML=`<span class="selo-promo">🔥 PROMOÇÃO -${promo.perc}%</span><br><span class="preco-antigo">${promo.antigo.toLocaleString()} Kz</span> <span class="desconto">-${promo.perc}%</span><br><b style="color:#dc2626;font-size:13px">⏰ Termina dia ${promo.dataBonita} - Faltam ${promo.diasFaltam} dia(s)</b>`;
+    document.getElementById('dPreco').textContent=promo.novo.toLocaleString()+' Kz';
+  } else {
+    document.getElementById('dPromo').innerHTML='';
+    document.getElementById('dPreco').textContent=Number(p.preco).toLocaleString()+' Kz';
+  }
+  document.getElementById('dDesc').textContent=p.descricao||'Produto de qualidade da Casa Nova.';
+  document.getElementById('dBtn').onclick=()=>{adicionarCarrinho(p.id); fecharDetalhe();};
+  document.getElementById('modal').classList.add('aberto');
 }
-async function tirar(id){
-  await db.from('produtos').update({preco_antigo:null}).eq('id',id);
-  alert('✅ Promoção tirada!'); carregar();
+function fecharDetalhe(){ document.getElementById('modal').classList.remove('aberto'); }
+
+function adicionarCarrinho(id){
+  let cliente=null;
+  try{ cliente=JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
+  if(!cliente){ mostrarToast('⚠️ Precisas te cadastrar para comprar!'); setTimeout(()=>location.href='cadastro.html',1200); return; }
+  let p=todos.find(x=>x.id==id);
+  if(!p) return;
+  let carrinho=JSON.parse(localStorage.getItem('carrinho')||'[]');
+  let achou=carrinho.find(i=>i.id==id);
+  if(achou){ achou.qtd=(achou.qtd||1)+1; achou.preco=Number(p.preco); }
+  else carrinho.push({id:p.id,nome:p.nome,preco:Number(p.preco),imagem:p.imagem||p.imagem_url||'',qtd:1});
+  localStorage.setItem('carrinho',JSON.stringify(carrinho));
+  mostrarToast('✅ Adicionado ao carrinho!');
 }
+
 carregar();
 </script>
-</body></html>
+</body>
+</html>

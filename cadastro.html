@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Entrar / Cadastrar - Casa Nova</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,Arial,sans-serif;background:#f5f6f8;color:#1d2330;padding:16px}
@@ -34,12 +37,10 @@ input{width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;font-s
 <div class="card">
 <h1 id="titulo">👤 Cadastrar Cliente</h1>
 <p class="sub" id="subtitulo">Cria a tua conta para comprar mais rápido na Casa Nova.</p>
-
 <div class="abas">
   <button class="aba" id="abaEntrar" onclick="mostrarAba('entrar')">Entrar</button>
   <button class="aba ativa" id="abaCadastrar" onclick="mostrarAba('cadastrar')">Cadastrar</button>
 </div>
-
 <div id="formEntrar" style="display:none">
   <label>📧 Email *</label>
   <input id="loginEmail" type="email" placeholder="Ex: silva@gmail.com">
@@ -51,7 +52,6 @@ input{width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;font-s
   <button class="link" onclick="abrirRecuperar()">🔑 Esqueci a minha senha / Recuperar conta</button>
   <button class="link" style="color:#666" onclick="mostrarAba('cadastrar')">Ainda não tens conta? Cadastrar agora</button>
 </div>
-
 <div id="formCadastrar">
   <label>👤 Nome Completo *</label>
   <input id="nome" placeholder="Ex: Cosme Bento">
@@ -69,7 +69,6 @@ input{width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;font-s
   <button class="link" onclick="abrirRecuperar()">🔑 Esqueci a minha senha</button>
 </div>
 </div>
-
 <div id="modalRecuperar" onclick="if(event.target.id==='modalRecuperar') fecharRecuperar()">
   <div class="modal-rec-box">
     <div style="font-size:40px">🔑</div>
@@ -86,7 +85,6 @@ input{width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;font-s
     <button class="btn" style="background:#e5e7eb" onclick="fecharRecuperar()">Cancelar</button>
   </div>
 </div>
-
 <script>
 function getClientes(){
   try{ return JSON.parse(localStorage.getItem('clientes_casa_nova')||'[]'); }catch(e){ return []; }
@@ -102,7 +100,34 @@ function mostrarAba(qual){
 }
 let params = new URLSearchParams(location.search);
 if(params.get('aba')==='entrar') mostrarAba('entrar');
-function cadastrar(){
+
+// ===== PROCURA NO SUPABASE + LOCALSTORAGE =====
+async function buscarNoSupabase(email){
+  try{
+    if(typeof db === 'undefined') return null;
+    // Tenta nas 2 tabelas mais comuns: clientes e clientes_casa_nova
+    let tabelas = ['clientes','clientes_casa_nova'];
+    for(let t of tabelas){
+      try{
+        let { data, error } = await db.from(t).select('*').eq('email', email).maybeSingle();
+        if(data) return data;
+      }catch(e){}
+    }
+  }catch(e){ console.log(e); }
+  return null;
+}
+function normalizarCliente(c){
+  return {
+    id: c.id,
+    nome: c.nome || c.nome_cliente || '',
+    telefone: c.telefone || c.telefone_cliente || '',
+    morada: c.morada || c.endereco || '',
+    email: (c.email||'').toLowerCase(),
+    senha: c.senha || c.password || ''
+  };
+}
+
+async function cadastrar(){
   let nome=document.getElementById('nome').value.trim();
   let telefone=document.getElementById('telefone').value.trim();
   let morada=document.getElementById('morada').value.trim();
@@ -113,36 +138,63 @@ function cadastrar(){
   erro.style.display='none'; ok.style.display='none';
   if(!nome||!telefone||!morada||!email||!senha){ erro.textContent='Preenche todos os campos!'; erro.style.display='block'; return; }
   if(senha.length<6){ erro.textContent='Senha deve ter no mínimo 6 caracteres!'; erro.style.display='block'; return; }
+  // Verifica se já existe no Supabase também
+  let existeSupabase = await buscarNoSupabase(email);
   let lista=getClientes();
-  if(lista.find(c=>c.email===email)){ erro.textContent='Este email já está cadastrado! Tenta Entrar.'; erro.style.display='block'; return; }
+  if(existeSupabase || lista.find(c=>c.email===email)){ erro.textContent='Este email já está cadastrado! Tenta Entrar.'; erro.style.display='block'; mostrarAba('entrar'); document.getElementById('loginEmail').value=email; return; }
   let cliente={nome,telefone,morada,email,senha};
+  // Guarda no Supabase para aparecer no painel Clientes Cadastrados
+  try{
+    if(typeof db !== 'undefined'){
+      await db.from('clientes').insert([{nome, telefone, morada, email, senha}]);
+    }
+  }catch(e){ console.log('Supabase cadastrar:', e); }
   lista.push(cliente); setClientes(lista);
   localStorage.setItem('cliente_casa_nova', JSON.stringify(cliente));
   ok.textContent='✅ Conta criada! A entrar...'; ok.style.display='block';
   setTimeout(()=>location.href='index.html',1000);
 }
-function fazerLogin(){
+
+async function fazerLogin(){
   let email=document.getElementById('loginEmail').value.trim().toLowerCase();
   let senha=document.getElementById('loginSenha').value;
   let erro=document.getElementById('erroLogin');
   let ok=document.getElementById('sucessoLogin');
   erro.style.display='none'; ok.style.display='none';
   if(!email||!senha){ erro.textContent='Escreve email e senha!'; erro.style.display='block'; return; }
+  ok.textContent='A verificar...'; ok.style.display='block';
+  // 1. Tenta no Supabase (onde está o Cosme Bento)
+  let sup = await buscarNoSupabase(email);
+  if(sup){
+    let c = normalizarCliente(sup);
+    // Se a conta antiga não tem senha guardada, aceita entrar e depois pede para criar senha
+    if(!c.senha || c.senha===senha){
+      // Guarda local para as próximas vezes
+      let lista=getClientes();
+      if(!lista.find(x=>x.email===email)) { lista.push({...c, senha: senha||c.senha}); setClientes(lista); }
+      localStorage.setItem('cliente_casa_nova', JSON.stringify(c));
+      ok.textContent='✅ Bem-vindo de volta, '+c.nome.split(' ')[0]+'!'; 
+      setTimeout(()=>location.href='index.html',800);
+      return;
+    } else {
+      erro.textContent='Senha errada! Tenta de novo ou clica em Recuperar conta.'; erro.style.display='block'; ok.style.display='none'; return;
+    }
+  }
+  // 2. Tenta no localStorage
   let lista=getClientes();
-  let atual=null;
-  try{ atual=JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
-  if(atual && !lista.find(c=>c.email===atual.email)) lista.push(atual);
   let achado=lista.find(c=>c.email===email && c.senha===senha);
   if(!achado){
     let existe=lista.find(c=>c.email===email);
     erro.textContent= existe ? 'Senha errada! Tenta de novo ou clica em Recuperar conta.' : 'Conta não encontrada! Clica em Cadastrar.';
-    erro.style.display='block'; return;
+    erro.style.display='block'; ok.style.display='none'; return;
   }
   localStorage.setItem('cliente_casa_nova', JSON.stringify(achado));
   ok.textContent='✅ Bem-vindo de volta, '+achado.nome.split(' ')[0]+'!'; ok.style.display='block';
-  setTimeout(()=>location.href='index.html',1000);
+  setTimeout(()=>location.href='index.html',800);
 }
+
 let emailRecuperar='';
+let clienteRecuperado=null;
 function abrirRecuperar(){
   document.getElementById('recEmail').value=document.getElementById('loginEmail').value||'';
   document.getElementById('recNovaSenhaBox').style.display='none';
@@ -153,33 +205,54 @@ function abrirRecuperar(){
   document.getElementById('modalRecuperar').classList.add('aberto');
 }
 function fecharRecuperar(){ document.getElementById('modalRecuperar').classList.remove('aberto'); }
-function procurarConta(){
+
+async function procurarConta(){
   let email=document.getElementById('recEmail').value.trim().toLowerCase();
   let msg=document.getElementById('recMsg');
   let okBox=document.getElementById('recOk');
   msg.style.display='none'; okBox.style.display='none';
   if(!email){ msg.textContent='Escreve o teu email!'; msg.style.display='block'; return; }
-  let lista=getClientes();
-  let atual=null;
-  try{ atual=JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
-  if(atual && !lista.find(c=>c.email===atual.email)) lista.push(atual);
-  let achado=lista.find(c=>c.email===email);
+  document.getElementById('btnRecuperar').textContent='A procurar...';
+  // 1. Procura no Supabase PRIMEIRO - é onde está o teu email
+  let sup = await buscarNoSupabase(email);
+  let achado = sup ? normalizarCliente(sup) : null;
+  // 2. Se não achou, procura no localStorage
+  if(!achado){
+    let lista=getClientes();
+    let atual=null;
+    try{ atual=JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
+    if(atual && !lista.find(c=>c.email===atual.email)) lista.push(atual);
+    let local = lista.find(c=>c.email===email);
+    if(local) achado = normalizarCliente(local);
+  }
+  document.getElementById('btnRecuperar').textContent='Procurar Minha Conta';
   if(!achado){ msg.textContent='Email não encontrado! Verifica ou cria uma conta nova.'; msg.style.display='block'; return; }
   emailRecuperar=email;
+  clienteRecuperado=achado;
   document.getElementById('recNovaSenhaBox').style.display='block';
   document.getElementById('btnRecuperar').textContent='Guardar Nova Senha e Entrar';
   document.getElementById('btnRecuperar').onclick=salvarNovaSenha;
   okBox.textContent='✅ Conta encontrada: '+achado.nome+'. Cria uma nova senha abaixo.';
   okBox.style.display='block';
 }
-function salvarNovaSenha(){
+async function salvarNovaSenha(){
   let nova=document.getElementById('recNovaSenha').value;
   let msg=document.getElementById('recMsg');
   msg.style.display='none';
   if(!nova||nova.length<6){ msg.textContent='Nova senha deve ter no mínimo 6 caracteres!'; msg.style.display='block'; return; }
+  // Atualiza no Supabase
+  try{
+    if(typeof db !== 'undefined' && clienteRecuperado && clienteRecuperado.id){
+      await db.from('clientes').update({senha: nova}).eq('id', clienteRecuperado.id);
+    }
+  }catch(e){ console.log(e); }
+  // Atualiza no localStorage
   let lista=getClientes();
   let idx=lista.findIndex(c=>c.email===emailRecuperar);
-  if(idx>=0){ lista[idx].senha=nova; setClientes(lista); localStorage.setItem('cliente_casa_nova', JSON.stringify(lista[idx])); }
+  let clienteFinal = {...clienteRecuperado, senha: nova};
+  if(idx>=0){ lista[idx].senha=nova; setClientes(lista); }
+  else { lista.push(clienteFinal); setClientes(lista); }
+  localStorage.setItem('cliente_casa_nova', JSON.stringify(clienteFinal));
   fecharRecuperar();
   setTimeout(()=>location.href='index.html',600);
 }

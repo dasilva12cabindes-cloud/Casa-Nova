@@ -48,7 +48,6 @@
   <a href="index.html" style="display:block;margin-top:14px;color:#0b5ed7;font-weight:700;font-size:14px">← Voltar à Loja</a>
 </div></div>
 
-<!-- TROCAR E-MAIL E SENHA DENTRO DO PAINEL -->
 <div id="telaConta"><div class="login-box">
   <div style="font-size:36px">⚙️</div>
   <h2 style="margin:8px 0">Minha Conta</h2>
@@ -109,15 +108,19 @@ function esqueciSenha(){
   localStorage.setItem('conta_admin',JSON.stringify({email:email,senha:nova}));
   localStorage.setItem('admin_logado','sim');
   localStorage.setItem('admin_email',email);
-  alert('✅ Nova senha criada!\nE-mail: '+email+'\nSenha: '+nova+'\nAponta num caderno!');
+  alert('✅ Nova senha criada!\nE-mail: '+email+'\nSenha: '+nova);
   esconderLogin();
 }
+// RETIFICADO: SAIR VOLTA PARA O LOGIN, NÃO VAI PARA A LOJA
 function sairAdmin(){
-  if(!confirm('Queres mesmo sair?')) return;
+  if(!confirm('Queres mesmo sair do Admin?')) return;
   localStorage.removeItem('admin_logado');
-  location.href='index.html';
+  document.getElementById('senhaAdmin').value='';
+  document.getElementById('emailAdmin').value=getConta().email;
+  document.getElementById('erroLogin').style.display='none';
+  mostrarLogin();
+  window.scrollTo(0,0);
 }
-// NOVO: TROCAR DENTRO DO PAINEL
 function abrirConta(){
   let conta=getConta();
   document.getElementById('emailAtual').textContent=conta.email;
@@ -133,10 +136,10 @@ function salvarConta(){
   let s2=document.getElementById('confirmarSenha').value.trim();
   if(!email || !email.includes('@')){ alert('Escreve um e-mail válido.'); return; }
   if(s1.length<4){ alert('Senha tem que ter no mínimo 4 caracteres.'); return; }
-  if(s1!==s2){ alert('As senhas não são iguais! Escreve igual nos 2 campos.'); return; }
+  if(s1!==s2){ alert('As senhas não são iguais!'); return; }
   localStorage.setItem('conta_admin',JSON.stringify({email:email,senha:s1}));
   localStorage.setItem('admin_email',email);
-  alert('✅ Guardado!\nNovo e-mail: '+email+'\nNova senha: '+s1+'\n\nDa próxima vez entras com estes.');
+  alert('✅ Guardado!\nNovo e-mail: '+email+'\nNova senha: '+s1);
   fecharConta();
 }
 if(localStorage.getItem('admin_logado')==='sim'){ esconderLogin(); }

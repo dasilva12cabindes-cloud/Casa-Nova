@@ -344,16 +344,19 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
   }catch(e){}
 })();
 function linkLimpoLoja(){
-  let base = window.location.origin + window.location.pathname;
-  base = base.replace(/[^\/]+$/, '');
-  return base + 'index.html';
+  return 'https://dasilva12cabindes-cloud.github.io/Casa-Nova/index.html';
 }
 function partilharLoja(){
   let link = linkLimpoLoja();
-  let texto = '🏠 Casa Nova - Eletrodomésticos em Cabinda! Vê as promoções aqui: ' + link;
-  if(navigator.share){ navigator.share({title:'Casa Nova', text:texto, url:link}).catch(()=>{}); }
-  else if(navigator.clipboard){ navigator.clipboard.writeText(link).then(()=>mostrarToast('🔗 Link da loja copiado! Partilha à vontade')); }
-  else { prompt('Copia o link da loja (sem a tua conta):', link); }
+  let msg = '🏠 Casa Nova - Eletrodomésticos em Cabinda! Vê as promoções aqui: ' + link;
+  // CORRIGIDO: só copia 1 vez, sem usar navigator.share que duplica no iPhone
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(msg).then(()=>{
+      mostrarToast('✅ Link copiado! Cola no WhatsApp - vem só 1 link');
+    }).catch(()=>{ prompt('Copia este link (só 1):', msg); });
+  } else {
+    prompt('Copia este link (só 1):', msg);
+  }
 }
 let estaProcessando = false;
 let timerProcesso = null;

@@ -198,6 +198,7 @@ input,select,textarea{font-size:16px !important}
   </div>
   <div class="menu-secao">Minha Conta</div>
   <div id="menuContaArea"></div>
+  <a class="menu-item" href="#" onclick="fecharMenu();partilharLoja();return false" style="background:#f0fdf4;border:2px solid #16a34a;border-radius:12px;margin:10px 16px"><span>🔗</span><span><b>Partilhar Loja</b><br><small style="color:#16a34a;font-weight:800">Partilha sem mostrar a tua conta</small></span></a>
   <a class="menu-item" href="promocao.html" style="background:#fef2f2;border:2px solid #dc2626;border-radius:12px;margin:10px 16px"><span>🔥</span><b>PROMOÇÃO</b> <small style="color:#dc2626;font-weight:800">Preços Baixos!</small></a>
   <a class="menu-item" href="carrinho.html"><span>🛒</span> Meu Carrinho</a>
   <a class="menu-item" href="meus-pedidos.html"><span>🔖</span> Meus Códigos / Pedidos</a>
@@ -260,6 +261,41 @@ input,select,textarea{font-size:16px !important}
 </div>
 
 <script>
+// ===== SEPARAÇÃO ADMIN / CLIENTE - LINK NÃO PARTILHA CONTA =====
+// ADMIN é fixo e escondido: teusite.com/admin.html (nunca aparece aqui)
+// CLIENTE é sempre limpo: teusite.com/index.html (sem nome, sem conta no link)
+// A conta fica SÓ no telefone da pessoa, no localStorage. Não vai no link.
+// Se alguém tentar colar ?cliente=... ?conta=... ?user=... ?id=... para entrar na conta do outro, apagamos logo.
+(function limparLinkPerigoso(){
+  try{
+    let q = window.location.search || '';
+    let h = window.location.hash || '';
+    if(q || h){
+      let perigoso = ['cliente','conta','user','usuario','nome','telefone','email','token','senha','id='];
+      let achou = perigoso.some(p=> q.toLowerCase().includes(p) || h.toLowerCase().includes(p));
+      if(achou || q.length>1){
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }catch(e){}
+})();
+function linkLimpoLoja(){
+  // Sempre devolve só o link da loja, sem nada pessoal
+  let base = window.location.origin + window.location.pathname;
+  base = base.replace(/[^\/]+$/, ''); // tira o nome do ficheiro
+  return base + 'index.html';
+}
+function partilharLoja(){
+  let link = linkLimpoLoja();
+  let texto = '🏠 Casa Nova - Eletrodomésticos em Cabinda! Vê as promoções aqui: ' + link;
+  if(navigator.share){
+    navigator.share({title:'Casa Nova', text:texto, url:link}).catch(()=>{});
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(link).then(()=>mostrarToast('🔗 Link da loja copiado! Partilha à vontade'));
+  } else {
+    prompt('Copia o link da loja (sem a tua conta):', link);
+  }
+}
 let todosProdutos = [];
 let categoriaAtual = 'Todas';
 let lojaCfgGlobal = {};
@@ -348,6 +384,7 @@ async function confirmarNoSistema(){
   setTimeout(()=>{ fecharTelaVerificar(); }, 2200);
 }
 function clienteLogado(){
+  // NUNCA lê do link (?cliente=...), só do telefone da pessoa
   try{ return JSON.parse(localStorage.getItem('cliente_casa_nova') || 'null'); }catch(e){ return null; }
 }
 function atualizarMenuConta(){

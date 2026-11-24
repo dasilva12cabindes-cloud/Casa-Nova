@@ -125,12 +125,10 @@ input,select,textarea{font-size:16px !important}
 .sobre-detalhe b{color:#0b5ed7}
 #telaVerificar{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1300;display:none;align-items:center;justify-content:center;padding:16px}
 #telaVerificar.aberto{display:flex}
-/* TELA DE BOAS-VINDAS AZUL COM LOGO */
 #telaBoasVindas{position:fixed;inset:0;background:#0b5ed7;z-index:2000;display:none;align-items:center;justify-content:center;padding:16px}
 #telaBoasVindas.aberto{display:flex}
 .boasvindas-box{background:#0b5ed7;width:100%;max-width:380px;border-radius:22px;padding:24px;text-align:center;color:#fff}
-.boasvindas-logo{width:200px;max-width:85%;height:auto;display:block;margin:0 auto 12px;background:#fff;border-radius:16px;padding:8px}
-/* PROCESSAMENTO - TETO DA CASA NOVA COM LED AZUL */
+.boasvindas-logo{width:230px;max-width:90%;height:auto;display:block;margin:0 auto 12px;background:#0b5ed7;border-radius:0;padding:0;mix-blend-mode:multiply}
 #telaProcessando{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:3000;display:none;align-items:center;justify-content:center;flex-direction:column;padding:20px;text-align:center;color:#fff}
 #telaProcessando.aberto{display:flex}
 .teto-box{width:260px;max-width:85%;margin:10px auto;filter:drop-shadow(0 0 12px rgba(0,170,255,.6))}
@@ -142,10 +140,7 @@ input,select,textarea{font-size:16px !important}
 </style>
 </head>
 <body>
-<!-- TELA DE PROCESSAMENTO - TETO COM LED -->
 <div id="telaProcessando">
-  <h2 style="margin:0 0 6px;letter-spacing:2px">CASA NOVA</h2>
-  <p style="font-size:12px;color:#999;margin-bottom:6px">ELETRODOMÉSTICOS</p>
   <div class="teto-box">
     <svg viewBox="0 0 200 110" width="100%" height="110">
       <path class="teto-fundo" d="M10 85 L100 15 L190 85" />
@@ -155,10 +150,8 @@ input,select,textarea{font-size:16px !important}
       <rect x="85" y="80" width="30" height="25" rx="3" fill="none" stroke="#333" stroke-width="5"/>
     </svg>
   </div>
-  <p id="textoProcessando" style="font-size:15px;font-weight:700;margin-top:6px">A processar... Aguarda 5 segundos</p>
   <div class="barra-processo"><div id="barraProcesso"></div></div>
   <p id="percentProcesso" style="font-size:13px;margin-top:8px;color:#00aaff;font-weight:800">0%</p>
-  <p style="font-size:12px;color:#777;margin-top:10px">🔒 A tua conta está segura</p>
 </div>
 
 <div class="topo" id="topoSite">
@@ -307,7 +300,6 @@ input,select,textarea{font-size:16px !important}
 </div>
 
 <script>
-// ===== SEPARAÇÃO ADMIN / CLIENTE =====
 (function limparLinkPerigoso(){
   try{
     let q = window.location.search || '';
@@ -331,52 +323,33 @@ function partilharLoja(){
   else if(navigator.clipboard){ navigator.clipboard.writeText(link).then(()=>mostrarToast('🔗 Link da loja copiado! Partilha à vontade')); }
   else { prompt('Copia o link da loja (sem a tua conta):', link); }
 }
-// ===== PROCESSAMENTO EM TUDO - TETO COM LED - 5 SEGUNDOS =====
+// ===== PROCESSAMENTO SÓ QUANDO ATUALIZAR O SITE - 5 SEGUNDOS =====
 let estaProcessando = false;
-function mostrarProcessandoTotal(texto, depois){
+let timerProcesso = null;
+function mostrarProcessando(){
   let tela = document.getElementById('telaProcessando');
   let barra = document.getElementById('barraProcesso');
   let perc = document.getElementById('percentProcesso');
-  let txt = document.getElementById('textoProcessando');
-  if(!tela){ if(depois) depois(); return; }
-  txt.textContent = texto || 'A processar... Aguarda 5 segundos';
+  if(!tela) return;
+  if(estaProcessando) return;
+  estaProcessando = true;
   tela.classList.add('aberto');
   let p = 0;
   barra.style.width = '0%'; perc.textContent = '0%';
-  let timer = setInterval(()=>{
+  clearInterval(timerProcesso);
+  timerProcesso = setInterval(()=>{
     p += 4;
     if(p > 100) p = 100;
     barra.style.width = p + '%';
     perc.textContent = p + '%';
     if(p >= 100){
-      clearInterval(timer);
-      setTimeout(()=>{ tela.classList.remove('aberto'); estaProcessando = false; if(depois) depois(); }, 300);
+      clearInterval(timerProcesso);
+      setTimeout(()=>{ tela.classList.remove('aberto'); estaProcessando = false; }, 300);
     }
   }, 200);
+  setTimeout(()=>{ if(estaProcessando){ tela.classList.remove('aberto'); estaProcessando = false; clearInterval(timerProcesso); } }, 6000);
 }
-window.addEventListener('load', ()=>{
-  estaProcessando = true;
-  mostrarProcessandoTotal('A entrar na Casa Nova... A procurar...');
-});
-document.addEventListener('click', (e)=>{
-  if(estaProcessando) return;
-  let alvo = e.target.closest('button, a, .card, .chip, .menu-item, input');
-  if(!alvo) return;
-  if(alvo.closest('#telaProcessando')) return;
-  if(alvo.classList.contains('fechar')) return;
-  if(alvo.textContent.includes('✕')) return;
-  if(alvo.id === 'busca' || alvo.id === 'vNome' || alvo.id === 'vWhats' || alvo.id === 'vCodigo') return;
-  let nome = alvo.textContent.trim().slice(0,25) || alvo.id || 'a processar';
-  e.preventDefault(); e.stopPropagation(); estaProcessando = true;
-  mostrarProcessandoTotal('A processar "' + nome + '"... Aguarda 5 segundos', ()=>{
-    if(alvo.tagName === 'A' && alvo.getAttribute('href') && alvo.getAttribute('href') !== '#'){
-      window.location.href = alvo.getAttribute('href'); return;
-    }
-    estaProcessando = true;
-    setTimeout(()=>{ estaProcessando = false; alvo.click(); }, 100);
-  });
-}, true);
-// ===== NOVO VISITANTE TEM QUE SE CADASTRAR =====
+window.addEventListener('load', ()=>{ mostrarProcessando(); });
 function verificarNovoUsuario(){
   let c = null;
   try{ c = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}

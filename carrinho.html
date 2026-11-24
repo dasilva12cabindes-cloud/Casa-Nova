@@ -114,7 +114,7 @@ h1{font-size:1.4rem;margin-bottom:12px}
   </div>
   <label>✅ 3º - Confirma o pagamento</label>
   <label class="check-pago"><input type="checkbox" id="checkPago" onchange="atualizarPassos()"> <span><b>Confirmo que já fiz o pagamento</b><br><small>Já paguei o valor indicado e subi o comprovativo.</small></span></label>
-  <div id="boxCodigo" style="display:none"><div class="box-ref"><div style="font-size:13px;opacity:.8">✅ PAGAMENTO CONFIRMADO</div><div style="font-size:13px;opacity:.8;margin-top:6px">TUA REFERÊNCIA - GUARDA BEM, É ÚNICA</div><b id="codigoRef">---</b><div style="font-size:12px;opacity:.8">⚠️ Aponta! Fica visível só 24h em Meus Códigos, depois apaga.</div></div></div>
+  <div id="boxCodigo" style="display:none"><div class="box-ref"><div style="font-size:13px;opacity:.8">✅ PAGAMENTO CONFIRMADO</div><div style="font-size:13px;opacity:.8;margin-top:6px">TUA REFERÊNCIA - GUARDA BEM, É ÚNICA</div><b id="codigoRef">---</b><div style="font-size:12px;opacity:.8">⚠️ Aponta! Fica visível só 5 minutos em Meus Códigos, depois apaga.</div></div></div>
   <div class="total" id="total">Total: 0 Kz</div>
   <div id="total50" style="font-weight:700;color:#b45309;margin-bottom:8px"></div>
   <button class="btn-whats" id="btnFinalizar" onclick="finalizar()">✅ Confirmar Pedido e Receber Código</button>
@@ -123,7 +123,7 @@ h1{font-size:1.4rem;margin-bottom:12px}
 <div id="vazio" class="vazio" style="display:none">O teu carrinho está vazio.<br><br><a href="index.html" style="color:#0b5ed7;font-weight:700">⬅ Voltar à Loja</a></div>
 </div>
 <div id="modalLimpar" class="modal-fundo" onclick="if(event.target.id==='modalLimpar') fecharLimpar()"><div class="modal-box"><div style="font-size:40px">🗑️</div><h3 style="margin:8px 0">Limpar todo o carrinho?</h3><button class="btn-whats" style="background:#dc2626" onclick="confirmarLimpar()">Sim, Limpar</button><button class="btn-limpar" onclick="fecharLimpar()">Cancelar</button></div></div>
-<div id="modalFinalizar" class="modal-fundo" onclick="if(event.target.id==='modalFinalizar') fecharFinalizar()"><div class="modal-box"><div style="font-size:40px">⚠️</div><h3 style="margin:8px 0">Confirmar só 1 vez?</h3><p style="color:#666;font-size:14px;margin-bottom:16px" id="textoFinalizar">Vais receber o código de referência.</p><p style="color:#dc2626;font-size:13px;font-weight:700">⚠️ ATENÇÃO: Só podes confirmar 1 vez! Guarda o código, faz print. O código fica visível só 24h, depois apaga. Aponta num caderno!</p><button class="btn-whats" onclick="confirmarFinalizar()">Sim, Confirmar 1 Única Vez</button><button class="btn-limpar" onclick="fecharFinalizar()">Cancelar</button></div></div>
+<div id="modalFinalizar" class="modal-fundo" onclick="if(event.target.id==='modalFinalizar') fecharFinalizar()"><div class="modal-box"><div style="font-size:40px">⚠️</div><h3 style="margin:8px 0">Confirmar só 1 vez?</h3><p style="color:#666;font-size:14px;margin-bottom:16px" id="textoFinalizar">Vais receber o código de referência.</p><p style="color:#dc2626;font-size:13px;font-weight:700">⚠️ ATENÇÃO: Só podes confirmar 1 vez! Guarda o código, faz print. O código fica visível só 5 minutos, depois apaga. Aponta num caderno!</p><button class="btn-whats" onclick="confirmarFinalizar()">Sim, Confirmar 1 Única Vez</button><button class="btn-limpar" onclick="fecharFinalizar()">Cancelar</button></div></div>
 <div id="toast"></div>
 <script>
 function mostrarToast(m){ let t=document.getElementById('toast'); t.textContent=m; t.classList.add('mostrar'); setTimeout(()=>t.classList.remove('mostrar'),2500); }
@@ -339,7 +339,6 @@ async function confirmarFinalizar(){
     meus.push({ codigo: codigoRef, nome: nome, email: email, telefone: telefone, itens: carrinho.map(i=>i.nome+' x'+i.qtd).join(', '), total: total, pago: pago, falta: falta, tipo: modoEntrega, criado_em: Date.now() });
     localStorage.setItem('meus_codigos', JSON.stringify(meus));
   }catch(e){}
-  // NOVO: SOBE O COMPROVATIVO PARA O STORAGE E PEGA O LINK REAL
   let comprovativoURL = comprovativoNome || '';
   try{
     if(comprovativoFicheiro && typeof db !== 'undefined'){
@@ -353,7 +352,6 @@ async function confirmarFinalizar(){
       } else { console.log('Upload comprovativo falhou:', up.error.message); }
     }
   }catch(e){ console.log('Erro upload comprovativo:', e); }
-  // GRAVA SÓ EM pedidos - SEM encomendas, porque essa tabela não existe
   let gravouNoSupabase = false;
   let erroSupabase = '';
   try{
@@ -388,7 +386,7 @@ async function confirmarFinalizar(){
   }catch(e){}
   let numero = getWhatsAppLoja();
   window.open('https://wa.me/'+numero+'?text='+encodeURIComponent(msg), '_blank');
-  mostrarToast('✅ Código gerado: ' + codigoRef + ' - Aponta! Fica 24h.');
+  mostrarToast('✅ Código gerado: ' + codigoRef + ' - Aponta! Fica 5 minutos.');
   setCarrinho([]);
   setTimeout(()=>{ location.href='meus-pedidos.html'; }, 1200);
 }

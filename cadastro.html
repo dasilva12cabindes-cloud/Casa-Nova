@@ -18,6 +18,7 @@ input{width:100%;padding:12px;border:1px solid #cfd5df;border-radius:8px;font-si
 .btn{border:0;padding:13px;border-radius:8px;width:100%;font-weight:700;cursor:pointer;font-size:15px;margin-top:16px}
 .btn-verde{background:#16a34a;color:#fff}
 .btn-cinza{background:#e5e7eb;color:#111}
+.link-recuperar{display:block;text-align:center;margin-top:12px;color:#0b5ed7;font-weight:700;font-size:14px;text-decoration:none}
 #toast{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:14px 18px;border-radius:14px;z-index:9999;font-weight:700;max-width:92%;text-align:center;transition:.35s;opacity:0;pointer-events:none}
 #toast.mostrar{transform:translateX(-50%) translateY(0);opacity:1}
 #toast.sucesso{background:#16a34a}
@@ -40,10 +41,15 @@ input{width:100%;padding:12px;border:1px solid #cfd5df;border-radius:8px;font-si
 <label>📍 Morada / Bairro</label>
 <input id="morada" placeholder="Ex: Viana, Luanda">
 
-<label>📧 Email (opcional)</label>
+<label>📧 Email *</label>
 <input id="email" placeholder="Ex: joao@gmail.com" type="email">
+<small style="color:#666">Obrigatório para recuperar a tua conta se perderes o acesso.</small>
+
+<label>🔒 Criar Senha *</label>
+<input id="senha" type="password" placeholder="Mínimo 6 caracteres">
 
 <button class="btn btn-verde" onclick="cadastrar()">✅ Cadastrar</button>
+<a class="link-recuperar" href="#" onclick="recuperarConta();return false;">🔑 Esqueci a minha senha / Recuperar conta</a>
 <button class="btn btn-cinza" onclick="location.href='index.html'">Cancelar</button>
 </div>
 
@@ -57,14 +63,29 @@ async function cadastrar(){
   let nome=document.getElementById('nome').value.trim();
   let telefone=document.getElementById('telefone').value.trim();
   let morada=document.getElementById('morada').value.trim();
-  let email=document.getElementById('email').value.trim();
+  let email=document.getElementById('email').value.trim().toLowerCase();
+  let senha=document.getElementById('senha').value;
   if(!nome||!telefone) return aviso('⚠️ Preenche nome e telefone','erro');
-  // Guarda no telemóvel para o carrinho usar depois
+  if(!email || !email.includes('@')) return aviso('⚠️ O Email é obrigatório para recuperar a conta','erro');
+  if(!senha || senha.length<6) return aviso('⚠️ A senha precisa de no mínimo 6 caracteres','erro');
   localStorage.setItem('cliente_casa_nova', JSON.stringify({nome,telefone,morada,email}));
-  // Tenta guardar também no Supabase se existir tabela clientes
-  try{ await db.from('clientes').insert([{nome_cliente:nome,telefone:telefone,morada:morada,email:email}]); }catch(e){}
+  let r=await db.from('clientes').insert([{nome_cliente:nome,telefone:telefone,morada:morada,email:email,senha:senha}]);
+  if(r.error){
+    if(r.error.message.includes('duplicate') || r.error.code=='23505') return aviso('⚠️ Este email já está cadastrado. Usa Recuperar Conta.','erro');
+    return aviso('❌ '+r.error.message,'erro');
+  }
   aviso('✅ Bem-vindo, '+nome+'! Cadastro feito.');
   setTimeout(()=>location.href='index.html',1500);
+}
+async function recuperarConta(){
+  let email=prompt('Escreve o teu email cadastrado para recuperar a conta:');
+  if(!email) return;
+  email=email.trim().toLowerCase();
+  let r=await db.from('clientes').select('*').eq('email',email).maybeSingle();
+  if(!r.data) return aviso('❌ Email não encontrado','erro');
+  // Envia email de recuperação via Supabase Auth se o cliente existir no Auth, senão avisa o dono
+  await db.auth.resetPasswordForEmail(email,{redirectTo: location.origin + '/recuperar.html'});
+  aviso('✅ Se o email existir, enviámos link de recuperação para '+email);
 }
 carregarLogoTopo();
 </script></body></html>

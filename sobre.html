@@ -5,11 +5,14 @@
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
 <style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:0}
-.topo{background:#2563eb;color:#fff;padding:14px;display:flex;justify-content:space-between;align-items:center}
-.topo a{color:#fff;text-decoration:none;font-weight:700}
-.hero{background:#2563eb;color:#fff;padding:30px 16px;text-align:center}
+.topo{background:#2563eb;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+.topo a{color:#fff;text-decoration:none;font-weight:700;font-size:14px}
+.logo-topo{height:42px;max-width:160px;object-fit:contain;background:#fff;border-radius:8px;padding:2px;display:none}
+.logo-texto{font-weight:800;font-size:18px}
+.hero{background:#2563eb;color:#fff;padding:20px 16px 30px;text-align:center}
+.hero-logo{width:150px;height:150px;object-fit:contain;background:#fff;border-radius:20px;padding:10px;display:none;margin:0 auto 12px;box-shadow:0 8px 20px rgba(0,0,0,.2)}
 .hero h1{margin:0;font-size:28px}
-.hero p{opacity:.9}
+.hero p{opacity:.9;margin:8px 0 0}
 .caixa{background:#fff;margin:12px;border-radius:14px;padding:16px}
 .caixa h3{margin:0 0 8px;color:#2563eb}
 .caixa p{color:#444;line-height:1.6;margin:0;white-space:pre-line}
@@ -18,8 +21,19 @@
 .btn-azul{background:#2563eb;color:#fff;display:block;text-align:center;padding:13px;border-radius:10px;text-decoration:none;font-weight:700;margin:12px}
 </style></head>
 <body>
-<div class="topo"><b>🏠 Casa Nova</b><a href="index.html">← Voltar à Loja</a></div>
-<div class="hero"><h1 id="tituloLoja">Sobre a Nossa Loja</h1><p>Conhece quem somos</p></div>
+<div class="topo">
+  <div style="display:flex;align-items:center;gap:8px">
+    <img id="logoTopo" class="logo-topo" src="">
+    <span id="logoTexto" class="logo-texto">🏠 Casa Nova</span>
+  </div>
+  <a href="index.html">← Voltar à Loja</a>
+</div>
+
+<div class="hero">
+  <img id="logoHero" class="hero-logo" src="">
+  <h1>Sobre a Nossa Loja</h1>
+  <p>Conhece quem somos</p>
+</div>
 
 <div class="caixa"><h3>🏠 Sobre Nós</h3><p id="sobre">A carregar...</p></div>
 <div class="caixa"><h3>👁️ A Nossa Visão</h3><p id="visao">A carregar...</p></div>
@@ -39,6 +53,14 @@
 async function carregar(){
   const r=await db.from('loja_config').select('*').eq('id',1).maybeSingle();
   let c=r.data||{};
+  // LOGOTIPO - AGORA APARECE
+  if(c.logo_url){
+    let lt=document.getElementById('logoTopo');
+    lt.src=c.logo_url; lt.style.display='block';
+    document.getElementById('logoTexto').style.display='none';
+    let lh=document.getElementById('logoHero');
+    lh.src=c.logo_url; lh.style.display='block';
+  }
   document.getElementById('sobre').textContent=c.sobre||'Bem-vindo à Casa Nova! A tua loja de confiança em Luanda.';
   document.getElementById('visao').textContent=c.visao||'Ser a melhor loja de eletrodomésticos e telemóveis em Angola, com qualidade e bons preços.';
   document.getElementById('missao').textContent=c.missao||'Levar produtos de qualidade a todas as famílias, com atendimento rápido e honesto.';

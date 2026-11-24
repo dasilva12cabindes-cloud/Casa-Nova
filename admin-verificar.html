@@ -4,7 +4,22 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
-<style>body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}.topo{background:#0b5ed7;color:#fff;padding:14px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}.topo a{color:#fff;text-decoration:none;font-weight:700}.caixa{background:#fff;padding:16px;border-radius:12px;margin-top:12px}input{width:100%;padding:14px;border:1px solid #cfd5df;border-radius:10px;font-size:18px;text-align:center;letter-spacing:2px;text-transform:uppercase;box-sizing:border-box}.btn{border:0;padding:14px;border-radius:10px;width:100%;font-weight:700;cursor:pointer;margin-top:10px}.btn-azul{background:#0b5ed7;color:#fff}.linha{padding:10px 0;border-bottom:1px solid #eee;font-size:15px}img.comp{width:100%;border-radius:12px;margin-top:10px;cursor:pointer;max-height:220px;object-fit:contain;background:#f8fafc}
+<style>body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}.topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}.topo .logo{display:flex;align-items:center;gap:8px}.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}.topo.tem-logo .logo-text{display:none}.topo a{color:#fff;text-decoration:none;font-weight:700}
+/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
+@keyframes logoZoom{
+  0%{transform:scale(0.7) translateY(0) rotate(0deg)}
+  25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
+  40%{transform:scale(1.45) translateY(0) rotate(0deg)}
+  48%{transform:scale(1.45) translateY(0) rotate(-6deg)}
+  56%{transform:scale(1.45) translateY(0) rotate(6deg)}
+  64%{transform:scale(1.45) translateY(0) rotate(-5deg)}
+  72%{transform:scale(1.45) translateY(0) rotate(4deg)}
+  80%{transform:scale(1.25) translateY(4px) rotate(0deg)}
+  88%{transform:scale(1.08) translateY(-3px) rotate(0deg)}
+  94%{transform:scale(0.96) translateY(2px) rotate(0deg)}
+  100%{transform:scale(1) translateY(0) rotate(0deg)}
+}
+.caixa{background:#fff;padding:16px;border-radius:12px;margin-top:12px}.caixa h3{background:#eff6ff;border:2px solid #0b5ed7;border-radius:999px;padding:10px 14px;text-align:center;margin:0 0 8px}input{width:100%;padding:14px;border:1px solid #cfd5df;border-radius:10px;font-size:18px;text-align:center;letter-spacing:2px;text-transform:uppercase;box-sizing:border-box}.btn{border:0;padding:14px;border-radius:10px;width:100%;font-weight:700;cursor:pointer;margin-top:10px}.btn-azul{background:#0b5ed7;color:#fff}.linha{padding:10px 0;border-bottom:1px solid #eee;font-size:15px}img.comp{width:100%;border-radius:12px;margin-top:10px;cursor:pointer;max-height:220px;object-fit:contain;background:#f8fafc}
 #visorComp{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:none;align-items:center;justify-content:center;padding:10px}
 #visorComp.aberto{display:flex}
 #visorComp img{max-width:100%;max-height:92vh;border-radius:10px;object-fit:contain}
@@ -13,18 +28,18 @@
 .item-pedido:active{background:#eff6ff}
 </style></head>
 <body>
-<div class="topo"><b>🔍 Verificar Pedido</b><a href="admin.html">← Voltar</a></div>
+<div class="topo" id="topoSite"><div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>🔍 Verificar Pedido</b></span></div><a href="admin.html">← Voltar</a></div>
 <div class="caixa">
-  <h3 style="margin:0">🔖 Verificação de Comprovativo e Código</h3>
-  <p style="color:#666;font-size:13px">Escreve o código que o cliente te deu (ex: CN-123456)</p>
+  <h3>🔖 Verificação de Comprovativo e Código</h3>
+  <p style="color:#666;font-size:13px;text-align:center">Escreve o código que o cliente te deu (ex: CN-123456)</p>
   <input id="codigoInput" placeholder="CN-123456">
   <button class="btn btn-azul" onclick="verificar()">🔍 VERIFICAR PEDIDO</button>
 </div>
 
 <!-- SE ESQUECESTE O CÓDIGO -->
 <div class="caixa">
-  <h3 style="margin:0">😅 Esqueceste o código?</h3>
-  <p style="color:#666;font-size:13px">Escreve nomes ou núm. telefone do cliente, clica no pedido e ele verifica sozinho.</p>
+  <h3>😅 Esqueceste o código?</h3>
+  <p style="color:#666;font-size:13px;text-align:center">Escreve nomes ou núm. telefone do cliente, clica no pedido e ele verifica sozinho.</p>
   <input id="buscaInput" placeholder="Escreve nomes ou núm.telefone" style="text-transform:none;letter-spacing:0;text-align:left" oninput="aoEscrever()" onkeydown="if(event.key==='Enter') listarPedidos(true)">
   <button class="btn btn-azul" onclick="listarPedidos(true)">🔍 PROCURAR</button>
   <div id="listaPedidos"></div>
@@ -33,6 +48,9 @@
 <div id="resultado"></div>
 <div id="visorComp" onclick="fecharComp()"><span>✕ Fechar</span><img id="imgGrande" src=""></div>
 <script>
+async function carregarLogoTopo(){
+  try{let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();let logo=r.data?.logo_url;if(logo){let img=document.getElementById('logoTopo');img.src=logo;img.style.display='block';document.getElementById('topoSite').classList.add('tem-logo');}}catch(e){}
+}
 function abrirComp(url){ document.getElementById('imgGrande').src=url; document.getElementById('visorComp').classList.add('aberto'); }
 function fecharComp(){ document.getElementById('visorComp').classList.remove('aberto'); }
 function getUrlComprovativo(valor){
@@ -173,4 +191,5 @@ async function marcarEntregue(cod){
   alert('✅ Pedido marcado como ENTREGUE!\n📄 Comprovativo vai ficar guardado por 1 mês.');
   verificar();
 }
+carregarLogoTopo();
 </script></body></html>

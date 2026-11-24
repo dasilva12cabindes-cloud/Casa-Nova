@@ -45,6 +45,10 @@ a { color: inherit; text-decoration: none; }
 .modal-preco { color: #0b5ed7; font-weight: 800; font-size: 1.3rem; margin: 10px 0; }
 .modal-desc { color: #333; font-size: .95rem; line-height: 1.5; margin-bottom: 14px; }
 .fechar { float: right; font-size: 1.4rem; border: 0; background: #f0f0f0; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
+/* BOTÃO FLUTUANTE CADASTRO - CANTO INFERIOR DIREITO */
+.btn-cadastro-flutuante{position:fixed;bottom:20px;right:16px;z-index:999;width:62px;height:62px;border-radius:50%;background:#16a34a;color:#fff;font-size:30px;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.35);border:3px solid #fff}
+.btn-cadastro-flutuante:active{transform:scale(.92)}
+.btn-cadastro-flutuante small{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -195,5 +199,9 @@ carregarLoja();
   <a href="sobre.html" style="color:#2563eb;font-weight:800;text-decoration:none;font-size:16px">🏠 Sobre a Nossa Loja →</a>
   <p style="color:#666;font-size:13px;margin:6px 0 0">Conhece quem somos, a nossa visão e contactos</p>
 </div>
+
+<!-- BOTÃO FLUTUANTE CADASTRO -->
+<a href="cadastro.html" class="btn-cadastro-flutuante">👤<small>Cadastrar</small></a>
+
 </body>
 </html>

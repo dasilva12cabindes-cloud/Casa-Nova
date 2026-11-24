@@ -10,8 +10,12 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,Arial,sans-serif;background:#f5f6f8;color:#1d2330;padding:16px}
-.topo{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.topo{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .topo a{color:#0b5ed7;font-weight:700;text-decoration:none}
+/* LOGOTIPO RETIFICADO - fundo azul porque o logo é branco */
+.topo-logo{background:#0b5ed7;padding:14px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;max-width:480px}
+.topo-logo img{height:64px;width:auto;max-width:240px;object-fit:contain;display:block}
+.topo-logo span{color:#fff;font-weight:800;font-size:22px}
 .card{background:#fff;border-radius:20px;padding:20px;max-width:480px;margin:0 auto}
 h1{font-size:1.4rem;margin-bottom:4px}
 .sub{color:#666;font-size:13px;margin-bottom:16px}
@@ -34,6 +38,13 @@ input{width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;font-s
 </head>
 <body>
 <div class="topo"><a href="index.html">⬅ Voltar à Loja</a></div>
+
+<!-- LOGOTIPO NO TOPO - AGORA VISÍVEL -->
+<div class="topo-logo">
+  <img id="logoCadastro" src="" alt="Casa Nova" style="display:none">
+  <span id="nomeLogo">Casa Nova</span>
+</div>
+
 <div class="card">
 <h1 id="titulo">👤 Cadastrar Cliente</h1>
 <p class="sub" id="subtitulo">Cria a tua conta para comprar mais rápido na Casa Nova.</p>
@@ -101,24 +112,44 @@ function mostrarAba(qual){
 let params = new URLSearchParams(location.search);
 if(params.get('aba')==='entrar') mostrarAba('entrar');
 
-// ===== PROCURA NO SUPABASE + LOCALSTORAGE =====
-async function buscarNoSupabase(email){
+// LOGOTIPO - busca do painel admin
+async function carregarLogo(){
   try{
-    if(typeof db === 'undefined') return null;
-    // Tenta nas 2 tabelas mais comuns: clientes e clientes_casa_nova
-    let tabelas = ['clientes','clientes_casa_nova'];
-    for(let t of tabelas){
-      try{
-        let { data, error } = await db.from(t).select('*').eq('email', email).maybeSingle();
-        if(data) return data;
-      }catch(e){}
+    if(typeof db === 'undefined') return;
+    const r = await db.from('loja_config').select('*').eq('id',1).maybeSingle();
+    if(r.data && r.data.logo_url){
+      let img = document.getElementById('logoCadastro');
+      img.src = r.data.logo_url; img.style.display='block';
+      document.getElementById('nomeLogo').style.display='none';
     }
   }catch(e){ console.log(e); }
+}
+carregarLogo();
+
+// ===== RETIFICADO: procura sem maiúsculas + busca todos e compara no JS =====
+async function buscarNoSupabase(email){
+  email = (email||'').trim().toLowerCase();
+  if(typeof db === 'undefined' || !email) return null;
+  let tabelas = ['clientes','clientes_casa_nova'];
+  for(let t of tabelas){
+    try{
+      let r1 = await db.from(t).select('*').ilike('email', email).maybeSingle();
+      if(r1.data){ r1.data._tabela=t; return r1.data; }
+      // Fallback: busca todos e compara no JS (resolve RLS parcial e maiúsculas)
+      let r2 = await db.from(t).select('*').limit(200);
+      if(r2.data){
+        let achado = r2.data.find(x => (x.email||'').toLowerCase().trim() === email);
+        if(achado){ achado._tabela=t; return achado; }
+      }
+      if(r1.error) console.log('Erro '+t, r1.error.message);
+    }catch(e){ console.log(e); }
+  }
   return null;
 }
 function normalizarCliente(c){
   return {
     id: c.id,
+    _tabela: c._tabela || 'clientes',
     nome: c.nome || c.nome_cliente || '',
     telefone: c.telefone || c.telefone_cliente || '',
     morada: c.morada || c.endereco || '',
@@ -138,15 +169,25 @@ async function cadastrar(){
   erro.style.display='none'; ok.style.display='none';
   if(!nome||!telefone||!morada||!email||!senha){ erro.textContent='Preenche todos os campos!'; erro.style.display='block'; return; }
   if(senha.length<6){ erro.textContent='Senha deve ter no mínimo 6 caracteres!'; erro.style.display='block'; return; }
-  // Verifica se já existe no Supabase também
   let existeSupabase = await buscarNoSupabase(email);
   let lista=getClientes();
+  // RETIFICADO: se já existe no Supabase MAS sem senha (conta antiga), deixa ATIVAR a conta com a nova senha em vez de bloquear
+  if(existeSupabase && !normalizarCliente(existeSupabase).senha){
+    let c = normalizarCliente(existeSupabase);
+    try{ await db.from(c._tabela).update({senha: senha}).eq('id', c.id); }catch(e){}
+    let clienteFinal = {...c, nome, telefone, morada, senha};
+    lista = lista.filter(x=>x.email!==email); lista.push(clienteFinal); setClientes(lista);
+    localStorage.setItem('cliente_casa_nova', JSON.stringify(clienteFinal));
+    ok.textContent='✅ Conta antiga ativada! A entrar...'; ok.style.display='block';
+    setTimeout(()=>location.href='index.html',1000);
+    return;
+  }
   if(existeSupabase || lista.find(c=>c.email===email)){ erro.textContent='Este email já está cadastrado! Tenta Entrar.'; erro.style.display='block'; mostrarAba('entrar'); document.getElementById('loginEmail').value=email; return; }
   let cliente={nome,telefone,morada,email,senha};
-  // Guarda no Supabase para aparecer no painel Clientes Cadastrados
   try{
     if(typeof db !== 'undefined'){
-      await db.from('clientes').insert([{nome, telefone, morada, email, senha}]);
+      let r = await db.from('clientes').insert([{nome, telefone, morada, email, senha}]);
+      if(r.error) console.log('Insert:', r.error.message);
     }
   }catch(e){ console.log('Supabase cadastrar:', e); }
   lista.push(cliente); setClientes(lista);
@@ -163,15 +204,22 @@ async function fazerLogin(){
   erro.style.display='none'; ok.style.display='none';
   if(!email||!senha){ erro.textContent='Escreve email e senha!'; erro.style.display='block'; return; }
   ok.textContent='A verificar...'; ok.style.display='block';
-  // 1. Tenta no Supabase (onde está o Cosme Bento)
   let sup = await buscarNoSupabase(email);
   if(sup){
     let c = normalizarCliente(sup);
-    // Se a conta antiga não tem senha guardada, aceita entrar e depois pede para criar senha
-    if(!c.senha || c.senha===senha){
-      // Guarda local para as próximas vezes
+    // RETIFICADO: conta antiga sem senha -> aceita e grava a senha que escreveste
+    if(!c.senha){
+      try{ await db.from(c._tabela).update({senha: senha}).eq('id', c.id); }catch(e){}
+      let clienteFinal = {...c, senha};
+      let lista=getClientes(); lista = lista.filter(x=>x.email!==email); lista.push(clienteFinal); setClientes(lista);
+      localStorage.setItem('cliente_casa_nova', JSON.stringify(clienteFinal));
+      ok.textContent='✅ Bem-vindo de volta, '+c.nome.split(' ')[0]+'!'; 
+      setTimeout(()=>location.href='index.html',800);
+      return;
+    }
+    if(c.senha===senha){
       let lista=getClientes();
-      if(!lista.find(x=>x.email===email)) { lista.push({...c, senha: senha||c.senha}); setClientes(lista); }
+      if(!lista.find(x=>x.email===email)) { lista.push(c); setClientes(lista); }
       localStorage.setItem('cliente_casa_nova', JSON.stringify(c));
       ok.textContent='✅ Bem-vindo de volta, '+c.nome.split(' ')[0]+'!'; 
       setTimeout(()=>location.href='index.html',800);
@@ -180,7 +228,6 @@ async function fazerLogin(){
       erro.textContent='Senha errada! Tenta de novo ou clica em Recuperar conta.'; erro.style.display='block'; ok.style.display='none'; return;
     }
   }
-  // 2. Tenta no localStorage
   let lista=getClientes();
   let achado=lista.find(c=>c.email===email && c.senha===senha);
   if(!achado){
@@ -213,20 +260,22 @@ async function procurarConta(){
   msg.style.display='none'; okBox.style.display='none';
   if(!email){ msg.textContent='Escreve o teu email!'; msg.style.display='block'; return; }
   document.getElementById('btnRecuperar').textContent='A procurar...';
-  // 1. Procura no Supabase PRIMEIRO - é onde está o teu email
   let sup = await buscarNoSupabase(email);
   let achado = sup ? normalizarCliente(sup) : null;
-  // 2. Se não achou, procura no localStorage
   if(!achado){
     let lista=getClientes();
     let atual=null;
     try{ atual=JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
     if(atual && !lista.find(c=>c.email===atual.email)) lista.push(atual);
-    let local = lista.find(c=>c.email===email);
+    let local = lista.find(c=>(c.email||'').toLowerCase()===email);
     if(local) achado = normalizarCliente(local);
   }
   document.getElementById('btnRecuperar').textContent='Procurar Minha Conta';
-  if(!achado){ msg.textContent='Email não encontrado! Verifica ou cria uma conta nova.'; msg.style.display='block'; return; }
+  if(!achado){
+    // RETIFICADO: em vez de travar, mostra que pode ser RLS e deixa criar / reativar
+    msg.innerHTML='Email não encontrado no telemóvel nem no Supabase.<br><br>Se tens a certeza que estás cadastrado, é o RLS do Supabase a bloquear. Vai a Cadastrar e usa o mesmo email + nome para reativar, ou vai no Supabase e desliga o RLS da tabela <b>clientes</b>.';
+    msg.style.display='block'; return;
+  }
   emailRecuperar=email;
   clienteRecuperado=achado;
   document.getElementById('recNovaSenhaBox').style.display='block';
@@ -240,13 +289,12 @@ async function salvarNovaSenha(){
   let msg=document.getElementById('recMsg');
   msg.style.display='none';
   if(!nova||nova.length<6){ msg.textContent='Nova senha deve ter no mínimo 6 caracteres!'; msg.style.display='block'; return; }
-  // Atualiza no Supabase
   try{
     if(typeof db !== 'undefined' && clienteRecuperado && clienteRecuperado.id){
-      await db.from('clientes').update({senha: nova}).eq('id', clienteRecuperado.id);
+      let r = await db.from(clienteRecuperado._tabela||'clientes').update({senha: nova}).eq('id', clienteRecuperado.id);
+      if(r.error) console.log(r.error.message);
     }
   }catch(e){ console.log(e); }
-  // Atualiza no localStorage
   let lista=getClientes();
   let idx=lista.findIndex(c=>c.email===emailRecuperar);
   let clienteFinal = {...clienteRecuperado, senha: nova};

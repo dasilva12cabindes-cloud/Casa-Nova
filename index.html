@@ -18,31 +18,29 @@ a { color: inherit; text-decoration: none; }
 .topo.tem-logo .logo-text { display: none; }
 .topo nav { display: flex; gap: 16px; align-items: center; }
 .topo nav a, #auth-links { display: inline-flex; gap: 12px; }
-/* BANNER RETIFICADO - GRANDE E SEM CORTAR */
+/* BANNER - GRANDE, SEM CORTAR E BEM CURVO */
 .banners { width: 100%; max-width: 1100px; margin: 12px auto 0; padding: 0 16px; display: none; }
-.banners img { width: 100%; height: 220px; object-fit: contain; display: block; border-radius: 12px; background: #fff; }
+.banners img { width: 100%; height: 220px; object-fit: contain; display: block; border-radius: 26px; background: #fff; }
 @media (max-width: 700px){ .banners img{ height: 220px; } }
 .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
-#busca { width: 100%; padding: 12px 14px; border: 1px solid #cfd5df; border-radius: 10px; font-size: 1rem; margin-bottom: 12px; }
+#busca { width: 100%; padding: 12px 14px; border: 1px solid #cfd5df; border-radius: 14px; font-size: 1rem; margin-bottom: 12px; }
 .categorias { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; }
 .chip { border: 1px solid #cfd5df; background: #fff; padding: 8px 14px; border-radius: 20px; font-size: .9rem; white-space: nowrap; cursor: pointer; }
 .chip.ativo { background: #0b5ed7; color: #fff; border-color: #0b5ed7; }
 .grade { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 @media (min-width: 700px) { .grade { grid-template-columns: repeat(4, 1fr); } }
-.card { background: #fff; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.08); cursor: pointer; }
-.card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: #eef0f4; }
+.card { background: #fff; border-radius: 20px; padding: 10px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.08); cursor: pointer; }
+.card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 14px; background: #eef0f4; }
 .card h3 { font-size: .95rem; font-weight: 600; }
 .preco { font-weight: 700; color: #0b5ed7; }
-.btn { background: #0b5ed7; color: #fff; border: 0; padding: 11px; border-radius: 8px; font-size: .95rem; cursor: pointer; margin-top: auto; }
+.btn { background: #0b5ed7; color: #fff; border: 0; padding: 11px; border-radius: 14px; font-size: .95rem; cursor: pointer; margin-top: auto; }
 .aviso { grid-column: 1 / -1; text-align: center; padding: 30px 0; color: #667085; }
-/* AVISO SEM E-MAIL */
 #toast { position: fixed; top: 82px; left: 50%; transform: translateX(-50%) translateY(-20px); background: #111; color: #fff; padding: 12px 18px; border-radius: 30px; font-size: .9rem; z-index: 100; opacity: 0; pointer-events: none; transition: .3s; box-shadow: 0 4px 16px rgba(0,0,0,.25); white-space: nowrap; }
 #toast.mostrar { opacity: 1; transform: translateX(-50%) translateY(0); }
-/* DETALHES DO PRODUTO */
 #modal { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 99; display: none; align-items: flex-end; justify-content: center; }
 #modal.aberto { display: flex; }
-.modal-box { background: #fff; width: 100%; max-width: 500px; border-radius: 18px 18px 0 0; padding: 16px; max-height: 88vh; overflow-y: auto; }
-.modal-box img { width: 100%; border-radius: 12px; aspect-ratio: 1; object-fit: cover; background: #eef0f4; }
+.modal-box { background: #fff; width: 100%; max-width: 500px; border-radius: 22px 22px 0 0; padding: 16px; max-height: 88vh; overflow-y: auto; }
+.modal-box img { width: 100%; border-radius: 16px; aspect-ratio: 1; object-fit: cover; background: #eef0f4; }
 .modal-box h2 { margin: 12px 0 4px; font-size: 1.2rem; }
 .modal-cat { color: #667085; font-size: .85rem; }
 .modal-preco { color: #0b5ed7; font-weight: 800; font-size: 1.3rem; margin: 10px 0; }
@@ -51,7 +49,6 @@ a { color: inherit; text-decoration: none; }
 </style>
 </head>
 <body>
-
 <div class="topo" id="topoSite">
   <a class="logo" href="index.html">
     <img id="logoTopo" class="logo-img" src="" alt="Casa Nova" style="display:none">
@@ -62,11 +59,8 @@ a { color: inherit; text-decoration: none; }
     <a href="carrinho.html">🛒 Carrinho (<span id="qtdCarrinho">0</span>)</a>
   </nav>
 </div>
-
 <div id="toast">✅ Adicionado ao carrinho!</div>
-
 <div class="banners" id="banners"><img src="" id="bannerImg" alt="Publicidade"></div>
-
 <div class="container">
   <input id="busca" placeholder="🔍 Pesquisar produto..." oninput="filtrar()">
   <div class="categorias" id="categorias">
@@ -74,7 +68,6 @@ a { color: inherit; text-decoration: none; }
   </div>
   <div class="grade" id="grade"><div class="aviso">A carregar produtos...</div></div>
 </div>
-
 <div id="modal" onclick="if(event.target.id==='modal') fecharDetalhe()">
   <div class="modal-box">
     <button class="fechar" onclick="fecharDetalhe()">✕</button>
@@ -86,11 +79,9 @@ a { color: inherit; text-decoration: none; }
     <button class="btn" style="width:100%" id="dBtn">Adicionar ao Carrinho</button>
   </div>
 </div>
-
 <script>
 let todosProdutos = [];
 let categoriaAtual = 'Todas';
-
 function categoriaAuto(p){
   if(p.categoria && p.categoria !== 'Outros' && p.categoria.trim() !== '') return p.categoria;
   let n = (p.nome||'').toLowerCase();
@@ -100,20 +91,17 @@ function categoriaAuto(p){
   if(n.includes('computador') || n.includes('portatil') || n.includes('portátil') || n.includes('tablet')) return 'Informática';
   return 'Outros';
 }
-
 function mostrarToast(msg){
   let t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('mostrar');
   setTimeout(()=>t.classList.remove('mostrar'), 2000);
 }
-
 function atualizarCarrinho(){
   let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
   let qtd = carrinho.reduce((s,i)=>s + (i.qtd||1), 0);
   document.getElementById('qtdCarrinho').textContent = qtd;
 }
-
 function adicionarCarrinho(id, event){
   if(event) event.stopPropagation();
   let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
@@ -124,7 +112,6 @@ function adicionarCarrinho(id, event){
   atualizarCarrinho();
   mostrarToast('✅ Adicionado ao carrinho!');
 }
-
 function abrirDetalhe(id){
   let p = todosProdutos.find(x=>x.id==id);
   if(!p) return;
@@ -137,7 +124,6 @@ function abrirDetalhe(id){
   document.getElementById('modal').classList.add('aberto');
 }
 function fecharDetalhe(){ document.getElementById('modal').classList.remove('aberto'); }
-
 function filtrarCategoria(cat, btn){
   categoriaAtual = cat;
   document.querySelectorAll('.chip').forEach(c=>c.classList.remove('ativo'));
@@ -165,7 +151,6 @@ function mostrarProdutos(lista){
     </div>
   `).join('');
 }
-
 async function carregarLoja(){
   let cfg = {};
   try{

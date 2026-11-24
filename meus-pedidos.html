@@ -12,6 +12,7 @@ body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
 .btn{border:0;padding:14px;border-radius:10px;width:100%;font-weight:700;cursor:pointer;margin-top:10px}
 .btn-azul{background:#0b5ed7;color:#fff}
 .btn-sair{background:#dc2626;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer}
+.btn-apagar{background:#111;color:#fff;border:0;padding:12px;border-radius:10px;width:100%;font-weight:700;cursor:pointer;margin-top:10px}
 .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-top:10px;line-height:1.7;font-size:14px}
 </style></head>
 <body>
@@ -20,46 +21,52 @@ body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
 <div id="infoCliente" class="caixa" style="display:none"></div>
 
 <div class="caixa">
-  <h3 style="margin:0">Os teus códigos ficam aqui 24h</h3>
-  <p style="color:#666;font-size:13px">Mesmo que atualizes a página, ficas aqui. Só sais se clicares em Sair.</p>
+  <h3 style="margin:0">Os teus códigos</h3>
+  <p style="color:#666;font-size:13px">Se atualizares a página, a informação some por segurança.<br>Aponta o código antes de sair.</p>
   <div id="listaCodigos"></div>
+  <button class="btn-apagar" onclick="apagarTudo()">🗑️ Apagar toda a informação agora</button>
 </div>
 
 <script>
-// ===== CLIENTE FICA LOGADO ATÉ ELE SAIR =====
-// Guarda onde está
-localStorage.setItem('ultima_pagina_cliente', location.pathname);
+// RETIFICADO: SE ATUALIZAR A PÁGINA, APAGA TUDO
+// Detecta se é atualização (refresh) e não primeira entrada
+if(performance.getEntriesByType('navigation')[0]?.type === 'reload'){
+  localStorage.removeItem('meus_codigos');
+  localStorage.removeItem('cliente_casa_nova');
+  // Volta para a loja / login, sem mostrar nada
+  // Se quiseres ficar na mesma página vazia, apaga as 2 linhas abaixo
+  // location.href = 'index.html';
+}
 
 let cliente = null;
 try{ cliente = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){ cliente=null; }
 
 function sairCliente(){
-  if(!confirm('Queres mesmo sair da tua conta?')) return;
-  // SÓ SAI QUANDO ELE CLICA EM SAIR
-  localStorage.removeItem('cliente_casa_nova');
-  localStorage.removeItem('meus_codigos');
+  if(!confirm('Queres mesmo sair? A informação vai ser apagada.')) return;
+  apagarTudo();
   location.href = 'index.html';
 }
 
+function apagarTudo(){
+  localStorage.removeItem('cliente_casa_nova');
+  localStorage.removeItem('meus_codigos');
+  document.getElementById('infoCliente').style.display='none';
+  document.getElementById('listaCodigos').innerHTML = `<p style="color:#666">Informação apagada.<br><a href="index.html" style="color:#0b5ed7;font-weight:700">Fazer um novo pedido →</a></p>`;
+}
+
 function renderizar(){
-  // Mostra quem está logado
   if(cliente){
     document.getElementById('infoCliente').style.display='block';
     document.getElementById('infoCliente').innerHTML = `👤 Logado como: <b>${cliente.nome||''}</b><br>📧 ${cliente.email||''} • 📞 ${cliente.telefone||''}`;
   }
-
-  // Mostra os códigos - não apaga ao atualizar
   let meus = [];
   try{ meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]'); }catch(e){}
-  
-  // Apaga só os que já passaram 24h
   let agora = Date.now();
   meus = meus.filter(m => (agora - (m.criado_em||0)) < 24*60*60*1000);
   localStorage.setItem('meus_codigos', JSON.stringify(meus));
-
   let div = document.getElementById('listaCodigos');
   if(!meus.length){
-    div.innerHTML = `<p style="color:#666">Ainda não tens códigos.<br><a href="index.html" style="color:#0b5ed7;font-weight:700">Fazer um pedido →</a></p>`;
+    div.innerHTML = `<p style="color:#666">Nenhuma informação.<br><a href="index.html" style="color:#0b5ed7;font-weight:700">Fazer um pedido →</a></p>`;
     return;
   }
   div.innerHTML = meus.map(m => `

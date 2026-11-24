@@ -19,13 +19,11 @@ label{font-size:13px;color:#555;font-weight:700}
 .item img{width:80px;height:80px;object-fit:cover;border-radius:8px;background:#f8f8f8;display:block}
 .preview{width:100%;margin-top:8px}
 .cat-item{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;padding:8px 0}
-/* NOTIFICAÇÃO BONITA - SEM LINK */
 #toast{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:14px 18px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:9999;font-size:15px;font-weight:700;max-width:92%;text-align:center;transition:.35s;opacity:0;pointer-events:none}
 #toast.mostrar{transform:translateX(-50%) translateY(0);opacity:1}
 #toast.sucesso{background:#16a34a}
 #toast.erro{background:#dc2626}
 #toast.aviso{background:#f59e0b;color:#111}
-/* JANELA DE CONFIRMAR BONITA */
 #modalFundo{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9998;padding:16px}
 #modalFundo.mostrar{display:flex}
 #modalCaixa{background:#fff;width:100%;max-width:360px;border-radius:18px;padding:20px;text-align:center}
@@ -34,9 +32,9 @@ label{font-size:13px;color:#555;font-weight:700}
 </style></head>
 <body>
 <div id="toast"></div>
-<div id="modalFundo"><div id="modalCaixa"><h3 id="modalTitulo">Confirmar?</h3><p id="modalTexto"></p><button class="btn-verde" id="modalSim" style="margin-top:10px">✅ Sim, continuar</button><button class="btn-cinza" onclick="fecharModal(false)" style="margin-top:8px">Cancelar</button></div></div>
+<div id="modalFundo"><div id="modalCaixa"><h3>Confirmar?</h3><p id="modalTexto"></p><button class="btn-verde" id="modalSim" style="margin-top:10px">✅ Sim, continuar</button><button class="btn-cinza" onclick="fecharModal(false)" style="margin-top:8px">Cancelar</button></div></div>
 
-<div class="topo"><b>Admin Casa Nova</b><a href="index.html">Ver Loja</a></div>
+<div class="topo"><b>Admin Casa Nova</b><div><a href="sobre.html" style="margin-right:10px">Ver Sobre</a><a href="index.html">Ver Loja</a></div></div>
 
 <div class="caixa"><h3>🏠 Logotipo da Loja</h3>
 <p style="color:#666;font-size:14px">Este logotipo aparece sozinho no topo do site, com fundo azul.</p>
@@ -53,6 +51,28 @@ label{font-size:13px;color:#555;font-weight:700}
 <input type="file" id="fileBanner" accept="image/*">
 <button class="btn" onclick="subirBanner()">📤 Subir Foto do Telefone</button>
 <div id="listaBanners">A carregar...</div>
+</div>
+
+<div class="caixa"><h3>🏪 Sobre a Minha Loja - TU MODIFICAS AQUI</h3>
+<p style="color:#666;font-size:14px">Isto aparece na página <b>sobre.html</b> para o cliente ver.</p>
+<label>🏠 Sobre a loja</label>
+<textarea id="fSobre" placeholder="Ex: Somos uma loja em Luanda, vendemos eletrodomésticos e telemóveis novos com garantia..."></textarea>
+<label>👁️ Visão</label>
+<textarea id="fVisao" placeholder="Ex: Ser a melhor loja de eletrodomésticos em Angola..."></textarea>
+<label>🎯 Missão</label>
+<textarea id="fMissao" placeholder="Ex: Levar produtos de qualidade a todas as famílias..."></textarea>
+<label>📍 Endereço</label>
+<input id="fEndereco" placeholder="Ex: Luanda, Viana, Rua...">
+<label>📞 Telefone</label>
+<input id="fTelefone" placeholder="Ex: 923 000 000">
+<label>💬 WhatsApp (só números, ex: 244923000000)</label>
+<input id="fWhatsapp" placeholder="Ex: 244923000000">
+<label>🕒 Horário</label>
+<input id="fHorario" placeholder="Ex: Seg - Sáb: 08h00 - 19h00">
+<label>📧 Email da loja</label>
+<input id="fEmail" placeholder="Ex: casa.nova@gmail.com">
+<button class="btn-verde" onclick="salvarSobre()">💾 Guardar Informações da Loja</button>
+<a href="sobre.html" style="display:block;text-align:center;margin-top:10px;color:#2563eb;font-weight:700">👀 Ver como ficou a página Sobre</a>
 </div>
 
 <div class="caixa"><h3>📁 Gerir Categorias - ÉS TU QUE ADICIONAS</h3>
@@ -82,7 +102,6 @@ label{font-size:13px;color:#555;font-weight:700}
 <div class="caixa"><h3>🛍️ Produtos</h3><div id="listaProdutos">A carregar...</div></div>
 
 <script>
-// ===== NOTIFICAÇÃO BONITA - SUBSTITUI O ALERT =====
 let toastTimer;
 function aviso(msg, tipo){
   let t=document.getElementById('toast');
@@ -91,7 +110,6 @@ function aviso(msg, tipo){
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>{ t.className=''; }, 3000);
 }
-// ===== CONFIRMAR BONITO - SUBSTITUI O CONFIRM =====
 let resolverModal=null;
 function perguntar(texto){
   return new Promise(res=>{
@@ -135,6 +153,36 @@ async function apagarCategoria(i){
   if(!ok) return;
   categorias.splice(i,1); guardarCategorias(); mostrarCategorias();
   aviso('🗑️ Categoria apagada');
+}
+// ===== SOBRE A LOJA =====
+async function salvarSobre(){
+  let dados={
+    sobre: document.getElementById('fSobre').value.trim(),
+    visao: document.getElementById('fVisao').value.trim(),
+    missao: document.getElementById('fMissao').value.trim(),
+    endereco: document.getElementById('fEndereco').value.trim(),
+    telefone: document.getElementById('fTelefone').value.trim(),
+    whatsapp: document.getElementById('fWhatsapp').value.trim(),
+    horario: document.getElementById('fHorario').value.trim(),
+    email_loja: document.getElementById('fEmail').value.trim()
+  };
+  let r=await db.from('loja_config').update(dados).eq('id',1);
+  if(r.error) return aviso('❌ Erro: '+r.error.message,'erro');
+  aviso('✅ Informações da loja guardadas!');
+}
+async function carregarSobreAdmin(){
+  let r=await db.from('loja_config').select('*').eq('id',1).maybeSingle();
+  let c=r.data||{};
+  if(document.getElementById('fSobre')){
+    document.getElementById('fSobre').value=c.sobre||'';
+    document.getElementById('fVisao').value=c.visao||'';
+    document.getElementById('fMissao').value=c.missao||'';
+    document.getElementById('fEndereco').value=c.endereco||'';
+    document.getElementById('fTelefone').value=c.telefone||'';
+    document.getElementById('fWhatsapp').value=c.whatsapp||'';
+    document.getElementById('fHorario').value=c.horario||'';
+    document.getElementById('fEmail').value=c.email_loja||'';
+  }
 }
 function mostrarBanners(){
   let div=document.getElementById('listaBanners');
@@ -250,5 +298,5 @@ async function carregarProdutos(){
   document.getElementById('listaProdutos').innerHTML=produtos.map(x=>'<div class="item"><img src="'+(x.imagem||x.imagem_url||'')+'"><div style="flex:1"><b>'+x.nome+'</b><br><small style="color:#2563eb;font-weight:700">📁 '+(x.categoria||'Sem categoria')+'</small><br>'+Number(x.preco).toLocaleString()+' Kz<br><button class="btn-cinza" style="margin-top:6px" onclick="editarProduto('+x.id+')">✏️ Editar</button> <button class="btn-vermelho" onclick="apagarProduto('+x.id+')">🗑️ Apagar</button></div></div>').join('')||'Sem produtos';
 }
 mostrarCategorias();
-carregarTudo(); carregarProdutos();
+carregarTudo(); carregarProdutos(); carregarSobreAdmin();
 </script></body></html>

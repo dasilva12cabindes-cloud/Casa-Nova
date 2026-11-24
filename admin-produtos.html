@@ -10,7 +10,6 @@
 .topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
 .topo.tem-logo .logo-text{display:none}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
-/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
 @keyframes logoZoom{
   0%{transform:scale(0.7) translateY(0) rotate(0deg)}
   25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
@@ -33,13 +32,18 @@ input{width:100%;padding:11px;margin-bottom:8px;border:1px solid #cfd5df;border-
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 @media(min-width:700px){.grid{grid-template-columns:repeat(4,1fr)}}
 .card{background:#fff;border-radius:14px;padding:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card.promo{border:2px solid #dc2626}
 .card img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;background:#eef0f4}
 .card h3{font-size:14px;margin:8px 0 4px;background:none;border:none;padding:0;text-align:left;border-radius:0}
 .preco{font-weight:800;color:#0b5ed7}
+.preco-antigo{color:#999;text-decoration:line-through;font-size:12px;font-weight:400;margin-right:6px}
+.desconto{color:#dc2626;font-size:11px;font-weight:800}
+.selo-promo{background:#dc2626;color:#fff;font-size:11px;font-weight:900;padding:3px 8px;border-radius:20px;display:inline-block}
 .btn{border:0;padding:10px;border-radius:8px;font-weight:700;cursor:pointer;width:100%}
 .btn-azul{background:#0b5ed7;color:#fff}
 .btn-vermelho{background:#dc2626;color:#fff}
 .btn-verde{background:#16a34a;color:#fff}
+.btn-cinza{background:#e5e7eb;color:#111}
 #toast{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:14px 18px;border-radius:14px;z-index:9999;font-weight:700;max-width:92%;text-align:center;transition:.35s;opacity:0;pointer-events:none}
 #toast.mostrar{transform:translateX(-50%) translateY(0);opacity:1}
 #toast.sucesso{background:#16a34a}
@@ -91,16 +95,46 @@ function filtrar(){
   });
   let g=document.getElementById('grade');
   if(!lista.length){g.innerHTML='<p>Nenhum produto encontrado.</p>';return;}
-  g.innerHTML=lista.map(p=>`
-    <div class="card">
+  g.innerHTML=lista.map(p=>{
+    let antigo=Number(p.preco_antigo||0), novo=Number(p.preco||0);
+    let perc=(antigo>novo&&antigo>0)?Math.round((1-novo/antigo)*100):0;
+    return `
+    <div class="card ${perc?'promo':''}">
       <img src="${p.imagem||p.imagem_url||'https://via.placeholder.com/300'}" onerror="this.src='https://via.placeholder.com/300'">
+      ${perc?`<div style="margin-top:6px"><span class="selo-promo">🔥 PROMOÇÃO -${perc}%</span></div>`:''}
       <h3>${p.nome}</h3>
       <div style="color:#666;font-size:12px">${p.categoria||''}</div>
-      <div class="preco">${Number(p.preco).toLocaleString()} Kz</div>
+      ${perc?`<div><span class="preco-antigo">${antigo.toLocaleString()} Kz</span> <span class="desconto">-${perc}%</span></div>`:''}
+      <div class="preco">${novo.toLocaleString()} Kz</div>
+      <div style="background:#fef2f2;border:1px dashed #dc2626;border-radius:10px;padding:8px;margin-top:8px">
+        <label style="font-size:12px;font-weight:800;color:#dc2626">🔥 Preço antigo (promoção):</label>
+        <input id="ant-${p.id}" type="number" placeholder="Ex: 150000" value="${antigo||''}" style="margin:6px 0">
+        <button class="btn btn-vermelho" onclick="salvarPromo(${p.id})">💾 Guardar Promoção</button>
+        ${perc?`<button class="btn btn-cinza" onclick="tirarPromo(${p.id})" style="margin-top:6px">❌ Tirar Promoção</button>`:''}
+      </div>
       <button class="btn btn-azul" onclick="location.href='admin-categorias.html'" style="margin-top:8px">✏️ Editar</button>
       <button class="btn btn-vermelho" onclick="apagar(${p.id},'${(p.nome||'').replace(/'/g,'')}')" style="margin-top:6px">🗑️ Apagar</button>
     </div>
-  `).join('');
+  `}).join('');
+}
+// 🔥 SALVAR / TIRAR PROMOÇÃO - 1 CLIQUE
+async function salvarPromo(id){
+  let v=Number(document.getElementById('ant-'+id).value||0);
+  if(!v){ aviso('⚠️ Escreve o preço antigo! Ex: 150000','aviso'); return; }
+  let p=todos.find(x=>x.id==id);
+  if(v <= Number(p.preco)){ aviso('⚠️ Preço antigo tem que ser maior que o preço atual!','aviso'); return; }
+  let r=await db.from('produtos').update({preco_antigo:v}).eq('id',id);
+  if(r.error) return aviso('❌ '+r.error.message,'erro');
+  aviso('✅ Promoção guardada! Na loja já aparece riscado + %');
+  carregar();
+}
+async function tirarPromo(id){
+  let ok=await perguntar('Tirar a promoção deste produto? Volta ao preço normal.');
+  if(!ok) return;
+  let r=await db.from('produtos').update({preco_antigo:null}).eq('id',id);
+  if(r.error) return aviso('❌ '+r.error.message,'erro');
+  aviso('✅ Promoção tirada');
+  carregar();
 }
 async function apagar(id,nome){
   let ok=await perguntar('Apagar '+nome+' da loja?');

@@ -7,7 +7,7 @@
 <style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
 .topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}
 .topo .logo{display:flex;align-items:center;gap:8px}
-.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:#fff;border-radius:8px;padding:2px;display:none}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none}
 .topo.tem-logo .logo-text{display:none}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
 .caixa{background:#fff;padding:14px;border-radius:12px;margin-top:12px}
@@ -59,7 +59,6 @@ async function carregarVendas(){
   let dia=document.getElementById('dataDia').value;
   if(!dia) return alert('Escolhe o dia primeiro');
   document.getElementById('dataLabel').textContent='- '+dia.split('-').reverse().join('/');
-  // Tenta buscar na tabela pedidos, se não existir usa encomendas
   let lista=[]; let erro=null;
   let r=await db.from('pedidos').select('*').order('created_at',{ascending:false});
   if(!r.error) lista=r.data||[];
@@ -69,18 +68,14 @@ async function carregarVendas(){
     else erro=r2.error;
   }
   if(erro){ document.getElementById('lista').innerHTML='<p style="color:#dc2626">Ainda não tens tabela de pedidos. As vendas vão aparecer aqui quando o cliente fizer pedido no carrinho.</p>'; return; }
-
-  // Filtra pelo dia
   let doDia=lista.filter(p=>{
     let d=(p.created_at||'').slice(0,10);
     return d===dia;
   });
-
   let total=0; let itens=0;
   doDia.forEach(p=>{
     let v=Number(p.total||p.valor_total||p.preco_total||0);
     total+=v;
-    // tenta contar itens
     try{
       let it=p.itens||p.produtos||p.items;
       if(typeof it==='string') it=JSON.parse(it);
@@ -88,11 +83,9 @@ async function carregarVendas(){
       else itens+=1;
     }catch(e){ itens+=1; }
   });
-
   document.getElementById('totalVendas').textContent=total.toLocaleString()+' Kz';
   document.getElementById('qtdPedidos').textContent=doDia.length;
   document.getElementById('qtdItens').textContent=itens;
-
   if(!doDia.length){ document.getElementById('lista').innerHTML='<p style="text-align:center;color:#888;padding:20px">Nenhuma venda neste dia.</p>'; return; }
   document.getElementById('lista').innerHTML=doDia.map(p=>{
     let nome=p.nome_cliente||p.cliente_nome||p.nome||p.telefone||'Cliente';

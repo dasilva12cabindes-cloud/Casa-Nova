@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Casa Nova - Eletrodomésticos</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
@@ -11,6 +11,11 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: system-ui, -apple-system, Arial, sans-serif; background: #f5f6f8; color: #1d2330; overflow-x:hidden; }
 a { color: inherit; text-decoration: none; }
+/* TIRA O ZOOM QUANDO CLICA PARA ESCREVER */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+input,select,textarea{font-size:16px !important}
+#vNome,#vWhats,#vCodigo{font-size:16px !important}
+#busca{font-size:16px !important}
 .topo { position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; background: #0b5ed7; color: #fff; height: 72px; }
 .topo .lado-esq { display:flex; align-items:center; gap:10px; min-width:0; }
 .topo .logo { display: flex; align-items: center; }
@@ -241,11 +246,11 @@ a { color: inherit; text-decoration: none; }
     </div>
     <div style="padding:18px">
       <label style="font-size:13px;font-weight:700">👤 Teu nome completo:</label>
-      <input id="vNome" placeholder="Ex: Cosme Bento" style="width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;margin:6px 0 12px;box-sizing:border-box">
+      <input id="vNome" placeholder="Ex: Cosme Bento" style="width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;margin:6px 0 12px;box-sizing:border-box;font-size:16px">
       <label style="font-size:13px;font-weight:700">📱 Teu número do WhatsApp:</label>
-      <input id="vWhats" type="tel" placeholder="Ex: 972370499" style="width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;margin:6px 0 12px;box-sizing:border-box">
+      <input id="vWhats" type="tel" placeholder="Ex: 972370499" style="width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;margin:6px 0 12px;box-sizing:border-box;font-size:16px">
       <label style="font-size:13px;font-weight:700">🔖 Número do pedido:</label>
-      <input id="vCodigo" placeholder="Ex: CN-583981" style="width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;margin:6px 0 16px;box-sizing:border-box;text-transform:uppercase">
+      <input id="vCodigo" placeholder="Ex: CN-583981" style="width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;margin:6px 0 16px;box-sizing:border-box;text-transform:uppercase;font-size:16px">
       <button onclick="irParaWhatsApp()" style="background:#25D366;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:15px;cursor:pointer;margin-bottom:10px">💬 ENTRAR EM CONTATO VIA WHATSAPP</button>
       <button onclick="confirmarNoSistema()" style="background:#0b5ed7;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:15px;cursor:pointer">✅ CONFIRMAR NO SISTEMA</button>
       <button onclick="fecharTelaVerificar()" style="background:#eee;border:0;padding:12px;border-radius:12px;width:100%;font-weight:700;margin-top:10px;cursor:pointer">❌ Fechar</button>
@@ -473,7 +478,6 @@ async function carregarMaisVendidos(){
       });
     }
     let lista = Object.values(vendas).sort((a,b)=> b.qtd - a.qtd).slice(0,5);
-    // Liga com produtos reais para ter id e foto certa
     lista = lista.map(v=>{
       let real = todosProdutos.find(p=> (p.nome||'').toLowerCase() === v.nome.toLowerCase());
       if(real) return {...v, id: real.id, img: real.imagem||real.imagem_url||v.img, preco: Number(real.preco)||v.preco};
@@ -518,7 +522,6 @@ function comprarMaisVendido(id, nome){
   if(real){ adicionarCarrinho(real.id); return; }
   mostrarToast('⚠️ Abre o produto na lista para comprar');
 }
-// Arrastar com o dedo para passar
 let toqueXBanner = 0;
 document.addEventListener('touchstart', e=>{ toqueXBanner = e.touches[0].clientX; }, {passive:true});
 document.addEventListener('touchend', e=>{

@@ -1,10 +1,11 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: system-ui, -apple-system, Arial, sans-serif; background: #f5f6f8; color: #1d2330; }
+body { font-family: system-ui, -apple-system, Arial, sans-serif; background: #f5f6f8; color: #1d2330; overflow-x:hidden; }
 a { color: inherit; text-decoration: none; }
 
-/* TOPO - SÓ LOGOTIPO */
+/* TOPO - LOGOTIPO + BOTÃO 4 BARRAS */
 .topo { position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between;
   align-items: center; padding: 8px 16px; background: #0b5ed7; color: #fff; height: 72px; }
+.topo .lado-esq { display:flex; align-items:center; gap:10px; min-width:0; }
 .topo .logo { display: flex; align-items: center; }
 .topo .logo-img { height: 56px; width: auto; max-width: 200px; object-fit: contain; display: block; background: transparent; }
 .topo .logo-text { font-size: 1.3rem; font-weight: 700; }
@@ -12,6 +13,25 @@ a { color: inherit; text-decoration: none; }
 .topo.tem-logo .logo-text { display: none; }
 .topo nav { display: flex; gap: 16px; align-items: center; }
 .topo nav a, #auth-links { display: inline-flex; gap: 12px; }
+
+/* BOTÃO 4 BARRAS - SUPERIOR ESQUERDO */
+.btn-menu { background: rgba(255,255,255,.2); color:#fff; border:0; width:42px; height:42px; border-radius:10px; cursor:pointer; flex:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; }
+.btn-menu span { display:block; width:22px; height:3px; background:#fff; border-radius:2px; }
+
+/* MENU LATERAL - ÁREA DETALHES */
+.fundo-menu { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:900; display:none; }
+.fundo-menu.aberto { display:block; }
+.menu-lateral { position:fixed; top:0; left:-320px; width:300px; max-width:85%; height:100%; background:#fff; z-index:1000; transition:left .3s; overflow-y:auto; padding-bottom:20px; }
+.menu-lateral.aberto { left:0; }
+.menu-topo { background:#0b5ed7; color:#fff; padding:16px; display:flex; justify-content:space-between; align-items:center; }
+.menu-topo b { font-size:18px; }
+.menu-topo button { background:rgba(255,255,255,.2); color:#fff; border:0; width:36px; height:36px; border-radius:50%; font-size:18px; cursor:pointer; }
+.menu-item { display:flex; gap:10px; align-items:center; padding:14px 16px; text-decoration:none; color:#1d2330; border-bottom:1px solid #f0f0f0; font-size:15px; }
+.menu-item:active { background:#eef2ff; }
+.menu-item span { font-size:20px; }
+.menu-secao { padding:12px 16px 4px; font-size:12px; font-weight:800; color:#888; text-transform:uppercase; }
+.menu-detalhe { margin:12px 16px; background:#f8fafc; border-radius:12px; padding:12px; font-size:13px; line-height:1.7; word-break:break-word; }
+.menu-detalhe b { color:#0b5ed7; }
 
 /* BANNERS / PUBLICIDADE */
 .banners { width: 100%; max-width: 1100px; margin: 12px auto 0; padding: 0 16px; display: none; }

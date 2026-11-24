@@ -18,6 +18,13 @@ input{width:100%;padding:11px;margin-bottom:8px;border:1px solid #cfd5df;border-
 <body>
 <div class="topo"><b>Admin Casa Nova</b><a href="index.html">Ver Loja</a></div>
 
+<div class="caixa"><h3>🏠 Logotipo da Loja</h3>
+<p style="color:#666;font-size:14px">Este logotipo aparece sozinho no topo do site, com fundo azul.</p>
+<div id="logoAtual">A carregar...</div>
+<input type="file" id="fileLogo" accept="image/*">
+<button class="btn" onclick="subirLogo()">📤 Subir Logotipo</button>
+</div>
+
 <div class="caixa"><h3>🖼️ Banners / Publicidade</h3>
 <p style="color:#666;font-size:14px">Estas fotos vão passar sozinhas no topo da loja.</p>
 <input id="urlBanner" placeholder="Cola o link da foto aqui... Ex: https://.../banner.jpg">
@@ -37,17 +44,36 @@ function mostrarBanners(){
   if(!banners.length){div.innerHTML='<p>Nenhum banner ainda.</p>';return}
   div.innerHTML=banners.map((b,i)=>'<div style="border-top:1px solid #eee;padding:10px 0"><div class="preview"><img src="'+b+'" style="width:100%;height:auto;object-fit:contain;border-radius:8px"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><b>Banner '+(i+1)+'</b><button class="btn-vermelho" onclick="apagarBanner('+i+')">🗑️ Apagar</button></div><small style="word-break:break-all;color:#888">'+b+'</small></div>').join('');
 }
-async function carregarBanners(){
+async function carregarTudo(){
   const r=await db.from('loja_config').select('*').eq('id',1).maybeSingle();
   let cfg=r.data||{};
+  // LOGO
+  if(cfg.logo_url){
+    document.getElementById('logoAtual').innerHTML='<img src="'+cfg.logo_url+'" style="width:100%;max-height:150px;object-fit:contain;background:#2563eb;border-radius:8px"><p style="text-align:center;color:green">✅ Logotipo atual</p>';
+  } else {
+    document.getElementById('logoAtual').innerHTML='<p>Sem logotipo ainda.</p>';
+  }
+  // BANNERS
   try{banners=typeof cfg.banners==='string'?JSON.parse(cfg.banners||'[]'):(cfg.banners||[])}catch(e){banners=[]}
   if(!banners.length && cfg.banner_url) banners=[cfg.banner_url];
   mostrarBanners();
 }
+async function subirLogo(){
+  const f=document.getElementById('fileLogo').files[0];
+  if(!f) return alert('Escolhe o logotipo primeiro');
+  const nome='logo_'+Date.now()+'_'+f.name.replace(/\s/g,'_');
+  const up=await db.storage.from('produtos').upload(nome,f,{upsert:true});
+  if(up.error) return alert('Erro: '+up.error.message);
+  const pub=db.storage.from('produtos').getPublicUrl(nome);
+  const url=pub.data.publicUrl;
+  const r=await db.from('loja_config').update({logo_url:url}).eq('id',1);
+  if(r.error) return alert('Erro: '+r.error.message);
+  alert('✅ Logotipo guardado!'); carregarTudo();
+}
 async function guardar(){
   const r=await db.from('loja_config').update({banners:JSON.stringify(banners), banner_url:banners[0]||null}).eq('id',1);
   if(r.error) return alert('Erro: '+r.error.message);
-  mostrarBanners(); alert('✅ Guardado! Vai ver na loja.');
+  mostrarBanners(); alert('✅ Guardado!');
 }
 async function adicionarBanner(){
   const v=document.getElementById('urlBanner').value.trim();
@@ -72,5 +98,5 @@ async function carregarProdutos(){
   const p=r.data||[];
   document.getElementById('listaProdutos').innerHTML=p.map(x=>'<div class="item"><img src="'+(x.imagem||x.imagem_url||'')+'"><div style="flex:1"><b>'+x.nome+'</b><br>'+Number(x.preco).toLocaleString()+' Kz</div></div>').join('')||'Sem produtos';
 }
-carregarBanners(); carregarProdutos();
+carregarTudo(); carregarProdutos();
 </script></body></html>

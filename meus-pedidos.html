@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meu Código - Casa Nova</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<style>body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}.topo{background:#0b5ed7;color:#fff;padding:14px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}.topo a{color:#fff;text-decoration:none;font-weight:700}.card{background:#fff;padding:16px;border-radius:12px;margin-top:12px;text-align:center}.codigo{font-size:32px;font-weight:900;letter-spacing:3px;color:#0b5ed7;background:#eef2ff;padding:14px;border-radius:12px;border:2px dashed #0b5ed7;margin:12px 0}.aviso{background:#fef3c7;color:#92400e;padding:12px;border-radius:10px;font-size:14px}.btn{border:0;padding:13px;border-radius:10px;width:100%;font-weight:700;cursor:pointer;margin-top:8px}.btn-azul{background:#0b5ed7;color:#fff}.btn-verde{background:#16a34a;color:#fff}.btn-cinza{background:#e5e7eb}</style></head>
+<body>
+<div class="topo"><b>🏠 Casa Nova</b><a href="index.html">← Loja</a></div>
+<div id="lista"></div>
+<script>
+function carregar(){
+  let meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]');
+  let agora = Date.now();
+  // APAGA AUTOMATICAMENTE DEPOIS DE 24H
+  let validos = meus.filter(m => (agora - m.criado_em) < 24*60*60*1000);
+  if(validos.length !== meus.length){
+    localStorage.setItem('meus_codigos', JSON.stringify(validos));
+    meus = validos;
+  }
+  if(!meus.length){
+    document.getElementById('lista').innerHTML = `<div class="card"><div style="font-size:40px">🔖</div><h3>Sem código ativo</h3><p style="color:#666">O teu código fica aqui só por 24 horas depois do pedido.<br>Depois apaga sozinho. Aponta num caderno para não perderes!</p><button class="btn btn-azul" onclick="location.href='index.html'">🛍️ Fazer Novo Pedido</button></div>`;
+    return;
+  }
+  document.getElementById('lista').innerHTML = meus.map(m=>{
+    let restante = 24*60*60*1000 - (agora - m.criado_em);
+    let horas = Math.floor(restante/3600000);
+    let mins = Math.floor((restante%3600000)/60000);
+    return `<div class="card">
+      <div>🧾 TEU CÓDIGO DE PEDIDO</div>
+      <div class="codigo">${m.codigo}</div>
+      <div class="aviso">⚠️ <b>APONT A ESTE CÓDIGO NUM CADERNO!</b><br>Ele apaga sozinho em <b>${horas}h ${mins}min</b>.<br>Depois das 24h não vais conseguir ver mais aqui.</div>
+      <div style="text-align:left;margin-top:12px;font-size:14px">
+        👤 <b>${m.nome||''}</b><br>📧 ${m.email||''}<br>🛒 ${m.itens||''}<br>
+        💰 Total: <b>${Number(m.total||0).toLocaleString()} Kz</b><br>
+        ✅ Pagaste: <b>${Number(m.pago||0).toLocaleString()} Kz</b><br>
+        ❗ Falta pagar: <b style="color:#dc2626">${Number(m.falta||0).toLocaleString()} Kz</b>
+      </div>
+      <button class="btn btn-verde" onclick="copiar('${m.codigo}')">📋 Copiar Código</button>
+      <button class="btn btn-cinza" onclick="location.href='index.html'">Continuar a Comprar</button>
+    </div>`;
+  }).join('');
+}
+function copiar(c){ navigator.clipboard.writeText(c); alert('✅ Código copiado: '+c+'\nAponta num sítio seguro!'); }
+carregar(); setInterval(carregar, 60000);
+</script></body></html>

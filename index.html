@@ -45,11 +45,9 @@ a { color: inherit; text-decoration: none; }
 .modal-preco { color: #0b5ed7; font-weight: 800; font-size: 1.3rem; margin: 10px 0; }
 .modal-desc { color: #333; font-size: .95rem; line-height: 1.5; margin-bottom: 14px; }
 .fechar { float: right; font-size: 1.4rem; border: 0; background: #f0f0f0; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
-/* BOTÃO FLUTUANTE */
 .btn-cadastro-flutuante{position:fixed;bottom:20px;right:16px;z-index:999;width:62px;height:62px;border-radius:50%;background:#16a34a;color:#fff;font-size:30px;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.35);border:3px solid #fff;cursor:pointer}
 .btn-cadastro-flutuante:active{transform:scale(.92)}
 .btn-cadastro-flutuante small{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap}
-/* MODAL DO CLIENTE */
 #modalCliente{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:flex-end;justify-content:center}
 #modalCliente.aberto{display:flex}
 .modal-cliente-box{background:#fff;width:100%;max-width:500px;border-radius:22px 22px 0 0;padding:20px;max-height:88vh;overflow-y:auto;text-align:center}
@@ -91,8 +89,6 @@ a { color: inherit; text-decoration: none; }
     <button class="btn" style="width:100%" id="dBtn">Adicionar ao Carrinho</button>
   </div>
 </div>
-
-<!-- MODAL PERFIL DO CLIENTE -->
 <div id="modalCliente" onclick="if(event.target.id==='modalCliente') fecharCliente()">
   <div class="modal-cliente-box">
     <button class="fechar" onclick="fecharCliente()">✕</button>
@@ -104,7 +100,6 @@ a { color: inherit; text-decoration: none; }
     <button class="btn-fechar-cliente" onclick="fecharCliente()">Continuar a Comprar</button>
   </div>
 </div>
-
 <script>
 let todosProdutos = [];
 let categoriaAtual = 'Todas';
@@ -125,7 +120,17 @@ function mostrarToast(msg){
   let t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('mostrar');
-  setTimeout(()=>t.classList.remove('mostrar'), 2000);
+  setTimeout(()=>t.classList.remove('mostrar'), 2500);
+}
+// ===== VERIFICA SE ESTÁ CADASTRADO =====
+function clienteLogado(){
+  try{ return JSON.parse(localStorage.getItem('cliente_casa_nova') || 'null'); }catch(e){ return null; }
+}
+function exigirCadastro(){
+  if(clienteLogado()) return true;
+  mostrarToast('⚠️ Precisas te cadastrar para comprar!');
+  setTimeout(()=>{ location.href='cadastro.html'; }, 1200);
+  return false;
 }
 function atualizarCarrinho(){
   let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
@@ -134,6 +139,7 @@ function atualizarCarrinho(){
 }
 function adicionarCarrinho(id, event){
   if(event) event.stopPropagation();
+  if(!exigirCadastro()) return;
   let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
   let achou = carrinho.find(i=>i.id==id);
   if(achou) achou.qtd = (achou.qtd||1)+1;
@@ -181,7 +187,6 @@ function mostrarProdutos(lista){
     </div>
   `).join('');
 }
-// ===== LÓGICA DO CLIENTE / BOTÃO FLUTUANTE =====
 function saudacaoPorHora(){
   let h = new Date().getHours();
   if(h >= 0 && h < 12) return 'Bom dia';
@@ -206,9 +211,11 @@ function fecharCliente(){ document.getElementById('modalCliente').classList.remo
 function sairCliente(){
   if(!confirm('Queres mesmo sair da tua conta?')) return;
   localStorage.removeItem('cliente_casa_nova');
+  localStorage.removeItem('carrinho');
   fecharCliente();
   mostrarToast('👋 Saíste da tua conta. Até já!');
   document.querySelector('.btn-cadastro-flutuante small').textContent = 'Cadastrar';
+  atualizarCarrinho();
 }
 (function(){
   let c = localStorage.getItem('cliente_casa_nova');
@@ -257,9 +264,6 @@ carregarLoja();
   <a href="sobre.html" style="color:#2563eb;font-weight:800;text-decoration:none;font-size:16px">🏠 Sobre a Nossa Loja →</a>
   <p style="color:#666;font-size:13px;margin:6px 0 0">Conhece quem somos, a nossa visão e contactos</p>
 </div>
-
-<!-- BOTÃO FLUTUANTE - AGORA ABRE PERFIL SE JÁ ESTIVER LOGADO -->
 <a class="btn-cadastro-flutuante" onclick="abrirCliente()">👤<small>Cadastrar</small></a>
-
 </body>
 </html>

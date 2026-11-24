@@ -135,7 +135,7 @@ h1{font-size:1.4rem;margin-bottom:12px}
     <div class="box-ref">
       <div style="font-size:13px;opacity:.8">✅ PAGAMENTO CONFIRMADO</div>
       <div style="font-size:13px;opacity:.8;margin-top:6px">TUA REFERÊNCIA - GUARDA BEM, É ÚNICA</div>
-      <b id="codigoRef">CN-000000</b>
+      <b id="codigoRef">---</b>
       <div style="font-size:12px;opacity:.8">⚠️ Aponta! Fica visível só 24h em Meus Códigos, depois apaga.</div>
     </div>
   </div>
@@ -166,6 +166,7 @@ let comprovativoNome = '';
 let comprovativoTipo = '';
 let pedidoJaConfirmado = false;
 let codigoJaGerado = '';
+// CORRIGIDO: NÃO gera código ao abrir a página. Só gera DEPOIS de confirmar.
 function gerarCodigo(){
   if(codigoJaGerado) { codigoRef = codigoJaGerado; return codigoRef; }
   codigoRef = 'CN-' + Math.floor(100000 + Math.random()*900000);
@@ -174,7 +175,7 @@ function gerarCodigo(){
   if(el) el.textContent = codigoRef;
   return codigoRef;
 }
-gerarCodigo();
+// NÃO chama gerarCodigo() aqui - antes chamava e mostrava o código no modal
 function bloquearPedido(){
   pedidoJaConfirmado = true;
   document.getElementById('btnFinalizar').disabled = true;
@@ -325,7 +326,8 @@ function abrirLimpar(){ document.getElementById('modalLimpar').classList.add('ab
 function fecharLimpar(){ document.getElementById('modalLimpar').classList.remove('aberto'); }
 function confirmarLimpar(){
   fecharLimpar();
-  pedidoJaConfirmado = false; codigoJaGerado = ''; comprovativoData = null; comprovativoNome = '';
+  pedidoJaConfirmado = false; codigoJaGerado = ''; codigoRef = ''; comprovativoData = null; comprovativoNome = '';
+  document.getElementById('codigoRef').textContent = '---';
   document.getElementById('btnFinalizar').disabled = false;
   document.getElementById('btnFinalizar').textContent = '✅ Confirmar Pedido e Receber Código';
   document.getElementById('checkPago').disabled = false; document.getElementById('checkPago').checked = false;
@@ -336,11 +338,10 @@ function confirmarLimpar(){
   document.getElementById('nomeFicheiro').style.display = 'none';
   document.getElementById('avisoUnico').style.display = 'none';
   document.getElementById('boxCodigo').style.display = 'none';
-  gerarCodigo();
   setCarrinho([]); renderizar(); mostrarToast('🗑️ Carrinho limpo - podes começar um NOVO pedido');
 }
 function finalizar(){
-  if(pedidoJaConfirmado){ mostrarToast('🔒 Já confirmaste! Teu código é ' + codigoRef); return; }
+  if(pedidoJaConfirmado){ mostrarToast('🔒 Já confirmaste!'); return; }
   let carrinho = getCarrinho(); let erro = document.getElementById('erroForm'); erro.style.display='none';
   if(!carrinho.length){ mostrarToast('🛒 Carrinho vazio'); return; }
   let nome = document.getElementById('nome').value.trim();
@@ -365,13 +366,16 @@ function finalizar(){
   }
   let total = carrinho.reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
   let aPagar = modoEntrega==='entrega' ? Math.round(total/2) : total;
-  document.getElementById('textoFinalizar').textContent = `Pagaste ${aPagar.toLocaleString()} Kz • Vais receber o código ÚNICO ${codigoRef} • Vais ser levado para o WhatsApp e para Meus Códigos.`;
+  // CORRIGIDO: modal NÃO mostra o código, só diz que vai receber
+  document.getElementById('textoFinalizar').textContent = `Pagaste ${aPagar.toLocaleString()} Kz • Vais receber o teu código ÚNICO depois de confirmar • Vais ser levado para o WhatsApp e para Meus Códigos.`;
   document.getElementById('modalFinalizar').classList.add('aberto');
 }
 function fecharFinalizar(){ document.getElementById('modalFinalizar').classList.remove('aberto'); }
 async function confirmarFinalizar(){
-  if(pedidoJaConfirmado){ fecharFinalizar(); mostrarToast('🔒 Já confirmaste! Teu código é ' + codigoRef); return; }
+  if(pedidoJaConfirmado){ fecharFinalizar(); mostrarToast('🔒 Já confirmaste!'); return; }
   fecharFinalizar();
+  // 1º GERA O CÓDIGO SÓ AGORA, depois de confirmar - antes era gerado ao abrir a página
+  gerarCodigo();
   bloquearPedido();
   let carrinho = getCarrinho();
   let nome = document.getElementById('nome').value.trim();
@@ -389,26 +393,43 @@ async function confirmarFinalizar(){
     else if(pag.tipo==='IBAN') detalhePag=`\n🏦 IBAN: ${pag.iban||pag.conta||''} (${pag.nome||pag.titular||''})`;
   }
   let moradaTxt = modoEntrega==='entrega' ? `${document.getElementById('pais').value.trim()}, ${document.getElementById('cidade').value.trim()}, ${document.getElementById('referenciaZona').value.trim()}` : `${_lojaInfo.pais}, ${_lojaInfo.cidade}, ${_lojaInfo.bairro} (Receber na Loja)`;
-  // 1) GUARDA NO TELEFONE DO CLIENTE POR 24H - depois apaga sozinho em meus-pedidos.html
+  // 2) GUARDA NO TELEFONE DO CLIENTE POR 24H
   try{
     let meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]');
     meus.push({ codigo: codigoRef, nome: nome, email: email, telefone: telefone, itens: carrinho.map(i=>i.nome+' x'+i.qtd).join(', '), total: total, pago: pago, falta: falta, tipo: modoEntrega, criado_em: Date.now() });
     localStorage.setItem('meus_codigos', JSON.stringify(meus));
   }catch(e){}
-  // 2) GUARDA NO SUPABASE PARA O ADMIN VERIFICAR - só nome, email, o que comprou, o que pagou, o que falta + comprovativo
+  // 3) GUARDA NO SUPABASE - CORRIGIDO: só colunas simples, SEM foto gigante
+  // Antes mandava comprovativo_url com a foto toda (base64) e o insert rebentava
+  let gravouNoSupabase = false;
+  let erroSupabase = '';
   try{
     if(typeof db !== 'undefined'){
-      let payload = { nome_cliente: nome, nome: nome, email: email, telefone: telefone, morada: moradaTxt, endereco: moradaTxt, itens: JSON.stringify(carrinho), produtos: JSON.stringify(carrinho), total: total, valor_total: total, valor_pago: pago, falta_pagar: falta, codigo: codigoRef, status: 'Novo', comprovativo_url: comprovativoData || '', tipo_entrega: modoEntrega, pagamento: pagamento };
+      // Tentativa 1: com todas as colunas novas
+      let payload = { nome_cliente: nome, email: email, telefone: telefone, morada: moradaTxt, itens: JSON.stringify(carrinho), total: total, valor_pago: pago, falta_pagar: falta, codigo: codigoRef, status: 'Novo', comprovativo_url: comprovativoNome || 'comprovativo enviado', tipo_entrega: modoEntrega, pagamento: pagamento };
       let r = await db.from('pedidos').insert([payload]);
-      if(r.error){
-        // Se a tabela pedidos não tem alguma coluna nova, tenta só com o básico
-        console.log('Insert pedidos falhou, a tentar básico:', r.error.message);
+      if(!r.error){ gravouNoSupabase = true; }
+      else {
+        erroSupabase = r.error.message;
+        console.log('Insert 1 falhou:', erroSupabase);
+        // Tentativa 2: só o básico que toda a tabela pedidos tem
         let r2 = await db.from('pedidos').insert([{ nome_cliente: nome, email: email, telefone: telefone, morada: moradaTxt, itens: JSON.stringify(carrinho), total: total, codigo: codigoRef, status: 'Novo' }]);
-        if(r2.error) console.log('Insert básico também falhou:', r2.error.message);
+        if(!r2.error){ gravouNoSupabase = true; }
+        else {
+          erroSupabase = r2.error.message;
+          console.log('Insert 2 falhou:', erroSupabase);
+          // Tentativa 3: na tabela encomendas
+          let r3 = await db.from('encomendas').insert([{ nome_cliente: nome, email: email, telefone: telefone, morada: moradaTxt, itens: JSON.stringify(carrinho), total: total, codigo: codigoRef, status: 'Novo' }]);
+          if(!r3.error) gravouNoSupabase = true;
+          else erroSupabase = r3.error.message;
+        }
       }
     }
-  }catch(e){ console.log('Erro ao gravar pedido:', e); }
-  // 3) MENSAGEM WHATSAPP
+  }catch(e){ erroSupabase = e.message; console.log('Erro ao gravar pedido:', e); }
+  if(!gravouNoSupabase){
+    alert('⚠️ ATENÇÃO: O pedido NÃO foi gravado no sistema do admin!\n\nErro: ' + erroSupabase + '\n\nVai ao Supabase > SQL e corre o SQL das colunas + RLS que te dei. Depois faz um pedido novo.');
+  }
+  // 4) MENSAGEM WHATSAPP
   let msg='';
   if(modoEntrega==='entrega'){
     let pais = document.getElementById('pais').value.trim();

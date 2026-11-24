@@ -12,15 +12,29 @@
 body{font-family:system-ui,Arial,sans-serif;background:#f5f6f8;color:#1d2330}
 .topo{background:#0b5ed7;color:#fff;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;height:72px;margin-bottom:16px}
 .topo .logo{display:flex;align-items:center;gap:10px}
-.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:none}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
 .topo.tem-logo .logo-text{display:none}
 .topo b{font-size:18px}
 .topo a{color:#fff;text-decoration:none;font-weight:700;font-size:14px}
+/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
+@keyframes logoZoom{
+  0%{transform:scale(0.7) translateY(0) rotate(0deg)}
+  25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
+  40%{transform:scale(1.45) translateY(0) rotate(0deg)}
+  48%{transform:scale(1.45) translateY(0) rotate(-6deg)}
+  56%{transform:scale(1.45) translateY(0) rotate(6deg)}
+  64%{transform:scale(1.45) translateY(0) rotate(-5deg)}
+  72%{transform:scale(1.45) translateY(0) rotate(4deg)}
+  80%{transform:scale(1.25) translateY(4px) rotate(0deg)}
+  88%{transform:scale(1.08) translateY(-3px) rotate(0deg)}
+  94%{transform:scale(0.96) translateY(2px) rotate(0deg)}
+  100%{transform:scale(1) translateY(0) rotate(0deg)}
+}
 .conteudo{padding:0 16px 16px}
-h1{font-size:1.4rem;margin-bottom:4px}
-.sub{color:#666;font-size:13px;margin-bottom:16px}
+h1{background:#fff;border:2px solid #0b5ed7;border-radius:999px;padding:14px 20px;font-size:1.4rem;margin-bottom:6px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.sub{color:#666;font-size:13px;margin-bottom:16px;text-align:center}
 .card{background:#fff;border-radius:16px;padding:16px;margin-bottom:14px;max-width:600px}
-.card h3{margin-bottom:12px}
+.card h3{background:#eff6ff;border:2px solid #0b5ed7;border-radius:999px;padding:10px 14px;text-align:center;margin-bottom:12px}
 label{font-weight:700;font-size:14px;display:block;margin:12px 0 6px}
 input,select,textarea{width:100%;padding:12px;border:1px solid #cfd5df;border-radius:10px;font-size:15px}
 .btn{width:100%;padding:14px;border:0;border-radius:12px;font-weight:800;font-size:16px;cursor:pointer;margin-top:14px}
@@ -159,7 +173,6 @@ async function carregarTudo(){
       }
     }
   }catch(e){}
-  // Fallback localStorage
   if(!document.getElementById('whatsapp').value) document.getElementById('whatsapp').value = localStorage.getItem('whatsapp_loja')||'';
   if(!document.getElementById('lojaPais').value) document.getElementById('lojaPais').value = localStorage.getItem('loja_pais')||'Angola';
   if(!document.getElementById('lojaCidade').value) document.getElementById('lojaCidade').value = localStorage.getItem('loja_cidade')||'Luanda';

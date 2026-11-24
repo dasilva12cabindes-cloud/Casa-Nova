@@ -39,9 +39,14 @@
 #telaConta{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:3000;display:none;align-items:center;justify-content:center;padding:20px}#telaConta.aberto{display:flex}
 .modal-fundo{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;display:none;align-items:center;justify-content:center;padding:20px}.modal-fundo.aberto{display:flex}.modal-box{background:#fff;width:100%;max-width:360px;border-radius:24px;overflow:hidden;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.35);animation:pop .25s ease}@keyframes pop{from{transform:scale(.85) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}.modal-topo{padding:22px 18px 16px;color:#fff}.modal-topo .emoji{font-size:48px;display:block;margin-bottom:6px}.modal-topo h3{margin:0;font-size:19px}.modal-corpo{padding:18px}.modal-corpo input{width:100%;padding:14px;border:1px solid #cfd5df;border-radius:10px;margin-top:10px;font-size:15px;text-align:center;box-sizing:border-box}.modal-botoes{display:flex;gap:10px;padding:0 18px 18px}.modal-botoes button{flex:1;border:0;padding:14px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer}.btn-sim{background:#16a34a;color:#fff}.btn-nao{background:#eef2ff;color:#111}.btn-vermelho{background:#dc2626;color:#fff}
 #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:999px;font-size:14px;font-weight:700;z-index:6000;display:none;max-width:90%;text-align:center}
+#alertaTopoPedido{position:fixed;top:0;left:0;right:0;z-index:9999;background:#dc2626;color:#fff;padding:14px;text-align:center;font-weight:900;font-size:16px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:piscarAlerta 1s infinite}
+@keyframes piscarAlerta{0%,100%{background:#dc2626}50%{background:#991b1b}}
+#btnAtivarSom{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:9998;background:#16a34a;color:#fff;border:0;padding:12px 20px;border-radius:999px;font-weight:900;font-size:14px;display:none;box-shadow:0 4px 16px rgba(0,0,0,.3);cursor:pointer}
 </style></head>
 <body>
 <audio id="somNovoPedido" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+<div id="alertaTopoPedido">🔔 PEDIDO NOVO! <span id="textoAlertaTopo"></span><br><button onclick="document.getElementById('alertaTopoPedido').style.display='none';location.href='admin-pedidos.html'" style="background:#fff;color:#dc2626;border:0;padding:10px 20px;border-radius:10px;font-weight:900;margin-top:8px;cursor:pointer">VER PEDIDO 👀</button> <button onclick="document.getElementById('alertaTopoPedido').style.display='none'" style="background:rgba(255,255,255,.2);color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:900;margin-top:8px;cursor:pointer">Fechar ✕</button></div>
+<button id="btnAtivarSom" onclick="ativarSomManual()">🔔 CLICA AQUI PARA ATIVAR O SOM DOS PEDIDOS</button>
 <div id="telaLogin"><div class="login-box">
   <img id="logoLogin" class="logo-login" src="">
   <div id="iconeLogin" style="font-size:40px">🏠</div>
@@ -72,6 +77,7 @@
 </div>
 <div class="titulo">Painel do Administrador</div>
 <div class="sub">Escolhe o que queres gerir:</div>
+<div style="padding:0 14px;text-align:center"><button onclick="ativarSomManual()" style="background:#16a34a;color:#fff;border:0;padding:12px 18px;border-radius:999px;font-weight:900;cursor:pointer">🔔 ATIVAR SOM + NOTIFICAÇÕES</button><p id="statusSom" style="font-size:12px;color:#666;margin:6px 0 0">Som: desligado - clica no botão verde</p></div>
 <div id="avisoNovoPedido" style="padding:0 14px"></div>
 <div class="grid">
   <a class="card card-online" href="admin-online.html"><span id="badgeOnline" class="badge-online">0</span><span>👀</span><b>Quem Está Online Agora</b><small id="textoOnline">A carregar... • Clica para ver nomes, telefone e onde estão</small></a>
@@ -109,6 +115,7 @@ function entrarAdmin(){
     localStorage.setItem('admin_logado','sim');
     localStorage.setItem('admin_email',email);
     esconderLogin();
+    ativarSomManual();
     pedirPermissaoNotificacao();
   } else {
     erro.textContent='E-mail ou senha errada! Clica em Esqueci a senha.';
@@ -162,7 +169,7 @@ function salvarConta(){
   mostrarToast('✅ Guardado! Novo e-mail: '+email);
   fecharConta();
 }
-// ===== QUEM ESTÁ ONLINE - LIGADO COM ADMIN-ONLINE.HTML =====
+// ===== QUEM ESTÁ ONLINE =====
 async function atualizarOnline(){
   try{
     let r = await db.from('presenca').select('*').eq('online', true).order('ultima_vez',{ascending:false}).limit(50);
@@ -181,12 +188,33 @@ async function atualizarOnline(){
     }
   }catch(e){}
 }
-// ===== ALERTA PEDIDOS NOVOS - SOM + NOTIFICAÇÃO + NÚMERO =====
+// ===== 🔔 ALERTA PEDIDOS NOVOS - RETIFICADO =====
 let totalNovos = 0;
+let ultimoIdVisto = Number(localStorage.getItem('admin_ultimo_pedido_id')||0);
+let somAtivo = localStorage.getItem('admin_som_ativo')==='sim';
+let primeiraVerificacao = true;
+
 function pedirPermissaoNotificacao(){
-  if("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied"){
+  if("Notification" in window && Notification.permission === "default"){
     Notification.requestPermission();
   }
+}
+function ativarSomManual(){
+  somAtivo = true;
+  localStorage.setItem('admin_som_ativo','sim');
+  let el = document.getElementById('statusSom');
+  if(el) el.textContent = 'Som: LIGADO ✅ - Vais ouvir quando cair pedido';
+  let btn = document.getElementById('btnAtivarSom');
+  if(btn) btn.style.display='none';
+  // Desbloqueia o áudio - toca baixinho 1x para o navegador permitir depois
+  try{
+    let a = document.getElementById('somNovoPedido');
+    a.volume = 0.1; a.play().then(()=>{ a.pause(); a.currentTime=0; a.volume=1; }).catch(()=>{});
+  }catch(e){}
+  pedirPermissaoNotificacao();
+  mostrarToast('✅ Som ativado! Agora vais ouvir os pedidos');
+  // Teste rápido
+  setTimeout(()=>{ try{ let a=document.getElementById('somNovoPedido'); a.volume=1; a.play().catch(()=>{}); }catch(e){} }, 300);
 }
 function atualizarBadge(){
   let b = document.getElementById('badgePedidos');
@@ -196,13 +224,29 @@ function atualizarBadge(){
   b.textContent = totalNovos;
 }
 function tocarSom(){
-  try{ document.getElementById('somNovoPedido').play().catch(()=>{}); }catch(e){}
+  if(!somAtivo){
+    let btn = document.getElementById('btnAtivarSom');
+    if(btn) btn.style.display='block';
+    return;
+  }
+  try{
+    let a = document.getElementById('somNovoPedido');
+    a.currentTime=0; a.volume=1; a.play().catch(()=>{});
+    // Toca 3x
+    setTimeout(()=>{ try{a.currentTime=0;a.play().catch(()=>{});}catch(e){} }, 900);
+    setTimeout(()=>{ try{a.currentTime=0;a.play().catch(()=>{});}catch(e){} }, 1800);
+  }catch(e){}
+  try{ if(navigator.vibrate) navigator.vibrate([400,200,400,200,600]); }catch(e){}
 }
 function notificarNovoPedido(p){
   tocarSom();
   mostrarToast('🔔 Novo Pedido: ' + (p.codigo||''));
+  // Banner vermelho no topo que fica
+  let topo = document.getElementById('alertaTopoPedido');
+  let txt = document.getElementById('textoAlertaTopo');
+  if(topo && txt){ txt.textContent = (p.codigo||'') + ' - ' + (p.nome_cliente||p.nome||'') + ' - ' + Number(p.total||0).toLocaleString() + ' Kz'; topo.style.display='block'; }
   if("Notification" in window && Notification.permission === "granted"){
-    try{ new Notification('🔔 Novo Pedido Casa Nova', {body: 'Pedido ' + (p.codigo||'') + ' - ' + (p.nome_cliente||'') + ' - ' + Number(p.total||0).toLocaleString() + ' Kz'}); }catch(e){}
+    try{ new Notification('🔔 Novo Pedido Casa Nova', {body: 'Pedido ' + (p.codigo||'') + ' - ' + (p.nome_cliente||'') + ' - ' + Number(p.total||0).toLocaleString() + ' Kz', icon: 'https://cdn-icons-png.flaticon.com/512/609/609803.png'}); }catch(e){}
   }
   let aviso = document.getElementById('avisoNovoPedido');
   if(aviso){
@@ -215,13 +259,37 @@ function notificarNovoPedido(p){
 async function contarPedidosNovos(){
   try{
     let r = await db.from('pedidos').select('id', {count:'exact'}).eq('status','Novo');
-    if(!r.error && r.data){ totalNovos = r.data.length; atualizarBadge(); }
+    if(!r.error){ totalNovos = r.count || (r.data||[]).length; atualizarBadge(); }
+  }catch(e){}
+}
+// VERIFICAÇÃO DE SEGURANÇA - De 10 em 10 segundos, mesmo se o tempo real falhar
+async function verificarNovosPorPolling(){
+  try{
+    let r = await db.from('pedidos').select('id,codigo,nome_cliente,nome,total,created_at').order('created_at',{ascending:false}).limit(1);
+    if(!r.data || !r.data.length) return;
+    let ultimo = r.data[0];
+    if(primeiraVerificacao){
+      if(ultimoIdVisto===0) ultimoIdVisto = ultimo.id;
+      primeiraVerificacao = false;
+      localStorage.setItem('admin_ultimo_pedido_id', String(ultimoIdVisto));
+      return;
+    }
+    if(ultimo.id > ultimoIdVisto){
+      ultimoIdVisto = ultimo.id;
+      localStorage.setItem('admin_ultimo_pedido_id', String(ultimoIdVisto));
+      totalNovos++; atualizarBadge();
+      notificarNovoPedido(ultimo);
+    }
   }catch(e){}
 }
 function ligarTempoRealPedidos(){
   try{
-    db.channel('admin-novos-pedidos')
+    db.channel('admin-novos-pedidos-v2')
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'pedidos'}, payload=>{
+      // Evita duplicar com o polling
+      if(payload.new.id <= ultimoIdVisto) return;
+      ultimoIdVisto = payload.new.id;
+      localStorage.setItem('admin_ultimo_pedido_id', String(ultimoIdVisto));
       totalNovos++; atualizarBadge(); notificarNovoPedido(payload.new);
     })
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'pedidos'}, payload=>{
@@ -232,7 +300,7 @@ function ligarTempoRealPedidos(){
     .subscribe();
   }catch(e){ console.log(e); }
 }
-if(localStorage.getItem('admin_logado')==='sim'){ esconderLogin(); pedirPermissaoNotificacao(); }
+if(localStorage.getItem('admin_logado')==='sim'){ esconderLogin(); pedirPermissaoNotificacao(); if(somAtivo){ let el=document.getElementById('statusSom'); if(el) el.textContent='Som: LIGADO ✅'; } else { let b=document.getElementById('btnAtivarSom'); if(b) b.style.display='block'; } }
 else { mostrarLogin(); document.getElementById('emailAdmin').value=getConta().email; }
 async function carregarLogoTopo(){
   try{
@@ -249,6 +317,8 @@ async function carregarLogoTopo(){
 carregarLogoTopo();
 contarPedidosNovos();
 ligarTempoRealPedidos();
+verificarNovosPorPolling();
+setInterval(verificarNovosPorPolling, 10000);
 atualizarOnline();
 setInterval(atualizarOnline, 10000);
 </script>

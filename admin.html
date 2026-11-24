@@ -22,6 +22,7 @@
 .card-pagamento{border:2px solid #0b5ed7}
 .card-verificar{border:2px solid #16a34a;background:#f0fdf4}
 .card-verificar b{color:#166534}
+.card-conta{border:2px solid #f97316;background:#fff7ed}
 .btn-sair{background:#dc2626;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer;font-size:14px}
 #telaLogin{position:fixed;inset:0;background:#0b5ed7;z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
 #telaLogin.aberto{display:flex}
@@ -30,10 +31,12 @@
 .login-box input{width:100%;padding:14px;border:1px solid #cfd5df;border-radius:10px;margin-top:10px;font-size:16px;text-align:center;box-sizing:border-box}
 .login-box button{background:#0b5ed7;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;margin-top:12px;cursor:pointer}
 .link-peq{color:#0b5ed7;font-size:13px;font-weight:700;cursor:pointer;display:block;margin-top:10px}
+#telaConta{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:3000;display:none;align-items:center;justify-content:center;padding:20px}
+#telaConta.aberto{display:flex}
 </style></head>
 <body>
 <div id="telaLogin"><div class="login-box">
-  <img id="logoLogin" class="logo-login" src="" alt="Casa Nova">
+  <img id="logoLogin" class="logo-login" src="">
   <div id="iconeLogin" style="font-size:40px">🏠</div>
   <h2 style="margin:8px 0">Casa Nova - Admin</h2>
   <p style="color:#666;font-size:13px;margin:0">Entra com e-mail e senha.<br>Ficas logado até tu saíres.</p>
@@ -43,6 +46,18 @@
   <p id="erroLogin" style="color:#dc2626;font-size:13px;display:none;margin-top:8px"></p>
   <span class="link-peq" onclick="esqueciSenha()">🔑 Esqueci a senha - Criar nova senha</span>
   <a href="index.html" style="display:block;margin-top:14px;color:#0b5ed7;font-weight:700;font-size:14px">← Voltar à Loja</a>
+</div></div>
+
+<!-- TROCAR E-MAIL E SENHA DENTRO DO PAINEL -->
+<div id="telaConta"><div class="login-box">
+  <div style="font-size:36px">⚙️</div>
+  <h2 style="margin:8px 0">Minha Conta</h2>
+  <p style="color:#666;font-size:13px;margin:0">E-mail atual: <b id="emailAtual">-</b></p>
+  <input id="novoEmail" type="email" placeholder="Novo e-mail">
+  <input id="novaSenha" type="password" placeholder="Nova senha (mínimo 4)">
+  <input id="confirmarSenha" type="password" placeholder="Repetir nova senha">
+  <button onclick="salvarConta()" style="background:#16a34a">💾 Guardar Novo E-mail e Senha</button>
+  <button onclick="fecharConta()" style="background:#eee;color:#111">Fechar</button>
 </div></div>
 
 <div class="topo" id="topoSite">
@@ -61,6 +76,7 @@
   <a class="card" href="admin-vendas.html"><span>💰</span><b>Vendas</b><small>Relatório de venda diária</small></a>
   <a class="card" href="admin-clientes.html"><span>👥</span><b>Clientes Cadastrados</b><small>Ver todos os clientes</small></a>
   <a class="card card-pagamento" href="admin-pagamento.html"><span>💳</span><b>Sistema de Pagamento</b><small>Multicaixa Express, PayPay, IBAN + WhatsApp</small></a>
+  <a class="card card-conta" href="#" onclick="abrirConta();return false"><span>⚙️</span><b>Minha Conta</b><small>Trocar e-mail e senha</small></a>
 </div>
 <script>
 const EMAIL_PADRAO = 'admin@casanova.co.ao';
@@ -100,6 +116,28 @@ function sairAdmin(){
   if(!confirm('Queres mesmo sair?')) return;
   localStorage.removeItem('admin_logado');
   location.href='index.html';
+}
+// NOVO: TROCAR DENTRO DO PAINEL
+function abrirConta(){
+  let conta=getConta();
+  document.getElementById('emailAtual').textContent=conta.email;
+  document.getElementById('novoEmail').value=conta.email;
+  document.getElementById('novaSenha').value='';
+  document.getElementById('confirmarSenha').value='';
+  document.getElementById('telaConta').classList.add('aberto');
+}
+function fecharConta(){ document.getElementById('telaConta').classList.remove('aberto'); }
+function salvarConta(){
+  let email=document.getElementById('novoEmail').value.trim().toLowerCase();
+  let s1=document.getElementById('novaSenha').value.trim();
+  let s2=document.getElementById('confirmarSenha').value.trim();
+  if(!email || !email.includes('@')){ alert('Escreve um e-mail válido.'); return; }
+  if(s1.length<4){ alert('Senha tem que ter no mínimo 4 caracteres.'); return; }
+  if(s1!==s2){ alert('As senhas não são iguais! Escreve igual nos 2 campos.'); return; }
+  localStorage.setItem('conta_admin',JSON.stringify({email:email,senha:s1}));
+  localStorage.setItem('admin_email',email);
+  alert('✅ Guardado!\nNovo e-mail: '+email+'\nNova senha: '+s1+'\n\nDa próxima vez entras com estes.');
+  fecharConta();
 }
 if(localStorage.getItem('admin_logado')==='sim'){ esconderLogin(); }
 else { mostrarLogin(); document.getElementById('emailAdmin').value=getConta().email; }

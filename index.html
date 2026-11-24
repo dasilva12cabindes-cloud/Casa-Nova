@@ -70,7 +70,6 @@ input,select,textarea{font-size:16px !important}
 .banner-slide p{margin:0;font-size:13px;color:#cbd5e1}
 .banner-slide .preco{font-size:18px;font-weight:900;color:#fbbf24;margin-top:4px}
 .banner-slide button{background:#fff;color:#111;border:0;padding:8px 14px;border-radius:20px;font-weight:900;margin-top:6px;cursor:pointer}
-/* PROMOÇÃO - PREÇO ANTIGO RISCADO + % VERMELHA PEQUENA */
 .preco-antigo{color:#999;text-decoration:line-through;font-size:12px;font-weight:400;margin-right:6px}
 .desconto{color:#dc2626;font-size:11px;font-weight:800}
 .selo-promo{background:#dc2626;color:#fff;font-size:11px;font-weight:900;padding:3px 8px;border-radius:20px;display:inline-block;margin-bottom:4px}
@@ -82,6 +81,9 @@ input,select,textarea{font-size:16px !important}
 .categorias { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; }
 .chip { border: 1px solid #cfd5df; background: #fff; padding: 8px 14px; border-radius: 20px; font-size: .9rem; white-space: nowrap; cursor: pointer; }
 .chip.ativo { background: #0b5ed7; color: #fff; border-color: #0b5ed7; }
+.chip-promo{background:#dc2626 !important;color:#fff !important;border-color:#dc2626 !important;font-weight:900;animation:flutuarPromo 2s ease-in-out infinite}
+.chip-promo.ativo{background:#b91c1c !important}
+@keyframes flutuarPromo{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
 .grade { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 @media (min-width: 700px) { .grade { grid-template-columns: repeat(4, 1fr); } }
 .card { background: #fff; border-radius: 20px; padding: 10px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.08); cursor: pointer; position:relative }
@@ -152,6 +154,7 @@ input,select,textarea{font-size:16px !important}
   <input id="busca" placeholder="🔍 Pesquisar produto..." oninput="filtrar()">
   <div class="categorias" id="categorias">
     <button class="chip ativo" onclick="filtrarCategoria('Todas',this)">Todas</button>
+    <button class="chip chip-promo" onclick="filtrarCategoria('Promoção',this)">🔥 PROMOÇÃO</button>
   </div>
   <div class="grade" id="grade"><div class="aviso">A carregar produtos...</div></div>
 </div>
@@ -195,6 +198,7 @@ input,select,textarea{font-size:16px !important}
   </div>
   <div class="menu-secao">Minha Conta</div>
   <div id="menuContaArea"></div>
+  <a class="menu-item" href="promocao.html" style="background:#fef2f2;border:2px solid #dc2626;border-radius:12px;margin:10px 16px"><span>🔥</span><b>PROMOÇÃO</b> <small style="color:#dc2626;font-weight:800">Preços Baixos!</small></a>
   <a class="menu-item" href="carrinho.html"><span>🛒</span> Meu Carrinho</a>
   <a class="menu-item" href="meus-pedidos.html"><span>🔖</span> Meus Códigos / Pedidos</a>
   <div class="menu-secao">Área Detalhes</div>
@@ -259,11 +263,9 @@ input,select,textarea{font-size:16px !important}
 let todosProdutos = [];
 let categoriaAtual = 'Todas';
 let lojaCfgGlobal = {};
-// ===== PROMOÇÃO: CALCULA % AUTOMATICAMENTE =====
 function dadosPromo(p){
   let precoNovo = Number(p.preco||0);
   let precoAntigo = Number(p.preco_antigo||p.preco_antes||p.preco_original||p.preco_normal||0);
-  // Se tem desconto direto na tabela (ex: 25)
   let descDireto = Number(p.desconto||p.percentual||0);
   if(!precoAntigo && descDireto > 0 && descDireto < 90 && precoNovo){
     precoAntigo = Math.round(precoNovo / (1 - descDireto/100));
@@ -431,7 +433,7 @@ function filtrarCategoria(cat, btn){
 function filtrar(){
   let termo = document.getElementById('busca').value.toLowerCase().trim();
   let lista = todosProdutos.filter(p=>{
-    let okCat = categoriaAtual==='Todas' || categoriaAuto(p)===categoriaAtual;
+    let okCat = categoriaAtual==='Todas' || (categoriaAtual==='Promoção' ? !!dadosPromo(p) : categoriaAuto(p)===categoriaAtual);
     let okBusca = !termo || (p.nome||'').toLowerCase().includes(termo);
     return okCat && okBusca;
   });
@@ -439,7 +441,7 @@ function filtrar(){
 }
 function mostrarProdutos(lista){
   let grade = document.getElementById('grade');
-  if(!lista.length){ grade.innerHTML='<div class="aviso">Nenhum produto encontrado.</div>'; return; }
+  if(!lista.length){ grade.innerHTML = categoriaAtual==='Promoção' ? '<div class="aviso">🔥 Nenhuma promoção agora.<br>Volta mais tarde!</div>' : '<div class="aviso">Nenhum produto encontrado.</div>'; return; }
   grade.innerHTML = lista.map(p=>{
     let promo = dadosPromo(p);
     return `
@@ -607,8 +609,10 @@ async function carregarLoja(){
     todosProdutos = r2.data || [];
     todosProdutos.forEach(p => { p.categoria = categoriaAuto(p); });
     let cats = [...new Set(todosProdutos.map(p=>p.categoria))];
+    let qtdPromo = todosProdutos.filter(p=>dadosPromo(p)).length;
     document.getElementById('categorias').innerHTML =
       `<button class="chip ativo" onclick="filtrarCategoria('Todas',this)">Todas</button>` +
+      `<button class="chip chip-promo" onclick="filtrarCategoria('Promoção',this)">🔥 PROMOÇÃO (${qtdPromo})</button>` +
       cats.map(c=>`<button class="chip" onclick="filtrarCategoria('${c}',this)">${c}</button>`).join('');
     mostrarProdutos(todosProdutos);
     carregarMaisVendidos();

@@ -21,11 +21,11 @@
   <button class="btn btn-azul" onclick="verificar()">🔍 VERIFICAR PEDIDO</button>
 </div>
 
-<!-- NOVO: SE ESQUECESTE O CÓDIGO -->
+<!-- SE ESQUECESTE O CÓDIGO -->
 <div class="caixa">
   <h3 style="margin:0">😅 Esqueceste o código?</h3>
-  <p style="color:#666;font-size:13px">Procura pelo nome ou telefone do cliente, clica no pedido e ele verifica sozinho.</p>
-  <input id="buscaInput" placeholder="Ex: Cosme ou 942788931" style="text-transform:none;letter-spacing:0;text-align:left" oninput="listarPedidos()">
+  <p style="color:#666;font-size:13px">Escreve nomes ou núm. telefone do cliente, clica no pedido e ele verifica sozinho.</p>
+  <input id="buscaInput" placeholder="Escreve nomes ou núm.telefone" style="text-transform:none;letter-spacing:0;text-align:left" oninput="listarPedidos()">
   <button class="btn" style="background:#111;color:#fff" onclick="listarPedidos()">📋 VER TODOS OS PEDIDOS</button>
   <div id="listaPedidos"></div>
 </div>
@@ -35,7 +35,6 @@
 <script>
 function abrirComp(url){ document.getElementById('imgGrande').src=url; document.getElementById('visorComp').classList.add('aberto'); }
 function fecharComp(){ document.getElementById('visorComp').classList.remove('aberto'); }
-
 function getUrlComprovativo(valor){
   if(!valor) return null;
   valor = String(valor).trim();
@@ -51,8 +50,6 @@ function getUrlComprovativo(valor){
   }catch(e){}
   return null;
 }
-
-// NOVO: LISTA PEDIDOS COM CÓDIGO À MOSTRA
 async function listarPedidos(){
   let busca = document.getElementById('buscaInput').value.trim().toLowerCase();
   let div = document.getElementById('listaPedidos');
@@ -83,7 +80,6 @@ function escolherPedido(cod){
   verificar();
   window.scrollTo(0,0);
 }
-
 async function verificar(){
   let cod = document.getElementById('codigoInput').value.trim().toUpperCase();
   if(!cod){ alert('Escreve o código!'); return; }

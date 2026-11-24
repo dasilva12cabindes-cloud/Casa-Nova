@@ -8,7 +8,7 @@
 *{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6}
 .topo{background:#0b5ed7;color:#fff;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;height:72px}
 .topo .logo{display:flex;align-items:center;gap:10px}
-.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:none}
 .topo.tem-logo .logo-text{display:none}
 .topo b{font-size:19px}
 .topo a{color:#fff;text-decoration:none;font-weight:700;font-size:14px}
@@ -19,45 +19,38 @@
 .card span{font-size:38px;display:block;margin-bottom:8px}
 .card b{display:block;font-size:15px}
 .card small{color:#666;font-size:12px;line-height:1.4;display:block;margin-top:4px}
-.card:active{transform:scale(.97)}
 .card-pagamento{border:2px solid #0b5ed7}
 .card-verificar{border:2px solid #16a34a;background:#f0fdf4}
 .card-verificar b{color:#166534}
 .btn-sair{background:#dc2626;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer;font-size:14px}
-.btn-sair2{background:#eee;border:0;padding:12px;border-radius:10px;width:100%;margin-top:10px;cursor:pointer;font-weight:700}
-/* LOGIN */
 #telaLogin{position:fixed;inset:0;background:#0b5ed7;z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
 #telaLogin.aberto{display:flex}
 .login-box{background:#fff;width:100%;max-width:340px;border-radius:20px;padding:24px;text-align:center}
-.login-box input{width:100%;padding:14px;border:1px solid #cfd5df;border-radius:10px;margin-top:12px;font-size:16px;text-align:center}
+.login-box .logo-login{height:90px;width:auto;max-width:230px;object-fit:contain;display:none;margin:0 auto 8px}
+.login-box input{width:100%;padding:14px;border:1px solid #cfd5df;border-radius:10px;margin-top:10px;font-size:16px;text-align:center;box-sizing:border-box}
 .login-box button{background:#0b5ed7;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;margin-top:12px;cursor:pointer}
+.link-peq{color:#0b5ed7;font-size:13px;font-weight:700;cursor:pointer;display:block;margin-top:10px}
 </style></head>
 <body>
-
-<!-- TELA DE LOGIN - só aparece a 1ª vez -->
 <div id="telaLogin"><div class="login-box">
-  <div style="font-size:40px">🔒</div>
-  <h2 style="margin:8px 0">Admin Casa Nova</h2>
-  <p style="color:#666;font-size:13px">Escreve a tua senha para entrar.<br>Depois ficas logado até tu saíres.</p>
-  <input id="senhaAdmin" type="password" placeholder="Senha do Admin" onkeydown="if(event.key==='Enter') entrarAdmin()">
+  <img id="logoLogin" class="logo-login" src="" alt="Casa Nova">
+  <div id="iconeLogin" style="font-size:40px">🏠</div>
+  <h2 style="margin:8px 0">Casa Nova - Admin</h2>
+  <p style="color:#666;font-size:13px;margin:0">Entra com e-mail e senha.<br>Ficas logado até tu saíres.</p>
+  <input id="emailAdmin" type="email" placeholder="Teu e-mail">
+  <input id="senhaAdmin" type="password" placeholder="Tua senha" onkeydown="if(event.key==='Enter') entrarAdmin()">
   <button onclick="entrarAdmin()">Entrar</button>
-  <p id="erroLogin" style="color:#dc2626;font-size:13px;display:none;margin-top:8px">Senha errada!</p>
+  <p id="erroLogin" style="color:#dc2626;font-size:13px;display:none;margin-top:8px"></p>
+  <span class="link-peq" onclick="esqueciSenha()">🔑 Esqueci a senha - Criar nova senha</span>
   <a href="index.html" style="display:block;margin-top:14px;color:#0b5ed7;font-weight:700;font-size:14px">← Voltar à Loja</a>
 </div></div>
 
 <div class="topo" id="topoSite">
-  <div class="logo">
-    <img id="logoTopo" class="logo-img" src="">
-    <span class="logo-text"><b>🏠 Casa Nova - Admin</b></span>
-  </div>
-  <div style="display:flex;gap:8px;align-items:center">
-    <a href="index.html">Ver Loja →</a>
-    <button class="btn-sair" onclick="sairAdmin()">🚪 Sair</button>
-  </div>
+  <div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>🏠 Casa Nova - Admin</b></span></div>
+  <div style="display:flex;gap:8px;align-items:center"><a href="index.html">Ver Loja →</a><button class="btn-sair" onclick="sairAdmin()">🚪 Sair</button></div>
 </div>
 <div class="titulo">Painel do Administrador</div>
 <div class="sub">Escolhe o que queres gerir:</div>
-
 <div class="grid">
   <a class="card card-verificar" href="admin-verificar.html"><span>🔍</span><b>Verificar Comprovativo e Código</b><small>Nome, e-mail, o que comprou, o que pagou, o que falta + comprovativo</small></a>
   <a class="card" href="admin-pedidos.html"><span>📦</span><b>Pedidos</b><small>Pedidos recebidos</small></a>
@@ -69,53 +62,56 @@
   <a class="card" href="admin-clientes.html"><span>👥</span><b>Clientes Cadastrados</b><small>Ver todos os clientes</small></a>
   <a class="card card-pagamento" href="admin-pagamento.html"><span>💳</span><b>Sistema de Pagamento</b><small>Multicaixa Express, PayPay, IBAN + WhatsApp</small></a>
 </div>
-
 <script>
-// ===== FICA LOGADO ATÉ TU SAÍRES =====
-// Guarda onde estás - se atualizares, ficas na mesma página
-localStorage.setItem('ultima_pagina_admin', location.pathname);
-
-const SENHA_ADMIN = '1234'; // <-- MUDA AQUI A TUA SENHA
-
-function mostrarLogin(){
-  document.getElementById('telaLogin').classList.add('aberto');
+const EMAIL_PADRAO = 'admin@casanova.co.ao';
+const SENHA_PADRAO = '1234';
+function getConta(){
+  try{ let c=JSON.parse(localStorage.getItem('conta_admin')||'null'); if(c&&c.email&&c.senha) return c; }catch(e){}
+  return {email:EMAIL_PADRAO, senha:SENHA_PADRAO};
 }
-function esconderLogin(){
-  document.getElementById('telaLogin').classList.remove('aberto');
-}
+function mostrarLogin(){ document.getElementById('telaLogin').classList.add('aberto'); }
+function esconderLogin(){ document.getElementById('telaLogin').classList.remove('aberto'); }
 function entrarAdmin(){
-  let s = document.getElementById('senhaAdmin').value.trim();
-  if(s === SENHA_ADMIN){
-    // FICA GUARDADO - mesmo que atualizes, não pede de novo
-    localStorage.setItem('admin_logado', 'sim');
+  let email=document.getElementById('emailAdmin').value.trim().toLowerCase();
+  let senha=document.getElementById('senhaAdmin').value.trim();
+  let conta=getConta();
+  let erro=document.getElementById('erroLogin');
+  if(email===conta.email.toLowerCase() && senha===conta.senha){
+    localStorage.setItem('admin_logado','sim');
+    localStorage.setItem('admin_email',email);
     esconderLogin();
   } else {
-    document.getElementById('erroLogin').style.display = 'block';
+    erro.textContent='E-mail ou senha errada! Clica em Esqueci a senha.';
+    erro.style.display='block';
   }
 }
-function sairAdmin(){
-  if(!confirm('Queres mesmo sair do Admin?')) return;
-  // SÓ SAI QUANDO TU CLICAS EM SAIR
-  localStorage.removeItem('admin_logado');
-  location.href = 'index.html';
-}
-
-// AO ABRIR A PÁGINA: se já estava logado, entra direto
-if(localStorage.getItem('admin_logado') === 'sim'){
+function esqueciSenha(){
+  let email=document.getElementById('emailAdmin').value.trim().toLowerCase();
+  if(!email){ alert('Escreve primeiro o teu e-mail em cima.'); return; }
+  let nova=prompt('Escreve a tua NOVA senha para '+email);
+  if(!nova||nova.length<4){ alert('Senha tem que ter no mínimo 4 caracteres.'); return; }
+  localStorage.setItem('conta_admin',JSON.stringify({email:email,senha:nova}));
+  localStorage.setItem('admin_logado','sim');
+  localStorage.setItem('admin_email',email);
+  alert('✅ Nova senha criada!\nE-mail: '+email+'\nSenha: '+nova+'\nAponta num caderno!');
   esconderLogin();
-} else {
-  mostrarLogin();
 }
-
+function sairAdmin(){
+  if(!confirm('Queres mesmo sair?')) return;
+  localStorage.removeItem('admin_logado');
+  location.href='index.html';
+}
+if(localStorage.getItem('admin_logado')==='sim'){ esconderLogin(); }
+else { mostrarLogin(); document.getElementById('emailAdmin').value=getConta().email; }
 async function carregarLogoTopo(){
   try{
-    let r = await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();
-    let logo = r.data?.logo_url;
+    let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();
+    let logo=r.data?.logo_url;
     if(logo){
-      let img = document.getElementById('logoTopo');
-      img.src = logo;
-      img.style.display = 'block';
+      let img=document.getElementById('logoTopo'); img.src=logo; img.style.display='block';
       document.getElementById('topoSite').classList.add('tem-logo');
+      let ll=document.getElementById('logoLogin'); ll.src=logo; ll.style.display='block';
+      document.getElementById('iconeLogin').style.display='none';
     }
   }catch(e){}
 }

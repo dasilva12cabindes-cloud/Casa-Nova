@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clientes - Admin - Casa Nova</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
+.topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}
+.topo .logo{display:flex;align-items:center;gap:8px}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none}
+.topo.tem-logo .logo-text{display:none}
+.topo a{color:#fff;text-decoration:none;font-weight:700}
+.caixa{background:#fff;padding:14px;border-radius:12px;margin-top:12px}
+input{width:100%;padding:11px;border:1px solid #cfd5df;border-radius:8px;font-size:15px;margin-bottom:10px}
+.card-cli{background:#fff;padding:12px;border-radius:12px;margin-top:10px;display:flex;gap:10px;align-items:center}
+.avatar{width:48px;height:48px;border-radius:50%;background:#0b5ed7;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.btn-azul{background:#0b5ed7;color:#fff;border:0;padding:9px 14px;border-radius:8px;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-vermelho{background:#dc2626;color:#fff;border:0;padding:9px 12px;border-radius:8px;cursor:pointer}
+.btn-verde{background:#16a34a;color:#fff;border:0;padding:10px;border-radius:8px;font-weight:700;width:100%;cursor:pointer}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:none;align-items:flex-end;justify-content:center}
+#modal.aberto{display:flex}
+.modal-box{background:#fff;width:100%;max-width:500px;border-radius:22px 22px 0 0;padding:18px;max-height:88vh;overflow-y:auto}
+.linha{padding:10px 0;border-bottom:1px solid #eee;font-size:15px}
+.linha b{color:#333}
+#toast{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:14px 18px;border-radius:14px;z-index:9999;font-weight:700;max-width:92%;text-align:center;transition:.35s;opacity:0;pointer-events:none}
+#toast.mostrar{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.sucesso{background:#16a34a}
+#toast.erro{background:#dc2626}
+</style></head>
+<body>
+<div id="toast"></div>
+<div class="topo" id="topoSite"><div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>Casa Nova</b></span></div><a href="admin.html">← Voltar</a></div>
+
+<div class="caixa"><h3 style="margin:0">👥 Clientes Cadastrados</h3><p style="color:#666;font-size:13px"><span id="total">0</span> clientes</p>
+<input id="busca" placeholder="🔍 Pesquisar por nome, email ou telefone..." oninput="carregar()">
+<div id="lista"></div></div>
+
+<div id="modal" onclick="if(event.target.id==='modal') fechar()"><div class="modal-box">
+<button onclick="fechar()" style="float:right;border:0;background:#eee;width:32px;height:32px;border-radius:50%;cursor:pointer">✕</button>
+<h3 style="margin:0">👤 Detalhes do Cliente</h3><div id="detalhe"></div>
+<button class="btn-verde" id="btnWpp" style="margin-top:12px">💬 Falar no WhatsApp</button>
+</div></div>
+
+<script>
+let toastTimer, todos=[];
+function aviso(m,t){let x=document.getElementById('toast');x.textContent=m;x.className='mostrar '+(t||'sucesso');clearTimeout(toastTimer);toastTimer=setTimeout(()=>x.className='',3000);}
+async function carregarLogoTopo(){try{let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();let l=r.data?.logo_url;if(l){let i=document.getElementById('logoTopo');i.src=l;i.style.display='block';document.getElementById('topoSite').classList.add('tem-logo');}}catch(e){}}
+async function carregar(){
+  let r=await db.from('clientes').select('*').order('id',{ascending:false});
+  if(r.error) return document.getElementById('lista').innerHTML='<p style="color:red">❌ '+r.error.message+'<br><br>Vai ao Supabase > SQL e cria a tabela clientes.</p>';
+  todos=r.data||[];
+  let termo=document.getElementById('busca').value.toLowerCase();
+  let lista=todos.filter(c=>((c.nome_cliente||c.nome||'')+' '+(c.email||'')+' '+(c.telefone||'')).toLowerCase().includes(termo));
+  document.getElementById('total').textContent=todos.length;
+  document.getElementById('lista').innerHTML=lista.length?lista.map(c=>{
+    let nome=c.nome_cliente||c.nome||'Sem nome';
+    let inicial=nome.charAt(0).toUpperCase();
+    return `<div class="card-cli"><div class="avatar">${inicial}</div><div style="flex:1"><b>${nome}</b><br><small>${c.email||'-'}</small><br><small>📞 ${c.telefone||'-'}</small></div><button class="btn-azul" onclick="verDetalhe(${c.id})">👁️ Detalhe</button></div>`;
+  }).join(''):'<p>Nenhum cliente encontrado.</p>';
+}
+function verDetalhe(id){
+  let c=todos.find(x=>x.id==id); if(!c) return;
+  document.getElementById('detalhe').innerHTML=`
+  <div class="linha">👤 <b>Nome:</b> ${c.nome_cliente||c.nome||'-'}</div>
+  <div class="linha">📧 <b>Email:</b> ${c.email||'-'}</div>
+  <div class="linha">📞 <b>Telefone:</b> ${c.telefone||'-'}</div>
+  <div class="linha">📍 <b>Morada:</b> ${c.morada||'-'}</div>
+  <div class="linha">📅 <b>Cadastrado em:</b> ${c.created_at?new Date(c.created_at).toLocaleString('pt-PT'):'-'}</div>`;
+  let num=(c.telefone||'').replace(/\D/g,'');
+  document.getElementById('btnWpp').onclick=()=>{ if(num) window.open('https://wa.me/'+num+'?text=Olá '+encodeURIComponent(c.nome_cliente||'')); };
+  document.getElementById('modal').classList.add('aberto');
+}
+function fechar(){document.getElementById('modal').classList.remove('aberto');}
+carregarLogoTopo(); carregar();
+</script></body></html>

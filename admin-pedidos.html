@@ -10,7 +10,6 @@
 .topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
 .topo.tem-logo .logo-text{display:none}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
-/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
 @keyframes logoZoom{
   0%{transform:scale(0.7) translateY(0) rotate(0deg)}
   25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
@@ -42,6 +41,11 @@ select{padding:10px;border:1px solid #cfd5df;border-radius:8px;width:100%;font-s
 #toast.mostrar{transform:translateX(-50%) translateY(0);opacity:1}
 #toast.sucesso{background:#16a34a}
 #toast.erro{background:#dc2626}
+/* MODAL CONFIRMAR COM CÓDIGO */
+.modal-fundo{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:5000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-fundo.aberto{display:flex}
+.modal-box{background:#fff;width:100%;max-width:360px;border-radius:20px;padding:22px;text-align:center}
+.modal-box input{width:100%;padding:14px;border:2px solid #0b5ed7;border-radius:10px;margin:12px 0;font-size:18px;text-align:center;font-weight:800;letter-spacing:2px;text-transform:uppercase;box-sizing:border-box}
 </style></head>
 <body>
 <div id="toast"></div>
@@ -50,6 +54,7 @@ select{padding:10px;border:1px solid #cfd5df;border-radius:8px;width:100%;font-s
 <div class="caixa">
 <h3>📦 Pedidos Recebidos</h3>
 <p style="color:#666;font-size:13px;text-align:center">Aqui aparecem todos os pedidos que os clientes fazem no carrinho.</p>
+<div id="contadorNovos" style="background:#fef3c7;border:2px solid #f59e0b;border-radius:12px;padding:12px;text-align:center;font-weight:800;margin:10px 0;display:none">🆕 Pedidos Novos: <span id="numNovos">0</span> - Aguarda confirmar com código</div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
 <button class="btn btn-verde" onclick="location.href='admin-vendas.html'">💰 Ver Vendas do Dia →</button>
 <button class="btn btn-azul" onclick="carregar()">🔄 Atualizar</button>
@@ -58,8 +63,21 @@ select{padding:10px;border:1px solid #cfd5df;border-radius:8px;width:100%;font-s
 
 <div id="lista"><p style="text-align:center;color:#888">A carregar pedidos...</p></div>
 
+<!-- MODAL CONFIRMAR COM CÓDIGO -->
+<div id="modalCodigo" class="modal-fundo" onclick="if(event.target.id==='modalCodigo') fecharModalCodigo()"><div class="modal-box">
+<div style="font-size:40px">🔖</div>
+<h3 style="margin:8px 0">Confirmar com Código</h3>
+<p style="color:#666;font-size:13px;margin:0">Pedido: <b id="codigoPedidoModal">-</b><br>Escreve o código do pedido para aceitar. Só fica aceite se o código estiver certo.</p>
+<input id="inputCodigoConfirmar" placeholder="CN-XXXXXX">
+<p id="erroCodigo" style="color:#dc2626;font-size:13px;display:none"></p>
+<button class="btn btn-verde" onclick="confirmarComCodigo()">✅ Confirmar e Aceitar Automático</button>
+<button class="btn btn-cinza" style="margin-top:8px" onclick="fecharModalCodigo()">Cancelar</button>
+</div></div>
+
 <script>
 let toastTimer;
+let pedidoParaConfirmar = null;
+let listaAtual = [];
 function aviso(msg,tipo){let t=document.getElementById('toast');t.textContent=msg;t.className='mostrar '+(tipo||'sucesso');clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='';},3000);}
 async function carregarLogoTopo(){
   try{let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();let logo=r.data?.logo_url;if(logo){let img=document.getElementById('logoTopo');img.src=logo;img.style.display='block';document.getElementById('topoSite').classList.add('tem-logo');}}catch(e){}
@@ -71,6 +89,13 @@ function badge(status){
   if(s.includes('cancel')) return '<span class="badge badge-cancelado">❌ Cancelado</span>';
   return '<span class="badge badge-novo">🆕 Novo</span>';
 }
+function atualizarContador(){
+  let novos = listaAtual.filter(p=> (p.status||p.estado||'Novo') === 'Novo').length;
+  let c = document.getElementById('contadorNovos');
+  let n = document.getElementById('numNovos');
+  if(n) n.textContent = novos;
+  if(c) c.style.display = novos > 0 ? 'block' : 'none';
+}
 async function carregar(){
   let lista=[]; let tabela='pedidos';
   let r=await db.from('pedidos').select('*').order('created_at',{ascending:false});
@@ -79,15 +104,16 @@ async function carregar(){
     if(!r2.error){ lista=r2.data||[]; tabela='encomendas'; }
     else { document.getElementById('lista').innerHTML='<div class="caixa" style="text-align:center">Ainda não tens pedidos.<br><small style="color:#888">Quando um cliente fizer pedido no carrinho, aparece aqui.</small></div>'; return; }
   } else lista=r.data||[];
-
+  listaAtual = lista;
+  atualizarContador();
   if(!lista.length){ document.getElementById('lista').innerHTML='<div class="caixa" style="text-align:center">Nenhum pedido ainda.</div>'; return; }
-
   document.getElementById('lista').innerHTML=lista.map(p=>{
     let nome=p.nome_cliente||p.cliente_nome||p.nome||'Cliente';
     let tel=p.telefone||p.whatsapp||'';
     let morada=p.morada||p.endereco||p.localizacao||'';
     let valor=Number(p.total||p.valor_total||p.preco_total||0).toLocaleString();
     let status=p.status||p.estado||'Novo';
+    let codigo=p.codigo||'';
     let data=(p.created_at||'').slice(0,10).split('-').reverse().join('/')+' '+(p.created_at||'').slice(11,16);
     let itens='';
     try{
@@ -97,14 +123,19 @@ async function carregar(){
       else if(it) itens=it;
     }catch(e){}
     let waMsg=encodeURIComponent('Olá '+nome+', recebemos o teu pedido na Casa Nova de '+valor+' Kz. Obrigado!');
+    let isNovo = status === 'Novo';
     return `<div class="card-pedido">
       <div style="display:flex;justify-content:space-between"><b>${nome}</b>${badge(status)}</div>
       <div style="color:#666;font-size:13px;margin:4px 0">${data} • ${tel}<br>${morada}</div>
-      <div style="font-size:14px">${itens}</div>
+      ${codigo ? `<div style="background:#fef3c7;border:1px dashed #f59e0b;border-radius:8px;padding:8px;text-align:center;margin:6px 0">🔖 <b>Código: ${codigo}</b></div>` : ''}
+      ${isNovo ? `<div style="background:#fff7ed;border:1px solid #f97316;border-radius:8px;padding:8px;font-size:13px;text-align:center">📰 <b>NOVO PEDIDO - Aguarda confirmação com código</b></div>` : ''}
+      <div style="font-size:14px;margin-top:6px">${itens}</div>
       <div style="font-weight:800;color:#0b5ed7;margin:8px 0">Total: ${valor} Kz</div>
-      <select onchange="mudarStatus(${p.id},this.value,'${tabela}')">
+      ${isNovo ? `<button class="btn btn-laranja" onclick="abrirModalCodigo(${p.id},'${codigo}')">🔥 Colocar em Preparação - Confirmar com Código</button>` : ''}
+      <select onchange="mudarStatus(${p.id},this.value,'${tabela}')" style="margin-top:8px">
         <option value="Novo" ${status==='Novo'?'selected':''}>🆕 Novo</option>
-        <option value="Aceite" ${status==='Aceite'?'selected':''}>🟡 Aceite / A Preparar</option>
+        <option value="Em Preparação" ${status==='Em Preparação'?'selected':''}>🔥 Em Preparação / Aceite</option>
+        <option value="Aceite" ${status==='Aceite'?'selected':''}>🟡 Aceite</option>
         <option value="Entregue" ${status==='Entregue'?'selected':''}>✅ Entregue</option>
         <option value="Cancelado" ${status==='Cancelado'?'selected':''}>❌ Cancelado</option>
       </select>
@@ -112,7 +143,46 @@ async function carregar(){
     </div>`;
   }).join('');
 }
+function abrirModalCodigo(id, codigo){
+  pedidoParaConfirmar = {id: id, codigo: codigo};
+  document.getElementById('codigoPedidoModal').textContent = codigo || '(sem código)';
+  document.getElementById('inputCodigoConfirmar').value = '';
+  document.getElementById('erroCodigo').style.display = 'none';
+  document.getElementById('modalCodigo').classList.add('aberto');
+  setTimeout(()=>document.getElementById('inputCodigoConfirmar').focus(), 200);
+}
+function fecharModalCodigo(){ document.getElementById('modalCodigo').classList.remove('aberto'); pedidoParaConfirmar = null; }
+async function confirmarComCodigo(){
+  if(!pedidoParaConfirmar) return;
+  let digitado = document.getElementById('inputCodigoConfirmar').value.trim().toUpperCase();
+  let certo = (pedidoParaConfirmar.codigo||'').toUpperCase();
+  if(!digitado){ document.getElementById('erroCodigo').textContent = '⚠️ Escreve o código!'; document.getElementById('erroCodigo').style.display='block'; return; }
+  if(digitado !== certo){
+    document.getElementById('erroCodigo').textContent = '❌ Código errado! Não foi aceite. Tenta de novo.';
+    document.getElementById('erroCodigo').style.display='block';
+    return;
+  }
+  // Código certo -> Aceite automático + Em Preparação
+  let r = await db.from('pedidos').update({status:'Em Preparação'}).eq('id', pedidoParaConfirmar.id);
+  if(r.error){
+    let r2 = await db.from('pedidos').update({estado:'Em Preparação'}).eq('id', pedidoParaConfirmar.id);
+    if(r2.error){ aviso('❌ '+r2.error.message,'erro'); return; }
+  }
+  fecharModalCodigo();
+  aviso('✅ Pedido '+certo+' aceite automaticamente! Foi para Preparação.');
+  // Baixa o número na hora
+  listaAtual = listaAtual.map(p=> p.id===pedidoParaConfirmar.id ? {...p, status:'Em Preparação'} : p);
+  atualizarContador();
+  carregar();
+}
 async function mudarStatus(id,status,tabela){
+  // Se for para Em Preparação a partir de Novo, tem que passar pelo código
+  let p = listaAtual.find(x=>x.id==id);
+  if(p && (p.status||p.estado||'Novo')==='Novo' && status==='Em Preparação'){
+    abrirModalCodigo(id, p.codigo||'');
+    carregar();
+    return;
+  }
   let r = await db.from(tabela).update({status: status}).eq('id', id);
   if(!r.error){ aviso('✅ Pedido atualizado para: '+status); carregar(); return; }
   if(r.error.message.includes('status') || r.error.message.includes('column')){

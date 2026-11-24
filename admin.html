@@ -15,14 +15,21 @@
 .titulo{padding:16px 14px 4px;font-size:22px;font-weight:800}
 .sub{padding:0 14px 12px;color:#666;font-size:14px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px}
-.card{background:#fff;border-radius:16px;padding:20px 12px;text-align:center;text-decoration:none;color:#111;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.card{background:#fff;border-radius:16px;padding:20px 12px;text-align:center;text-decoration:none;color:#111;box-shadow:0 2px 8px rgba(0,0,0,.06);border:2px solid #e5e7eb}
 .card span{font-size:38px;display:block;margin-bottom:8px}
 .card b{display:block;font-size:15px}
 .card small{color:#666;font-size:12px;line-height:1.4;display:block;margin-top:4px}
-.card-pagamento{border:2px solid #0b5ed7}
+.card-pagamento{border:2px solid #1e3a8a;background:#eff6ff}
 .card-verificar{border:2px solid #16a34a;background:#f0fdf4}
 .card-verificar b{color:#166534}
 .card-conta{border:2px solid #f97316;background:#fff7ed}
+.card-pedidos{border:2px solid #6b7280;background:#f9fafb}
+.card-logo{border:2px solid #eab308;background:#fefce8}
+.card-sobre{border:2px solid #dc2626;background:#fef2f2}
+.card-categorias{border:2px solid #0b5ed7;background:#eff6ff}
+.card-produtos{border:2px solid #ec4899;background:#fdf2f8}
+.card-vendas{border:2px solid #f59e0b;background:#fffbeb}
+.card-clientes{border:2px solid #06b6d4;background:#ecfeff}
 .btn-sair{background:#dc2626;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer;font-size:14px}
 #telaLogin{position:fixed;inset:0;background:#0b5ed7;z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
 #telaLogin.aberto{display:flex}
@@ -67,13 +74,13 @@
 <div class="sub">Escolhe o que queres gerir:</div>
 <div class="grid">
   <a class="card card-verificar" href="admin-verificar.html"><span>🔍</span><b>Verificar Comprovativo e Código</b><small>Nome, e-mail, o que comprou, o que pagou, o que falta + comprovativo</small></a>
-  <a class="card" href="admin-pedidos.html"><span>📦</span><b>Pedidos</b><small>Pedidos recebidos</small></a>
-  <a class="card" href="admin-logo.html"><span>🖼️</span><b>Logotipo & Banner</b><small>Logo da loja + publicidade</small></a>
-  <a class="card" href="admin-sobre.html"><span>🏠</span><b>Sobre a Minha Loja</b><small>Sobre, visão, missão</small></a>
-  <a class="card" href="admin-categorias.html"><span>📂</span><b>Categorias & Produtos</b><small>Adicionar / Editar</small></a>
-  <a class="card" href="admin-produtos.html"><span>🛍️</span><b>Produtos</b><small>Todos os produtos da loja</small></a>
-  <a class="card" href="admin-vendas.html"><span>💰</span><b>Vendas</b><small>Relatório de venda diária</small></a>
-  <a class="card" href="admin-clientes.html"><span>👥</span><b>Clientes Cadastrados</b><small>Ver todos os clientes</small></a>
+  <a class="card card-pedidos" href="admin-pedidos.html"><span>📦</span><b>Pedidos</b><small>Pedidos recebidos</small></a>
+  <a class="card card-logo" href="admin-logo.html"><span>🖼️</span><b>Logotipo & Banner</b><small>Logo da loja + publicidade</small></a>
+  <a class="card card-sobre" href="admin-sobre.html"><span>🏠</span><b>Sobre a Minha Loja</b><small>Sobre, visão, missão</small></a>
+  <a class="card card-categorias" href="admin-categorias.html"><span>📂</span><b>Categorias & Produtos</b><small>Adicionar / Editar</small></a>
+  <a class="card card-produtos" href="admin-produtos.html"><span>🛍️</span><b>Produtos</b><small>Todos os produtos da loja</small></a>
+  <a class="card card-vendas" href="admin-vendas.html"><span>💰</span><b>Vendas</b><small>Relatório de venda diária</small></a>
+  <a class="card card-clientes" href="admin-clientes.html"><span>👥</span><b>Clientes Cadastrados</b><small>Ver todos os clientes</small></a>
   <a class="card card-pagamento" href="admin-pagamento.html"><span>💳</span><b>Sistema de Pagamento</b><small>Multicaixa Express, PayPay, IBAN + WhatsApp</small></a>
   <a class="card card-conta" href="#" onclick="abrirConta();return false"><span>⚙️</span><b>Minha Conta</b><small>Trocar e-mail e senha</small></a>
 </div>
@@ -111,7 +118,6 @@ function esqueciSenha(){
   alert('✅ Nova senha criada!\nE-mail: '+email+'\nSenha: '+nova);
   esconderLogin();
 }
-// RETIFICADO: SAIR VOLTA PARA O LOGIN, NÃO VAI PARA A LOJA
 function sairAdmin(){
   if(!confirm('Queres mesmo sair do Admin?')) return;
   localStorage.removeItem('admin_logado');

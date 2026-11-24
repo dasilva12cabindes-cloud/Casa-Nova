@@ -29,9 +29,12 @@ body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
 .btn-sair{background:#dc2626;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer}
 .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-top:10px;line-height:1.7;font-size:14px}
 .msg-prep{background:#dcfce7;border:2px solid #16a34a;padding:14px;border-radius:12px;text-align:center;margin-top:12px;font-weight:800}
+.msg-recebido{background:#e0e7ff;border:2px solid #4338ca;padding:14px;border-radius:12px;text-align:center;margin-top:12px;font-weight:800}
+.msg-entregue{background:#dcfce7;border:2px solid #16a34a;padding:14px;border-radius:12px;text-align:center;margin-top:12px;font-weight:800}
 .badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700}
 .badge-novo{background:#dbeafe;color:#1e40af}
 .badge-prep{background:#fef3c7;color:#92400e}
+.badge-recebido{background:#e0e7ff;color:#3730a3}
 .badge-entregue{background:#dcfce7;color:#166534}
 </style></head>
 <body>
@@ -57,18 +60,35 @@ function sairCliente(){
 let statusPorCodigo = {};
 function badgeStatus(status){
   let s=(status||'Novo').toLowerCase();
-  if(s.includes('entregue')) return '<span class="badge badge-entregue">✅ Entregue</span>';
-  if(s.includes('prepar')||s.includes('aceite')) return '<span class="badge badge-prep">🔥 Em Preparação</span>';
+  if(s.includes('entregue')) return '<span class="badge badge-entregue">✅ Entregue - Fatura recebida</span>';
+  if(s.includes('recebido')) return '<span class="badge badge-recebido">💙 Recebido - Pagamento Recebido</span>';
+  if(s.includes('prepar')||s.includes('aceite')) return '<span class="badge badge-prep">🔥 Em Preparação / Aceite</span>';
   return '<span class="badge badge-novo">🆕 Novo - Aguarda resposta</span>';
 }
-function mostrarMensagemPreparacao(codigo){
+function mostrarMensagem(status, codigo){
   let area = document.getElementById('areaMensagemPreparacao');
-  area.innerHTML = `<div class="msg-prep">✅ Teu pedido ${codigo} foi colocado em Preparação!<br><small style="font-weight:400">A loja já está a preparar. Esta mensagem some em 5 minutos depois de abrires.</small><br><small id="contagemMsg">Some em 05:00</small></div>`;
-  // Notificação na barra do cliente
-  if("Notification" in window && Notification.permission === "granted"){
-    try{ new Notification('✅ Casa Nova', {body: 'Teu pedido '+codigo+' foi colocado em Preparação!'}); }catch(e){}
+  let texto = '';
+  let classe = 'msg-prep';
+  let tituloBarra = '';
+  if(status === 'Recebido'){
+    classe = 'msg-recebido';
+    texto = `💙 Recebemos o teu pagamento - Pedido ${codigo}<br><small style="font-weight:400">Pagaste 100%. Só falta vires com o código para levantares e levares a fatura.</small>`;
+    tituloBarra = 'Recebemos o teu pagamento - Pedido '+codigo;
+  } else if(status === 'Em Preparação' || status === 'Aceite'){
+    classe = 'msg-prep';
+    texto = `🔥 Teu pedido ${codigo} está em Preparação / Aceite!<br><small style="font-weight:400">A loja já está a preparar. Esta mensagem some em 5 minutos depois de abrires.</small>`;
+    tituloBarra = 'Teu pedido '+codigo+' está em Preparação / Aceite!';
+  } else if(status === 'Entregue'){
+    classe = 'msg-entregue';
+    texto = `✅ Teu pedido ${codigo} foi Entregue!<br><small style="font-weight:400">Obrigado! Recebeste a tua fatura.</small>`;
+    tituloBarra = 'Teu pedido '+codigo+' foi Entregue!';
+  } else {
+    return;
   }
-  // Some em 5 min depois de abrir / ver
+  area.innerHTML = `<div class="${classe}">${texto}<br><small id="contagemMsg">Some em 05:00</small></div>`;
+  if("Notification" in window && Notification.permission === "granted"){
+    try{ new Notification('✅ Casa Nova', {body: tituloBarra}); }catch(e){}
+  }
   let fim = Date.now() + 5*60*1000;
   let timer = setInterval(()=>{
     let falta = fim - Date.now();
@@ -104,12 +124,10 @@ function renderizar(){
     </div>
   `}).join('');
 }
-// Ouvir em tempo real se o pedido foi para Preparação
 function ligarTempoReal(){
   try{
     let meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]');
     if(!meus.length) return;
-    // Pedir permissão para notificação na barra
     if("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied"){
       Notification.requestPermission();
     }
@@ -119,12 +137,11 @@ function ligarTempoReal(){
         let novo = payload.new.status || payload.new.estado || '';
         statusPorCodigo[m.codigo] = novo;
         renderizar();
-        if(novo === 'Em Preparação' || novo === 'Aceite'){
-          mostrarMensagemPreparacao(m.codigo);
+        if(novo === 'Recebido' || novo === 'Em Preparação' || novo === 'Aceite' || novo === 'Entregue'){
+          mostrarMensagem(novo, m.codigo);
         }
       }).subscribe();
     });
-    // Também verifica o status atual no Supabase
     meus.forEach(async m=>{
       try{
         let r = await db.from('pedidos').select('status,estado').eq('codigo', m.codigo).maybeSingle();
@@ -132,9 +149,8 @@ function ligarTempoReal(){
           let st = r.data.status || r.data.estado || 'Novo';
           statusPorCodigo[m.codigo] = st;
           renderizar();
-          if(st === 'Em Preparação' || st === 'Aceite'){
-            // Se já está em preparação e ele abriu agora, mostra a mensagem
-            mostrarMensagemPreparacao(m.codigo);
+          if(st === 'Recebido' || st === 'Em Preparação' || st === 'Aceite' || st === 'Entregue'){
+            mostrarMensagem(st, m.codigo);
           }
         }
       }catch(e){}
@@ -147,6 +163,5 @@ async function carregarLogoTopo(){
 carregarLogoTopo();
 renderizar();
 ligarTempoReal();
-// Atualiza a contagem a cada 1 segundo para o código sumir em 5 min
 setInterval(renderizar, 1000);
 </script></body></html>

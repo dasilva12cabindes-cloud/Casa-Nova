@@ -45,10 +45,18 @@ a { color: inherit; text-decoration: none; }
 .modal-preco { color: #0b5ed7; font-weight: 800; font-size: 1.3rem; margin: 10px 0; }
 .modal-desc { color: #333; font-size: .95rem; line-height: 1.5; margin-bottom: 14px; }
 .fechar { float: right; font-size: 1.4rem; border: 0; background: #f0f0f0; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
-/* BOTÃO FLUTUANTE CADASTRO - CANTO INFERIOR DIREITO */
-.btn-cadastro-flutuante{position:fixed;bottom:20px;right:16px;z-index:999;width:62px;height:62px;border-radius:50%;background:#16a34a;color:#fff;font-size:30px;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.35);border:3px solid #fff}
+/* BOTÃO FLUTUANTE */
+.btn-cadastro-flutuante{position:fixed;bottom:20px;right:16px;z-index:999;width:62px;height:62px;border-radius:50%;background:#16a34a;color:#fff;font-size:30px;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.35);border:3px solid #fff;cursor:pointer}
 .btn-cadastro-flutuante:active{transform:scale(.92)}
 .btn-cadastro-flutuante small{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap}
+/* MODAL DO CLIENTE */
+#modalCliente{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:flex-end;justify-content:center}
+#modalCliente.aberto{display:flex}
+.modal-cliente-box{background:#fff;width:100%;max-width:500px;border-radius:22px 22px 0 0;padding:20px;max-height:88vh;overflow-y:auto;text-align:center}
+.avatar-cliente{width:80px;height:80px;border-radius:50%;background:#0b5ed7;color:#fff;display:flex;align-items:center;justify-content:center;font-size:38px;margin:0 auto 10px}
+.linha-cli{padding:10px 0;border-bottom:1px solid #eee;font-size:15px;text-align:left}
+.btn-sair{background:#dc2626;color:#fff;border:0;padding:13px;border-radius:10px;width:100%;font-weight:700;font-size:15px;cursor:pointer;margin-top:14px}
+.btn-fechar-cliente{background:#e5e7eb;border:0;padding:13px;border-radius:10px;width:100%;font-weight:700;margin-top:8px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -83,6 +91,20 @@ a { color: inherit; text-decoration: none; }
     <button class="btn" style="width:100%" id="dBtn">Adicionar ao Carrinho</button>
   </div>
 </div>
+
+<!-- MODAL PERFIL DO CLIENTE -->
+<div id="modalCliente" onclick="if(event.target.id==='modalCliente') fecharCliente()">
+  <div class="modal-cliente-box">
+    <button class="fechar" onclick="fecharCliente()">✕</button>
+    <div class="avatar-cliente" id="avatarCliente">👤</div>
+    <h2 id="saudacaoCliente" style="margin:0"></h2>
+    <p id="subSaudacao" style="color:#16a34a;font-weight:700;margin:6px 0 14px">✅ Já estás conectado na Casa Nova</p>
+    <div id="dadosCliente"></div>
+    <button class="btn-sair" onclick="sairCliente()">🚪 Sair da Loja</button>
+    <button class="btn-fechar-cliente" onclick="fecharCliente()">Continuar a Comprar</button>
+  </div>
+</div>
+
 <script>
 let todosProdutos = [];
 let categoriaAtual = 'Todas';
@@ -159,6 +181,42 @@ function mostrarProdutos(lista){
     </div>
   `).join('');
 }
+// ===== LÓGICA DO CLIENTE / BOTÃO FLUTUANTE =====
+function saudacaoPorHora(){
+  let h = new Date().getHours();
+  if(h >= 0 && h < 12) return 'Bom dia';
+  if(h >= 12 && h < 18) return 'Boa tarde';
+  return 'Boa noite';
+}
+function abrirCliente(){
+  let salvo = localStorage.getItem('cliente_casa_nova');
+  if(!salvo){ location.href='cadastro.html'; return; }
+  let c = JSON.parse(salvo);
+  let nome = c.nome || c.nome_cliente || 'Cliente';
+  document.getElementById('avatarCliente').textContent = nome.charAt(0).toUpperCase();
+  document.getElementById('saudacaoCliente').textContent = saudacaoPorHora() + ', ' + nome + '!';
+  document.getElementById('dadosCliente').innerHTML = `
+    <div class="linha-cli">👤 <b>Nome:</b> ${nome}</div>
+    <div class="linha-cli">📧 <b>Email:</b> ${c.email||'-'}</div>
+    <div class="linha-cli">📞 <b>Telefone:</b> ${c.telefone||'-'}</div>
+    <div class="linha-cli">📍 <b>Morada:</b> ${c.morada||'-'}</div>`;
+  document.getElementById('modalCliente').classList.add('aberto');
+}
+function fecharCliente(){ document.getElementById('modalCliente').classList.remove('aberto'); }
+function sairCliente(){
+  if(!confirm('Queres mesmo sair da tua conta?')) return;
+  localStorage.removeItem('cliente_casa_nova');
+  fecharCliente();
+  mostrarToast('👋 Saíste da tua conta. Até já!');
+  document.querySelector('.btn-cadastro-flutuante small').textContent = 'Cadastrar';
+}
+(function(){
+  let c = localStorage.getItem('cliente_casa_nova');
+  if(c){
+    let el = document.querySelector('.btn-cadastro-flutuante small');
+    if(el) el.textContent = JSON.parse(c).nome?.split(' ')[0] || 'Minha Conta';
+  }
+})();
 async function carregarLoja(){
   let cfg = {};
   try{
@@ -200,8 +258,8 @@ carregarLoja();
   <p style="color:#666;font-size:13px;margin:6px 0 0">Conhece quem somos, a nossa visão e contactos</p>
 </div>
 
-<!-- BOTÃO FLUTUANTE CADASTRO -->
-<a href="cadastro.html" class="btn-cadastro-flutuante">👤<small>Cadastrar</small></a>
+<!-- BOTÃO FLUTUANTE - AGORA ABRE PERFIL SE JÁ ESTIVER LOGADO -->
+<a class="btn-cadastro-flutuante" onclick="abrirCliente()">👤<small>Cadastrar</small></a>
 
 </body>
 </html>

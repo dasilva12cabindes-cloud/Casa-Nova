@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sistema de Pagamento - Admin Casa Nova</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,Arial,sans-serif;background:#f5f6f8;padding:16px;color:#1d2330}
+.topo{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.topo a{color:#0b5ed7;font-weight:700;text-decoration:none}
+h1{font-size:1.4rem;margin-bottom:4px}
+.sub{color:#666;font-size:13px;margin-bottom:16px}
+.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:14px;max-width:600px}
+.card h3{margin-bottom:12px}
+label{font-weight:700;font-size:14px;display:block;margin:12px 0 6px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #cfd5df;border-radius:10px;font-size:15px}
+.btn{width:100%;padding:14px;border:0;border-radius:12px;font-weight:800;font-size:16px;cursor:pointer;margin-top:14px}
+.btn-azul{background:#0b5ed7;color:#fff}
+.btn-verde{background:#16a34a;color:#fff}
+.btn-vermelho{background:#fee2e2;color:#dc2626;padding:8px 12px;border:0;border-radius:8px;cursor:pointer;font-size:13px}
+.metodo{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-bottom:10px}
+.metodo b{display:block;font-size:15px}
+.metodo small{color:#666;line-height:1.6;display:block}
+.ativo{color:#16a34a;font-weight:700;font-size:13px}
+.inativo{color:#999;font-weight:700;font-size:13px}
+.sucesso{background:#dcfce7;color:#15803d;padding:10px;border-radius:10px;font-size:13px;margin-top:10px;display:none}
+.erro{background:#fee2e2;color:#dc2626;padding:10px;border-radius:10px;font-size:13px;margin-top:10px;display:none}
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:30px;font-size:14px;z-index:200;opacity:0;transition:.3s;pointer-events:none}
+#toast.mostrar{opacity:1}
+</style>
+</head>
+<body>
+<div class="topo"><a href="admin.html">⬅ Voltar ao Admin</a></div>
+<h1>💳 Sistema de Pagamento</h1>
+<p class="sub">Adiciona as formas de pagamento e o WhatsApp da loja.</p>
+
+<!-- WHATSAPP -->
+<div class="card">
+  <h3>📱 Número do WhatsApp da Loja</h3>
+  <p style="color:#666;font-size:13px">É este número que o cliente usa para falar contigo e para onde vão os pedidos.</p>
+  <label>Número do WhatsApp *</label>
+  <input id="whatsapp" placeholder="Ex: 942788931">
+  <div id="msgWhatsBox" class="sucesso"></div>
+  <button class="btn btn-verde" onclick="salvarWhatsApp()">💾 Guardar WhatsApp</button>
+</div>
+
+<!-- ADICIONAR PAGAMENTO -->
+<div class="card">
+  <h3>➕ Adicionar Forma de Pagamento</h3>
+  <label>Tipo de Pagamento *</label>
+  <select id="tipoPagamento" onchange="mostrarCampos()">
+    <option value="Multicaixa Express">Multicaixa Express</option>
+    <option value="PayPay">PayPay</option>
+    <option value="IBAN">IBAN / Transferência</option>
+    <option value="Dinheiro na Entrega">Dinheiro na Entrega</option>
+  </select>
+
+  <!-- MULTICAIXA EXPRESS -->
+  <div id="camposMulticaixa">
+    <label>📞 Número de Telefone *</label>
+    <input id="mcTelefone" placeholder="Ex: 942788931">
+    <label>👤 Nome *</label>
+    <input id="mcNome" placeholder="Ex: Cosme Bento">
+  </div>
+
+  <!-- PAYPAY -->
+  <div id="camposPayPay" style="display:none">
+    <label>🔢 Número de Referência *</label>
+    <input id="ppReferencia" placeholder="Ex: 123456789">
+    <label>📞 Número de Telefone *</label>
+    <input id="ppTelefone" placeholder="Ex: 942788931">
+  </div>
+
+  <!-- IBAN -->
+  <div id="camposIban" style="display:none">
+    <label>🏦 Número do IBAN *</label>
+    <input id="ibanNumero" placeholder="Ex: AO06 0040 0000 0000 0000 0000 0">
+    <label>👤 Nome *</label>
+    <input id="ibanNome" placeholder="Ex: Cosme Bento">
+  </div>
+
+  <label>Ativo?</label>
+  <select id="ativoPagamento">
+    <option value="true">✅ Ativo - aparece para o cliente</option>
+    <option value="false">❌ Inativo - escondido</option>
+  </select>
+
+  <div id="msgPag" class="sucesso"></div>
+  <div id="erroPag" class="erro"></div>
+  <button class="btn btn-azul" onclick="adicionarPagamento()">➕ Adicionar Pagamento</button>
+</div>
+
+<!-- LISTA -->
+<div class="card">
+  <h3>💳 Pagamentos Cadastrados</h3>
+  <div id="listaPagamentos"><p style="color:#999">A carregar...</p></div>
+</div>
+
+<div id="toast"></div>
+<script>
+function toast(m){ let t=document.getElementById('toast'); t.textContent=m; t.classList.add('mostrar'); setTimeout(()=>t.classList.remove('mostrar'),2500); }
+function getPagamentos(){ try{ return JSON.parse(localStorage.getItem('pagamentos_casa_nova')||'[]'); }catch(e){ return []; } }
+function setPagamentos(l){ localStorage.setItem('pagamentos_casa_nova', JSON.stringify(l)); }
+
+function mostrarCampos(){
+  let tipo = document.getElementById('tipoPagamento').value;
+  document.getElementById('camposMulticaixa').style.display = tipo==='Multicaixa Express' ? 'block' : 'none';
+  document.getElementById('camposPayPay').style.display = tipo==='PayPay' ? 'block' : 'none';
+  document.getElementById('camposIban').style.display = tipo==='IBAN' ? 'block' : 'none';
+  if(tipo==='Dinheiro na Entrega'){
+    document.getElementById('camposMulticaixa').style.display='none';
+  }
+}
+
+async function carregarTudo(){
+  try{
+    if(typeof db !== 'undefined'){
+      let r = await db.from('loja_config').select('*').eq('id',1).maybeSingle();
+      if(r.data && r.data.whatsapp) document.getElementById('whatsapp').value = r.data.whatsapp;
+    }
+  }catch(e){}
+  if(!document.getElementById('whatsapp').value){
+    document.getElementById('whatsapp').value = localStorage.getItem('whatsapp_loja')||'';
+  }
+  renderPagamentos();
+}
+
+async function salvarWhatsApp(){
+  let num = document.getElementById('whatsapp').value.trim().replace(/\s/g,'');
+  let box = document.getElementById('msgWhatsBox');
+  box.style.display='none';
+  if(!num){ toast('⚠️ Escreve o número do WhatsApp!'); return; }
+  if(num.length===9 && num.startsWith('9')) num = '244'+num;
+  localStorage.setItem('whatsapp_loja', num);
+  try{ if(typeof db !== 'undefined') await db.from('loja_config').upsert({id:1, whatsapp:num}, {onConflict:'id'}); }catch(e){}
+  box.textContent='✅ WhatsApp guardado: '+num; box.style.display='block';
+  toast('✅ WhatsApp guardado!');
+}
+
+async function adicionarPagamento(){
+  let tipo = document.getElementById('tipoPagamento').value;
+  let ativo = document.getElementById('ativoPagamento').value==='true';
+  let erro = document.getElementById('erroPag');
+  let ok = document.getElementById('msgPag');
+  erro.style.display='none'; ok.style.display='none';
+  let novo = {id: Date.now(), tipo, ativo};
+
+  if(tipo==='Multicaixa Express'){
+    novo.telefone = document.getElementById('mcTelefone').value.trim();
+    novo.nome = document.getElementById('mcNome').value.trim();
+    if(!novo.telefone || !novo.nome){ erro.textContent='Preenche o Número de Telefone e o Nome!'; erro.style.display='block'; return; }
+    novo.conta = novo.telefone;
+    novo.titular = novo.nome;
+  }
+  else if(tipo==='PayPay'){
+    novo.referencia = document.getElementById('ppReferencia').value.trim();
+    novo.telefone = document.getElementById('ppTelefone').value.trim();
+    if(!novo.referencia || !novo.telefone){ erro.textContent='Preenche o Número de Referência e o Número de Telefone!'; erro.style.display='block'; return; }
+    novo.conta = novo.referencia;
+  }
+  else if(tipo==='IBAN'){
+    novo.iban = document.getElementById('ibanNumero').value.trim();
+    novo.nome = document.getElementById('ibanNome').value.trim();
+    if(!novo.iban || !novo.nome){ erro.textContent='Preenche o Número do IBAN e o Nome!'; erro.style.display='block'; return; }
+    novo.conta = novo.iban;
+    novo.titular = novo.nome;
+  }
+  else if(tipo==='Dinheiro na Entrega'){
+    novo.nome = 'Dinheiro na Entrega';
+    novo.conta = 'Paga na entrega';
+  }
+
+  let lista = getPagamentos();
+  lista.push(novo); setPagamentos(lista);
+  try{
+    if(typeof db !== 'undefined'){
+      await db.from('pagamentos').insert([{tipo: novo.tipo, nome: novo.nome||'', telefone: novo.telefone||'', referencia: novo.referencia||'', iban: novo.iban||'', conta: novo.conta||'', ativo}]);
+    }
+  }catch(e){ console.log(e.message); }
+
+  // Limpa
+  ['mcTelefone','mcNome','ppReferencia','ppTelefone','ibanNumero','ibanNome'].forEach(id=>{ document.getElementById(id).value=''; });
+  ok.textContent='✅ Pagamento adicionado!'; ok.style.display='block';
+  renderPagamentos(); toast('✅ Pagamento adicionado!');
+}
+
+function renderPagamentos(){
+  let lista = getPagamentos();
+  let div = document.getElementById('listaPagamentos');
+  if(!lista.length){ div.innerHTML = '<p style="color:#999">Nenhum pagamento ainda. Adiciona em cima.</p>'; return; }
+  div.innerHTML = lista.map((p,i)=>{
+    let detalhe = '';
+    if(p.tipo==='Multicaixa Express') detalhe = `📞 Telefone: <b>${p.telefone}</b><br>👤 Nome: <b>${p.nome}</b>`;
+    else if(p.tipo==='PayPay') detalhe = `🔢 Referência: <b>${p.referencia}</b><br>📞 Telefone: <b>${p.telefone}</b>`;
+    else if(p.tipo==='IBAN') detalhe = `🏦 IBAN: <b>${p.iban}</b><br>👤 Nome: <b>${p.nome}</b>`;
+    else detalhe = `💵 Paga na entrega`;
+    return `<div class="metodo">
+      <b>${p.tipo==='IBAN' ? '🏦 IBAN' : p.tipo==='PayPay' ? '💸 PayPay' : p.tipo==='Multicaixa Express' ? '📱 Multicaixa Express' : '💵 '+p.tipo}</b>
+      <small>${detalhe}</small>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+        <span class="${p.ativo?'ativo':'inativo'}">${p.ativo?'✅ Ativo':'❌ Inativo'}</span>
+        <button class="btn-vermelho" style="background:#eef2ff;color:#0b5ed7" onclick="trocarAtivo(${i})">${p.ativo?'Desativar':'Ativar'}</button>
+        <button class="btn-vermelho" onclick="removerPagamento(${i})">Remover</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function removerPagamento(i){ let l=getPagamentos(); l.splice(i,1); setPagamentos(l); renderPagamentos(); toast('🗑️ Removido'); }
+function trocarAtivo(i){ let l=getPagamentos(); l[i].ativo=!l[i].ativo; setPagamentos(l); renderPagamentos(); }
+mostrarCampos(); carregarTudo();
+</script>
+</body>
+</html>

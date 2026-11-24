@@ -150,9 +150,13 @@ input,select,textarea{font-size:16px !important}
 #modalInstalar{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;display:none;align-items:flex-end;justify-content:center}
 #modalInstalar.aberto{display:flex}
 .modal-instalar-box{background:#fff;width:100%;max-width:500px;border-radius:22px 22px 0 0;padding:20px;text-align:center}
+#alertaCliente{position:fixed;top:0;left:0;right:0;z-index:9999;background:#16a34a;color:#fff;padding:16px;text-align:center;font-weight:900;font-size:16px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:piscarCliente 1s infinite}
+@keyframes piscarCliente{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
 </style>
 </head>
 <body>
+<div id="alertaCliente"><span id="textoAlertaCliente"></span><br><button onclick="document.getElementById('alertaCliente').style.display='none'" style="background:#fff;color:#16a34a;border:0;padding:10px 20px;border-radius:10px;font-weight:900;margin-top:8px;cursor:pointer">OK, ENTENDI ✅</button> <button onclick="document.getElementById('alertaCliente').style.display='none';location.href='meus-pedidos.html'" style="background:rgba(255,255,255,.25);color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:900;margin-top:8px;cursor:pointer">VER MEU PEDIDO →</button></div>
+<audio id="somCliente" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 <div id="telaProcessando">
   <div class="teto-box">
     <svg viewBox="0 0 200 110" width="100%" height="110">
@@ -349,7 +353,6 @@ function linkLimpoLoja(){
 function partilharLoja(){
   let link = linkLimpoLoja();
   let msg = '🏠 Casa Nova - Eletrodomésticos em Cabinda! Vê as promoções aqui: ' + link;
-  // CORRIGIDO: só copia 1 vez, sem usar navigator.share que duplica no iPhone
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(msg).then(()=>{
       mostrarToast('✅ Link copiado! Cola no WhatsApp - vem só 1 link');
@@ -790,6 +793,95 @@ async function carregarLoja(){
   atualizarCarrinho();
 }
 carregarLoja();
+</script>
+<script>
+// 🔔 NOTIFICAÇÃO DO CLIENTE - RETIFICADO - AVISA QUANDO O ADMIN MUDA O STATUS
+let statusAnterioresCliente = {};
+try{ statusAnterioresCliente = JSON.parse(localStorage.getItem('casanova_status_pedidos')||'{}'); }catch(e){ statusAnterioresCliente={}; }
+let primeiraVezCliente = true;
+if("Notification" in window && Notification.permission === "default"){
+  setTimeout(()=>{ try{ Notification.requestPermission(); }catch(e){} }, 3000);
+}
+function tocarSomCliente(){
+  try{
+    let a = document.getElementById('somCliente');
+    if(a){ a.currentTime=0; a.volume=1; a.play().catch(()=>{}); setTimeout(()=>{ try{a.currentTime=0;a.play().catch(()=>{});}catch(e){} }, 800); }
+  }catch(e){}
+  try{ if(navigator.vibrate) navigator.vibrate([300,200,300,200,500]); }catch(e){}
+}
+function mostrarAlertaCliente(msg, cor){
+  let box = document.getElementById('alertaCliente');
+  let txt = document.getElementById('textoAlertaCliente');
+  if(!box || !txt) return;
+  box.style.background = cor || '#16a34a';
+  txt.textContent = msg;
+  box.style.display = 'block';
+  tocarSomCliente();
+  if("Notification" in window && Notification.permission === "granted"){
+    try{ new Notification('🏠 Casa Nova', {body: msg, icon: 'https://cdn-icons-png.flaticon.com/512/609/609803.png'}); }catch(e){}
+  }
+  setTimeout(()=>{ box.style.display='none'; }, 20000);
+}
+function textoStatusCliente(status){
+  let s = (status||'').toLowerCase();
+  if(s.includes('aprov') || s.includes('confirm')) return {msg:'✅ O TEU PEDIDO FOI APROVADO! Prepara o pagamento / levantamento 🎉', cor:'#16a34a'};
+  if(s.includes('prepar')) return {msg:'👨‍🍳 O TEU PEDIDO ESTÁ A SER PREPARADO!', cor:'#0b5ed7'};
+  if(s.includes('caminho') || s.includes('enviado') || s.includes('entrega') || s.includes('saiu')) return {msg:'🛵 O TEU PEDIDO ESTÁ A CAMINHO! Fica atento!', cor:'#f59e0b'};
+  if(s.includes('entregue') || s.includes('conclu')) return {msg:'🎉 PEDIDO ENTREGUE! Obrigado por comprar na Casa Nova!', cor:'#16a34a'};
+  if(s.includes('rejeit') || s.includes('cancel')) return {msg:'❌ O TEU PEDIDO FOI CANCELADO. Fala connosco no WhatsApp.', cor:'#dc2626'};
+  if(s.includes('novo')) return {msg:'📦 Recebemos o teu pedido! Estamos a verificar...', cor:'#0b5ed7'};
+  return null;
+}
+async function verificarStatusCliente(){
+  try{
+    let c = null; try{ c = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
+    let meuTel = c ? (c.telefone||c.whatsapp||'') : '';
+    let meusCodigos = [];
+    try{ meusCodigos = JSON.parse(localStorage.getItem('meus_pedidos')||'[]'); }catch(e){}
+    try{ let v = JSON.parse(localStorage.getItem('meus_codigos')||'[]'); meusCodigos = [...meusCodigos, ...v]; }catch(e){}
+    // Também guarda códigos que o cliente verificou
+    try{ let ult = localStorage.getItem('ultimo_pedido_codigo'); if(ult) meusCodigos.push(ult); }catch(e){}
+    let r = await db.from('pedidos').select('id,codigo,status,telefone,whatsapp,nome_cliente,cliente_telefone').order('created_at',{ascending:false}).limit(20);
+    if(!r.data) return;
+    let meus = r.data.filter(p=>{
+      if(meusCodigos.includes(p.codigo)) return true;
+      if(meuTel){
+        let telLimpo = String(meuTel).replace(/\D/g,'').slice(-9);
+        let telPedido = String(p.telefone||p.whatsapp||p.cliente_telefone||'').replace(/\D/g,'').slice(-9);
+        if(telLimpo && telPedido && telLimpo===telPedido) return true;
+      }
+      return false;
+    });
+    // Se não achou por telefone, usa o último pedido do telefone guardado na verificação
+    if(!meus.length && r.data.length && !meuTel){
+      // Sem login, não mostra para não confundir com pedido de outro
+      primeiraVezCliente = false;
+      return;
+    }
+    meus.forEach(p=>{
+      let antigo = statusAnterioresCliente[p.codigo];
+      if(primeiraVezCliente){
+        statusAnterioresCliente[p.codigo] = p.status;
+        return;
+      }
+      if(antigo && antigo !== p.status){
+        statusAnterioresCliente[p.codigo] = p.status;
+        localStorage.setItem('casanova_status_pedidos', JSON.stringify(statusAnterioresCliente));
+        let t = textoStatusCliente(p.status);
+        if(t) mostrarAlertaCliente('Pedido ' + p.codigo + ' - ' + t.msg, t.cor);
+      } else if(!antigo){
+        statusAnterioresCliente[p.codigo] = p.status;
+      }
+    });
+    localStorage.setItem('casanova_status_pedidos', JSON.stringify(statusAnterioresCliente));
+    primeiraVezCliente = false;
+  }catch(e){ console.log(e); }
+}
+document.addEventListener('click', function(){
+  try{ let a=document.getElementById('somCliente'); if(a){ a.volume=0.1; a.play().then(()=>{a.pause();a.currentTime=0;a.volume=1;}).catch(()=>{}); } }catch(e){}
+}, {once:true});
+verificarStatusCliente();
+setInterval(verificarStatusCliente, 10000);
 </script>
 <a class="btn-cadastro-flutuante" onclick="abrirCliente()">👤<small>Cadastrar</small></a>
 </body>

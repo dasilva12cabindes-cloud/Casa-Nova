@@ -297,6 +297,26 @@ input,select,textarea{font-size:16px !important}
   </div>
 </div>
 <script>
+// 🟢 SISTEMA ONLINE - QUEM ESTÁ NA LOJA
+let meuIdOnline = localStorage.getItem('meu_id_online') || 'v_'+Math.random().toString(36).slice(2,10);
+localStorage.setItem('meu_id_online', meuIdOnline);
+let paginaAtualOnline = 'Loja Principal';
+async function marcarOnline(pagina){
+  if(pagina) paginaAtualOnline = pagina;
+  try{
+    let c=null; try{ c=JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
+    let nome = c ? (c.nome||c.nome_cliente||'Cliente') : 'Visitante';
+    let telefone = c ? (c.telefone||c.whatsapp||'') : '';
+    await db.from('presenca').upsert({cliente_id: meuIdOnline, nome: nome, telefone: telefone, pagina: paginaAtualOnline, ultima_vez: new Date().toISOString(), online: true, saiu_em: null}, {onConflict:'cliente_id'});
+  }catch(e){}
+}
+async function marcarSaiu(){
+  try{ await db.from('presenca').update({online:false, saiu_em: new Date().toISOString()}).eq('cliente_id', meuIdOnline); }catch(e){}
+}
+marcarOnline('Loja Principal');
+setInterval(()=> marcarOnline(), 15000);
+window.addEventListener('beforeunload', ()=>{ marcarSaiu(); });
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) marcarSaiu(); else marcarOnline(); });
 // 📱 PWA - INSTALAR APP
 let promptInstalar=null;
 window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); promptInstalar=e; document.getElementById('bannerInstalar').classList.add('mostrar'); });
@@ -509,6 +529,7 @@ function adicionarCarrinho(id, event){
   if(!exigirCadastro()) return;
   let p = todosProdutos.find(x=>x.id==id);
   if(!p) return;
+  marcarOnline('🛒 Carrinho - '+p.nome);
   let promo = dadosPromo(p);
   let precoFinal = promo ? promo.novo : (promo===null && p.preco_antigo ? Number(p.preco_antigo) : Number(p.preco));
   if(!promo && p.preco_antigo && p.promo_fim){
@@ -532,6 +553,7 @@ function adicionarCarrinho(id, event){
 function abrirDetalhe(id){
   let p = todosProdutos.find(x=>x.id==id);
   if(!p) return;
+  marcarOnline('👀 A ver: '+p.nome);
   document.getElementById('dImg').src = p.imagem || p.imagem_url || 'https://via.placeholder.com/300';
   document.getElementById('dNome').textContent = p.nome;
   document.getElementById('dCat').textContent = categoriaAuto(p);
@@ -553,7 +575,7 @@ function abrirDetalhe(id){
   document.getElementById('dBtn').onclick = (e)=>{ adicionarCarrinho(p.id, e); fecharDetalhe(); };
   document.getElementById('modal').classList.add('aberto');
 }
-function fecharDetalhe(){ document.getElementById('modal').classList.remove('aberto'); }
+function fecharDetalhe(){ document.getElementById('modal').classList.remove('aberto'); marcarOnline('Loja Principal'); }
 function filtrarCategoria(cat, btn){
   categoriaAtual = cat;
   document.querySelectorAll('.chip').forEach(c=>c.classList.remove('ativo'));
@@ -618,6 +640,7 @@ function fecharCliente(){ document.getElementById('modalCliente').classList.remo
 function abrirConfirmarSair(){ document.getElementById('modalSair').classList.add('aberto'); }
 function fecharConfirmarSair(){ document.getElementById('modalSair').classList.remove('aberto'); }
 function confirmarSair(){
+  marcarSaiu();
   localStorage.removeItem('cliente_casa_nova');
   localStorage.removeItem('carrinho');
   fecharConfirmarSair();

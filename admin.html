@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Admin - Casa Nova</title>
+<link rel="manifest" href="manifest-admin.json">
+<meta name="theme-color" content="#0b5ed7">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Admin Casa Nova">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/609/609803.png">
+<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/609/609803.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
@@ -42,6 +50,7 @@
 #alertaTopoPedido{position:fixed;top:0;left:0;right:0;z-index:9999;background:#dc2626;color:#fff;padding:14px;text-align:center;font-weight:900;font-size:16px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:piscarAlerta 1s infinite}
 @keyframes piscarAlerta{0%,100%{background:#dc2626}50%{background:#991b1b}}
 #btnAtivarSom{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:9998;background:#16a34a;color:#fff;border:0;padding:12px 20px;border-radius:999px;font-weight:900;font-size:14px;display:none;box-shadow:0 4px 16px rgba(0,0,0,.3);cursor:pointer}
+#btnInstalarAdmin{display:none;background:#0b5ed7;color:#fff;border:2px solid #fff;padding:12px 18px;border-radius:999px;font-weight:900;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25);margin-top:8px}
 </style></head>
 <body>
 <audio id="somNovoPedido" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
@@ -77,7 +86,7 @@
 </div>
 <div class="titulo">Painel do Administrador</div>
 <div class="sub">Escolhe o que queres gerir:</div>
-<div style="padding:0 14px;text-align:center"><button onclick="ativarSomManual()" style="background:#16a34a;color:#fff;border:0;padding:12px 18px;border-radius:999px;font-weight:900;cursor:pointer">🔔 ATIVAR SOM + NOTIFICAÇÕES</button><p id="statusSom" style="font-size:12px;color:#666;margin:6px 0 0">Som: desligado - clica no botão verde</p></div>
+<div style="padding:0 14px;text-align:center"><button onclick="ativarSomManual()" style="background:#16a34a;color:#fff;border:0;padding:12px 18px;border-radius:999px;font-weight:900;cursor:pointer">🔔 ATIVAR SOM + NOTIFICAÇÕES</button><br><button id="btnInstalarAdmin" onclick="instalarAppAdmin()">📲 INSTALAR APP DO ADMIN</button><p id="textoInstalar" style="font-size:12px;color:#666;margin:6px 0 0">Se o botão azul não aparecer, usa: ⋮ → Adicionar à tela inicial</p><p id="statusSom" style="font-size:12px;color:#666;margin:6px 0 0">Som: desligado - clica no botão verde</p></div>
 <div id="avisoNovoPedido" style="padding:0 14px"></div>
 <div class="grid">
   <a class="card card-online" href="admin-online.html"><span id="badgeOnline" class="badge-online">0</span><span>👀</span><b>Quem Está Online Agora</b><small id="textoOnline">A carregar... • Clica para ver nomes, telefone e onde estão</small></a>
@@ -169,7 +178,6 @@ function salvarConta(){
   mostrarToast('✅ Guardado! Novo e-mail: '+email);
   fecharConta();
 }
-// ===== QUEM ESTÁ ONLINE =====
 async function atualizarOnline(){
   try{
     let r = await db.from('presenca').select('*').eq('online', true).order('ultima_vez',{ascending:false}).limit(50);
@@ -188,12 +196,10 @@ async function atualizarOnline(){
     }
   }catch(e){}
 }
-// ===== 🔔 ALERTA PEDIDOS NOVOS - RETIFICADO =====
 let totalNovos = 0;
 let ultimoIdVisto = Number(localStorage.getItem('admin_ultimo_pedido_id')||0);
 let somAtivo = localStorage.getItem('admin_som_ativo')==='sim';
 let primeiraVerificacao = true;
-
 function pedirPermissaoNotificacao(){
   if("Notification" in window && Notification.permission === "default"){
     Notification.requestPermission();
@@ -206,14 +212,12 @@ function ativarSomManual(){
   if(el) el.textContent = 'Som: LIGADO ✅ - Vais ouvir quando cair pedido';
   let btn = document.getElementById('btnAtivarSom');
   if(btn) btn.style.display='none';
-  // Desbloqueia o áudio - toca baixinho 1x para o navegador permitir depois
   try{
     let a = document.getElementById('somNovoPedido');
     a.volume = 0.1; a.play().then(()=>{ a.pause(); a.currentTime=0; a.volume=1; }).catch(()=>{});
   }catch(e){}
   pedirPermissaoNotificacao();
   mostrarToast('✅ Som ativado! Agora vais ouvir os pedidos');
-  // Teste rápido
   setTimeout(()=>{ try{ let a=document.getElementById('somNovoPedido'); a.volume=1; a.play().catch(()=>{}); }catch(e){} }, 300);
 }
 function atualizarBadge(){
@@ -232,7 +236,6 @@ function tocarSom(){
   try{
     let a = document.getElementById('somNovoPedido');
     a.currentTime=0; a.volume=1; a.play().catch(()=>{});
-    // Toca 3x
     setTimeout(()=>{ try{a.currentTime=0;a.play().catch(()=>{});}catch(e){} }, 900);
     setTimeout(()=>{ try{a.currentTime=0;a.play().catch(()=>{});}catch(e){} }, 1800);
   }catch(e){}
@@ -241,7 +244,6 @@ function tocarSom(){
 function notificarNovoPedido(p){
   tocarSom();
   mostrarToast('🔔 Novo Pedido: ' + (p.codigo||''));
-  // Banner vermelho no topo que fica
   let topo = document.getElementById('alertaTopoPedido');
   let txt = document.getElementById('textoAlertaTopo');
   if(topo && txt){ txt.textContent = (p.codigo||'') + ' - ' + (p.nome_cliente||p.nome||'') + ' - ' + Number(p.total||0).toLocaleString() + ' Kz'; topo.style.display='block'; }
@@ -262,7 +264,6 @@ async function contarPedidosNovos(){
     if(!r.error){ totalNovos = r.count || (r.data||[]).length; atualizarBadge(); }
   }catch(e){}
 }
-// VERIFICAÇÃO DE SEGURANÇA - De 10 em 10 segundos, mesmo se o tempo real falhar
 async function verificarNovosPorPolling(){
   try{
     let r = await db.from('pedidos').select('id,codigo,nome_cliente,nome,total,created_at').order('created_at',{ascending:false}).limit(1);
@@ -286,7 +287,6 @@ function ligarTempoRealPedidos(){
   try{
     db.channel('admin-novos-pedidos-v2')
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'pedidos'}, payload=>{
-      // Evita duplicar com o polling
       if(payload.new.id <= ultimoIdVisto) return;
       ultimoIdVisto = payload.new.id;
       localStorage.setItem('admin_ultimo_pedido_id', String(ultimoIdVisto));
@@ -299,6 +299,36 @@ function ligarTempoRealPedidos(){
     })
     .subscribe();
   }catch(e){ console.log(e); }
+}
+// ===== 📲 INSTALAR APP DO ADMIN =====
+let promptInstalar = null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  promptInstalar = e;
+  let b = document.getElementById('btnInstalarAdmin');
+  if(b) b.style.display = 'inline-block';
+});
+window.addEventListener('appinstalled', function(){
+  let b = document.getElementById('btnInstalarAdmin');
+  if(b) b.style.display = 'none';
+  mostrarToast('✅ App do Admin instalado!');
+});
+async function instalarAppAdmin(){
+  if(promptInstalar){
+    promptInstalar.prompt();
+    let r = await promptInstalar.userChoice;
+    if(r.outcome === 'accepted') mostrarToast('✅ A instalar App do Admin...');
+    promptInstalar = null;
+  } else {
+    mostrarToast('No teu telefone: clica nos 3 pontinhos ⋮ → Adicionar à tela inicial');
+  }
+}
+// Se já está instalado, esconde botão
+if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone){
+  let b = document.getElementById('btnInstalarAdmin');
+  if(b) b.style.display = 'none';
+  let t = document.getElementById('textoInstalar');
+  if(t) t.textContent = '✅ Já estás dentro do App do Admin!';
 }
 if(localStorage.getItem('admin_logado')==='sim'){ esconderLogin(); pedirPermissaoNotificacao(); if(somAtivo){ let el=document.getElementById('statusSom'); if(el) el.textContent='Som: LIGADO ✅'; } else { let b=document.getElementById('btnAtivarSom'); if(b) b.style.display='block'; } }
 else { mostrarLogin(); document.getElementById('emailAdmin').value=getConta().email; }

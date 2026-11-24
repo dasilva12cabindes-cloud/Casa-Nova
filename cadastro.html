@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Meu Carrinho - Casa Nova</title>
+<title>Cadastro - Casa Nova</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
@@ -12,391 +12,163 @@
 body{font-family:system-ui,Arial,sans-serif;background:#f5f6f8;color:#1d2330}
 .topo{display:flex;justify-content:space-between;align-items:center;padding:8px 16px;background:#0b5ed7;color:#fff;height:72px}
 .topo .logo{display:flex;align-items:center}
-.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:block}
-.topo .logo-text{font-size:1.3rem;font-weight:700}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:none}
 .topo.tem-logo .logo-text{display:none}
+.topo .logo-text{font-size:1.3rem;font-weight:700}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
-.container{max-width:600px;margin:0 auto;padding:16px}
-h1{font-size:1.4rem;margin-bottom:12px}
-.cliente-box{background:#e0f2fe;border:1px solid #93c5fd;padding:12px;border-radius:12px;margin-bottom:12px;font-size:14px}
-.aviso-login{background:#fef3c7;border:1px solid #fbbf24;padding:12px;border-radius:12px;margin-bottom:12px;font-size:14px}
-.item{background:#fff;border-radius:14px;padding:12px;margin-bottom:10px;display:flex;gap:10px;align-items:center}
-.item img{width:70px;height:70px;object-fit:cover;border-radius:10px;background:#eee}
-.item-info{flex:1}
-.item-info b{font-size:15px;display:block}
-.item-info span{color:#0b5ed7;font-weight:700}
-.qtd{display:flex;gap:6px;align-items:center}
-.qtd button{width:32px;height:32px;border:0;border-radius:8px;background:#eef2ff;font-size:18px;cursor:pointer}
-.qtd .remover{background:#fee2e2;color:#dc2626}
-.form{background:#fff;border-radius:16px;padding:16px;margin-top:10px}
-.form h3{margin-bottom:12px}
-.form input,.form select,.form textarea{width:100%;padding:12px;border:1px solid #cfd5df;border-radius:10px;margin-bottom:10px;font-size:15px}
-.form label{font-weight:700;font-size:14px;display:block;margin:12px 0 6px}
-.total{font-size:1.2rem;font-weight:800;margin:12px 0}
-.btn-whats{background:#0b5ed7;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;cursor:pointer}
-.btn-limpar{background:#eee;border:0;padding:10px;border-radius:10px;width:100%;margin-top:8px;cursor:pointer}
-.btn-verde{background:#16a34a;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;cursor:pointer}
-.vazio{text-align:center;padding:30px;color:#666}
+.container{max-width:480px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:16px;padding:20px;margin-top:16px}
+.abas{display:flex;background:#eef2ff;border-radius:12px;padding:4px;margin-bottom:16px}
+.aba{flex:1;padding:12px;border:0;border-radius:9px;background:transparent;font-weight:700;cursor:pointer}
+.aba.ativa{background:#0b5ed7;color:#fff}
+input{width:100%;padding:12px;border:1px solid #cfd5df;border-radius:10px;margin-bottom:10px;font-size:15px}
+.btn{background:#0b5ed7;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;cursor:pointer}
+.btn-verde{background:#16a34a}
 .erro{background:#fee2e2;color:#dc2626;padding:10px;border-radius:10px;font-size:13px;margin-bottom:10px;display:none}
-#infoPagamento{background:#e0f2fe;border:1px solid #93c5fd;padding:12px;border-radius:10px;font-size:14px;margin-bottom:10px;display:none;line-height:1.7}
-.abas-entrega{display:flex;background:#eef2ff;border-radius:12px;padding:4px;margin:12px 0}
-.aba-entrega{flex:1;padding:12px;border:0;border-radius:9px;background:transparent;font-weight:700;cursor:pointer;font-size:14px}
-.aba-entrega.ativa{background:#0b5ed7;color:#fff}
-.box-50{background:#fef3c7;border:1px solid #fbbf24;padding:12px;border-radius:12px;font-size:14px;line-height:1.7;margin-bottom:10px}
-.box-loja{background:#dcfce7;border:1px solid #86efac;padding:12px;border-radius:12px;font-size:14px;line-height:1.7;margin-bottom:10px}
-.box-ref{background:#111;color:#fff;padding:14px;border-radius:12px;text-align:center;margin:10px 0}
-.box-ref b{font-size:24px;letter-spacing:2px}
-.passo{display:flex;gap:8px;margin:14px 0}
-.passo div{flex:1;text-align:center;font-size:12px;font-weight:700;padding:8px;border-radius:10px;background:#eef2ff;color:#666}
-.passo div.ativo{background:#0b5ed7;color:#fff}
-.passo div.feito{background:#dcfce7;color:#15803d}
-.upload-box{border:2px dashed #0b5ed7;border-radius:12px;padding:16px;text-align:center;background:#f8fafc;margin:10px 0}
-.upload-box input{display:none}
-.upload-preview{margin-top:10px}
-.upload-preview img{max-width:100%;max-height:200px;border-radius:10px}
-.upload-preview iframe{width:100%;height:200px;border:0;border-radius:10px}
-.check-pago{display:flex;gap:10px;align-items:flex-start;background:#f0fdf4;border:1px solid #86efac;padding:12px;border-radius:12px;margin:10px 0;font-size:14px}
-.check-pago input{width:22px;height:22px;flex:none;margin:0}
+.sucesso{background:#dcfce7;color:#15803d;padding:10px;border-radius:10px;font-size:13px;margin-bottom:10px;display:none}
+small{color:#666;font-size:13px}
 #toast{position:fixed;top:82px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:30px;font-size:14px;z-index:200;opacity:0;transition:.3s;pointer-events:none}
 #toast.mostrar{opacity:1}
-.modal-fundo{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
-.modal-fundo.aberto{display:flex}
-.modal-box{background:#fff;width:100%;max-width:360px;border-radius:20px;padding:22px;text-align:center}
 </style>
 </head>
 <body>
 <div class="topo" id="topoSite">
   <a class="logo" href="index.html">
-    <img id="logoTopo" class="logo-img" src="" alt="Casa Nova" style="display:none">
-    <span class="logo-text" id="nomeTopo">⬅ Casa Nova</span>
+    <img id="logoTopo" class="logo-img" src="">
+    <span class="logo-text">⬅ Casa Nova</span>
   </a>
   <a href="index.html">Loja</a>
 </div>
+
 <div class="container">
-<h1>Meu Carrinho</h1>
-<div id="infoCliente" class="cliente-box" style="display:none"></div>
-<div id="avisoLogin" class="aviso-login" style="display:none">👋 Já tens conta? <a href="cadastro.html?aba=entrar" style="color:#0b5ed7;font-weight:800">Entra aqui</a> para preencher os teus dados sozinho. Ou preenche em baixo para fazer o pedido.</div>
-<div id="lista"></div>
-<div id="formBox" class="form" style="display:none">
-  <h3>Dados de Entrega</h3>
-  <div id="erroForm" class="erro"></div>
-  <input id="nome" placeholder="Teu nome completo">
-  <input id="telefone" placeholder="Teu telefone / WhatsApp">
+  <h1 style="font-size:1.4rem">Minha Conta</h1>
+  <p style="color:#666;font-size:13px;margin-top:4px">Cria conta ou entra para comprar mais rápido.</p>
 
-  <label>🚚 Como queres receber?</label>
-  <div class="abas-entrega">
-    <button type="button" class="aba-entrega ativa" id="abaEntrega" onclick="trocarModo('entrega')">🚚 Entrega a Domicílio</button>
-    <button type="button" class="aba-entrega" id="abaLoja" onclick="trocarModo('loja')">🏪 Receber na Loja</button>
-  </div>
-
-  <div id="boxEntrega">
-    <div class="box-50" id="box50"></div>
-    <label>🌍 País *</label>
-    <input id="pais" list="listaPaises" placeholder="Ex: Angola - ou escreve o teu país">
-    <datalist id="listaPaises"><option value="Angola"><option value="Congo"><option value="RDC - República Democrática do Congo"><option value="Congo Brazzaville"><option value="Portugal"><option value="Brasil"><option value="Moçambique"><option value="Cabo Verde"><option value="Guiné-Bissau"><option value="São Tomé e Príncipe"></datalist>
-    <label>🏙️ Cidade *</label>
-    <input id="cidade" list="listaCidades" placeholder="Ex: Luanda - ou escreve a tua cidade">
-    <datalist id="listaCidades"><option value="Luanda"><option value="Cabinda"><option value="Huíla"><option value="Benguela"><option value="Huambo"><option value="Lobito"><option value="Lubango"><option value="Malanje"><option value="Uíge"><option value="Viana"><option value="Cacuaco"></datalist>
-    <label>📍 Referência da Zona de Entrega *</label>
-    <textarea id="referenciaZona" rows="2" placeholder="Ex: 4 de Fevereiro, Cabinda - ao lado da farmácia, casa azul"></textarea>
-  </div>
-
-  <div id="boxLoja" style="display:none">
-    <div class="box-loja" id="infoLoja">
-      <b>🏪 Localização da Nossa Loja</b><br>
-      🌍 País: <b id="lojaPaisTxt">Angola</b><br>
-      🏙️ Cidade: <b id="lojaCidadeTxt">Luanda</b><br>
-      📍 Bairro / Referência: <b id="lojaBairroTxt">Viana</b>
+  <div class="card">
+    <div class="abas">
+      <button class="aba ativa" id="abaCriar" onclick="trocarAba('criar')">Criar Conta</button>
+      <button class="aba" id="abaEntrar" onclick="trocarAba('entrar')">Entrar</button>
     </div>
-    <p style="color:#666;font-size:13px">💰 Pagas agora para levantar. Sobe o comprovativo em baixo.</p>
-  </div>
 
-  <!-- PASSOS 1-2-3-4 -->
-  <div class="passo">
-    <div id="p1" class="ativo">1º PAGAR</div>
-    <div id="p2">2º COMPROVATIVO</div>
-    <div id="p3">3º CONFIRMAR</div>
-    <div id="p4">4º CÓDIGO</div>
-  </div>
+    <div id="erroBox" class="erro"></div>
+    <div id="okBox" class="sucesso"></div>
 
-  <!-- 1º PAGAR -->
-  <label>💳 1º - Faz o pagamento aqui</label>
-  <select id="pagamento" onchange="mostrarInfoPagamento()"></select>
-  <div id="infoPagamento"></div>
-
-  <!-- 2º COMPROVATIVO -->
-  <label>📎 2º - Sobe o comprovativo</label>
-  <div class="upload-box" onclick="document.getElementById('comprovativo').click()">
-    <div style="font-size:32px">📎</div>
-    <b>Clica para subir o comprovativo</b><br>
-    <small style="color:#666">PDF, PNG, JPG ou Foto</small><br>
-    <small style="color:#0b5ed7;font-weight:700" id="nomeFicheiro">Nenhum ficheiro escolhido</small>
-    <input type="file" id="comprovativo" accept=".pdf,.png,.jpg,.jpeg,.webp,image/*,application/pdf" onchange="lerComprovativo(event)">
-  </div>
-  <div id="previewComp" class="upload-preview" style="display:none"></div>
-
-  <!-- 3º CONFIRMAR -->
-  <label>✅ 3º - Confirma o pagamento</label>
-  <label class="check-pago"><input type="checkbox" id="checkPago" onchange="atualizarPassos()"> <span><b>Confirmo que já fiz o pagamento</b><br><small>Já paguei o valor indicado e subi o comprovativo.</small></span></label>
-
-  <!-- 4º CÓDIGO -->
-  <div id="boxCodigo" style="display:none">
-    <div class="box-ref">
-      <div style="font-size:13px;opacity:.8">✅ PAGAMENTO CONFIRMADO</div>
-      <div style="font-size:13px;opacity:.8;margin-top:6px">TUA REFERÊNCIA</div>
-      <b id="codigoRef">CN-000000</b>
-      <div style="font-size:12px;opacity:.8">Mostra este código na loja / entrega</div>
+    <!-- CRIAR CONTA -->
+    <div id="boxCriar">
+      <input id="nomeCriar" placeholder="Nome completo *">
+      <input id="telefoneCriar" placeholder="Telefone / WhatsApp *">
+      <input id="emailCriar" type="email" placeholder="Email *">
+      <input id="moradaCriar" placeholder="Morada / Bairro">
+      <input id="senhaCriar" type="password" placeholder="Senha *">
+      <input id="senha2Criar" type="password" placeholder="Repete a senha *">
+      <button class="btn btn-verde" onclick="criarConta()">✅ Criar Minha Conta</button>
+      <p style="text-align:center;margin-top:10px"><small>Já tens conta? <a href="#" onclick="trocarAba('entrar');return false" style="color:#0b5ed7;font-weight:700">Entra aqui</a></small></p>
     </div>
-  </div>
 
-  <div class="total" id="total">Total: 0 Kz</div>
-  <div id="total50" style="font-weight:700;color:#b45309;margin-bottom:8px"></div>
-  <button class="btn-whats" id="btnFinalizar" onclick="finalizar()">✅ Confirmar Pedido e Receber Código</button>
-  <button class="btn-limpar" onclick="abrirLimpar()">🗑️ Limpar Carrinho</button>
+    <!-- ENTRAR -->
+    <div id="boxEntrar" style="display:none">
+      <input id="emailEntrar" type="email" placeholder="Email">
+      <input id="senhaEntrar" type="password" placeholder="Senha">
+      <button class="btn" onclick="entrar()">Entrar →</button>
+      <p style="text-align:center;margin-top:10px"><small>Não tens conta? <a href="#" onclick="trocarAba('criar');return false" style="color:#0b5ed7;font-weight:700">Cria aqui</a></small></p>
+    </div>
+
+    <hr style="margin:16px 0;border:0;border-top:1px solid #eee">
+    <button class="btn" style="background:#eee;color:#111" onclick="continuarSemConta()">🛒 Continuar sem conta →</button>
+    <p style="text-align:center;margin-top:8px"><small>Vais poder preencher os dados no carrinho.</small></p>
+  </div>
 </div>
-<div id="vazio" class="vazio" style="display:none">O teu carrinho está vazio.<br><br><a href="index.html" style="color:#0b5ed7;font-weight:700">⬅ Voltar à Loja</a></div>
-</div>
-<div id="modalLimpar" class="modal-fundo" onclick="if(event.target.id==='modalLimpar') fecharLimpar()">
-  <div class="modal-box"><div style="font-size:40px">🗑️</div><h3 style="margin:8px 0">Limpar todo o carrinho?</h3><button class="btn-whats" style="background:#dc2626" onclick="confirmarLimpar()">Sim, Limpar</button><button class="btn-limpar" onclick="fecharLimpar()">Cancelar</button></div>
-</div>
-<div id="modalFinalizar" class="modal-fundo" onclick="if(event.target.id==='modalFinalizar') fecharFinalizar()">
-  <div class="modal-box"><div style="font-size:40px">✅</div><h3 style="margin:8px 0">Confirmar pedido?</h3><p style="color:#666;font-size:14px;margin-bottom:16px" id="textoFinalizar">Vais receber o código de referência.</p><button class="btn-whats" onclick="confirmarFinalizar()">Sim, Confirmar e Enviar</button><button class="btn-limpar" onclick="fecharFinalizar()">Cancelar</button></div>
-</div>
+
 <div id="toast"></div>
 <script>
-function mostrarToast(m){ let t=document.getElementById('toast'); t.textContent=m; t.classList.add('mostrar'); setTimeout(()=>t.classList.remove('mostrar'),2500); }
-function getCarrinho(){ try{ return JSON.parse(localStorage.getItem('carrinho')||'[]'); }catch(e){ return []; } }
-function setCarrinho(c){ localStorage.setItem('carrinho', JSON.stringify(c)); }
-let cliente = null;
-try{ cliente = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){ cliente=null; }
+function toast(m){ let t=document.getElementById('toast'); t.textContent=m; t.classList.add('mostrar'); setTimeout(()=>t.classList.remove('mostrar'),2500); }
+function mostrarErro(m){ let e=document.getElementById('erroBox'); e.textContent=m; e.style.display='block'; document.getElementById('okBox').style.display='none'; }
+function mostrarOk(m){ let e=document.getElementById('okBox'); e.textContent=m; e.style.display='block'; document.getElementById('erroBox').style.display='none'; }
 
-let modoEntrega = 'entrega';
-let codigoRef = '';
-let comprovativoData = null;
-let comprovativoNome = '';
-let comprovativoTipo = '';
+function trocarAba(aba){
+  document.getElementById('abaCriar').classList.toggle('ativa', aba==='criar');
+  document.getElementById('abaEntrar').classList.toggle('ativa', aba==='entrar');
+  document.getElementById('boxCriar').style.display = aba==='criar' ? 'block' : 'none';
+  document.getElementById('boxEntrar').style.display = aba==='entrar' ? 'block' : 'none';
+}
+// Se veio do carrinho: cadastro.html?aba=entrar
+let params = new URLSearchParams(location.search);
+if(params.get('aba')==='entrar') trocarAba('entrar');
 
-function gerarCodigo(){
-  codigoRef = 'CN-' + Math.floor(100000 + Math.random()*900000);
-  let el = document.getElementById('codigoRef');
-  if(el) el.textContent = codigoRef;
-  return codigoRef;
-}
-gerarCodigo();
-function trocarModo(modo){
-  modoEntrega = modo;
-  document.getElementById('abaEntrega').classList.toggle('ativa', modo==='entrega');
-  document.getElementById('abaLoja').classList.toggle('ativa', modo==='loja');
-  document.getElementById('boxEntrega').style.display = modo==='entrega' ? 'block' : 'none';
-  document.getElementById('boxLoja').style.display = modo==='loja' ? 'block' : 'none';
-  document.getElementById('btnFinalizar').textContent = modo==='entrega' ? '✅ Confirmar Pedido e Receber Código' : '✅ Confirmar Levantamento e Receber Código';
-  atualizarTotais(); mostrarInfoPagamento();
-}
-function atualizarTotais(){
-  let carrinho = getCarrinho();
-  let total = carrinho.reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
-  document.getElementById('total').textContent = 'Total: ' + total.toLocaleString() + ' Kz';
-  let box50 = document.getElementById('box50');
-  let t50 = document.getElementById('total50');
-  if(modoEntrega==='entrega'){
-    let metade = Math.round(total/2);
-    box50.innerHTML = `💰 <b>Entrega a Domicílio - Paga 50% agora</b><br>Total: <b>${total.toLocaleString()} Kz</b><br>✅ Pagas agora: <b>${metade.toLocaleString()} Kz (50%)</b><br>📦 Pagas na entrega: <b>${(total-metade).toLocaleString()} Kz (50%)</b>`;
-    t50.textContent = '💰 Pagas agora: ' + metade.toLocaleString() + ' Kz (50%)';
-  } else {
-    box50.innerHTML = ``;
-    t50.textContent = '💰 Pagas agora na loja: ' + total.toLocaleString() + ' Kz (100%)';
-  }
-}
-function atualizarPassos(){
-  let temComp = !!comprovativoData;
-  let check = document.getElementById('checkPago').checked;
-  document.getElementById('p1').className = temComp||check ? 'feito' : 'ativo';
-  document.getElementById('p2').className = temComp ? 'feito' : (check ? '' : '');
-  document.getElementById('p3').className = check ? 'feito' : '';
-  document.getElementById('p4').className = '';
-}
-function lerComprovativo(e){
-  let f = e.target.files[0];
-  if(!f) return;
-  comprovativoNome = f.name; comprovativoTipo = f.type;
-  document.getElementById('nomeFicheiro').textContent = '✅ ' + f.name;
-  let reader = new FileReader();
-  reader.onload = function(ev){
-    comprovativoData = ev.target.result;
-    let prev = document.getElementById('previewComp');
-    prev.style.display='block';
-    if(f.type.includes('pdf')) prev.innerHTML = `<iframe src="${comprovativoData}"></iframe><small>📄 ${f.name}</small>`;
-    else prev.innerHTML = `<img src="${comprovativoData}"><br><small>🖼️ ${f.name}</small>`;
-    atualizarPassos(); mostrarToast('📎 Comprovativo carregado');
-  };
-  reader.readAsDataURL(f);
-}
+async function criarConta(){
+  let nome = document.getElementById('nomeCriar').value.trim();
+  let telefone = document.getElementById('telefoneCriar').value.trim();
+  let email = document.getElementById('emailCriar').value.trim().toLowerCase();
+  let morada = document.getElementById('moradaCriar').value.trim();
+  let senha = document.getElementById('senhaCriar').value;
+  let senha2 = document.getElementById('senha2Criar').value;
+  if(!nome || !telefone || !email || !senha){ mostrarErro('⚠️ Preenche nome, telefone, email e senha!'); return; }
+  if(senha !== senha2){ mostrarErro('⚠️ As senhas não são iguais!'); return; }
+  if(senha.length < 4){ mostrarErro('⚠️ Senha muito curta, usa 4+ caracteres!'); return; }
 
-let _pagAtivos = [];
-let _whatsLoja = localStorage.getItem('whatsapp_loja') || '';
-let _lojaInfo = {pais:'Angola', cidade:'Cabinda', bairro:'Mbaca, Ref : bar matondo'};
-function carregarPagamentosCarrinho(){
-  let select = document.getElementById('pagamento');
-  let lista = [];
-  try{ lista = JSON.parse(localStorage.getItem('pagamentos_casa_nova')||'[]'); }catch(e){}
-  if(!lista.length){
-    lista = [{tipo:'Multicaixa Express', telefone:'', nome:'', ativo:true},{tipo:'PayPay', referencia:'10116', telefone:'942788931', ativo:true},{tipo:'IBAN', iban:'', nome:'', ativo:true},{tipo:'Dinheiro na Entrega', ativo:true}];
-  }
-  _pagAtivos = lista.filter(p=>p.ativo);
-  select.innerHTML = _pagAtivos.map(p=>`<option value="${p.tipo}">${p.tipo}</option>`).join('');
-  mostrarInfoPagamento();
-}
-function mostrarInfoPagamento(){
-  let select = document.getElementById('pagamento');
-  let div = document.getElementById('infoPagamento');
-  let p = _pagAtivos.find(x=>x.tipo===select.value);
-  if(!p){ div.style.display='none'; return; }
-  let total = getCarrinho().reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
-  let aPagar = modoEntrega==='entrega' ? Math.round(total/2) : total;
-  let txt='';
-  if(p.tipo==='Multicaixa Express') txt=`<b>📱 Multicaixa Express</b><br>📞 Telefone: <b>${p.telefone||'---'}</b><br>👤 Nome: <b>${p.nome||'---'}</b>`;
-  else if(p.tipo==='PayPay') txt=`<b>💸 PayPay</b><br>🔢 Referência: <b>${p.referencia||p.conta||'---'}</b><br>📞 Telefone: <b>${p.telefone||'---'}</b>`;
-  else if(p.tipo==='IBAN') txt=`<b>🏦 IBAN</b><br>🏦 IBAN: <b>${p.iban||p.conta||'---'}</b><br>👤 Nome: <b>${p.nome||p.titular||'---'}</b>`;
-  else txt=`<b>💵 Dinheiro</b><br>Paga quando receberes.`;
-  txt += `<br><br>💰 <b>${modoEntrega==='entrega'?'Pagas agora 50%':'Pagas agora 100%'}: ${aPagar.toLocaleString()} Kz</b>`;
-  div.innerHTML=txt; div.style.display='block';
-}
-function getWhatsAppLoja(){ return _whatsLoja || localStorage.getItem('whatsapp_loja') || '244942788931'; }
+  let cliente = {nome, telefone, email, morada, senha};
+  // Guarda no telemóvel - é isto que o carrinho lê
+  localStorage.setItem('cliente_casa_nova', JSON.stringify(cliente));
 
-async function corrigirItensAntigos(){
-  let carrinho = getCarrinho();
-  let precisa = carrinho.some(i=>!i.nome || !i.preco);
-  if(precisa && typeof db !== 'undefined'){
-    try{
-      let ids = carrinho.map(i=>i.id);
-      let { data } = await db.from('produtos').select('id,nome,preco,imagem,imagem_url').in('id', ids);
-      if(data){
-        carrinho = carrinho.map(item=>{
-          let p = data.find(x=>x.id==item.id);
-          if(p) return {...item, nome:p.nome, preco:Number(p.preco), imagem:p.imagem||p.imagem_url||''};
-          return item;
-        });
-        setCarrinho(carrinho);
-      }
-    }catch(e){}
-  }
-  return carrinho;
-}
-async function renderizar(){
-  let carrinho = await corrigirItensAntigos();
-  let lista = document.getElementById('lista');
-  let formBox = document.getElementById('formBox');
-  let vazio = document.getElementById('vazio');
-  if(cliente){
-    document.getElementById('infoCliente').style.display='block';
-    document.getElementById('infoCliente').innerHTML = `👤 Comprando como: <b>${cliente.nome||cliente.nome_cliente||''}</b><br>📧 ${cliente.email||''} • 📞 ${cliente.telefone||''}`;
-    document.getElementById('nome').value = cliente.nome||cliente.nome_cliente||'';
-    document.getElementById('telefone').value = cliente.telefone||'';
-    if(cliente.morada) document.getElementById('referenciaZona').value = cliente.morada;
-    document.getElementById('avisoLogin').style.display='none';
-  } else {
-    document.getElementById('infoCliente').style.display='none';
-    document.getElementById('avisoLogin').style.display='block';
-  }
-  if(!carrinho.length){ lista.innerHTML=''; formBox.style.display='none'; vazio.style.display='block'; return; }
-  vazio.style.display='none'; formBox.style.display='block';
-  let total = 0;
-  lista.innerHTML = carrinho.map((item, idx)=>{
-    let preco = Number(item.preco||0); let qtd = Number(item.qtd||1); total += preco*qtd;
-    return `<div class="item"><img src="${item.imagem||'https://via.placeholder.com/100'}" onerror="this.src='https://via.placeholder.com/100'"><div class="item-info"><b>${item.nome||'Produto'}</b><span>${preco.toLocaleString()} Kz x ${qtd}</span><br><small>= ${(preco*qtd).toLocaleString()} Kz</small></div><div class="qtd"><button onclick="mudarQtd(${idx},1)">+</button><button onclick="mudarQtd(${idx},-1)">-</button><button class="remover" onclick="remover(${idx})">X</button></div></div>`;
-  }).join('');
-  atualizarTotais();
-}
-function mudarQtd(idx, delta){ let c = getCarrinho(); c[idx].qtd = (c[idx].qtd||1) + delta; if(c[idx].qtd <= 0) c.splice(idx,1); setCarrinho(c); renderizar(); }
-function remover(idx){ let c = getCarrinho(); c.splice(idx,1); setCarrinho(c); renderizar(); }
-function abrirLimpar(){ document.getElementById('modalLimpar').classList.add('aberto'); }
-function fecharLimpar(){ document.getElementById('modalLimpar').classList.remove('aberto'); }
-function confirmarLimpar(){ fecharLimpar(); setCarrinho([]); renderizar(); mostrarToast('🗑️ Carrinho limpo'); }
-function finalizar(){
-  let carrinho = getCarrinho(); let erro = document.getElementById('erroForm'); erro.style.display='none';
-  if(!carrinho.length){ mostrarToast('🛒 Carrinho vazio'); return; }
-  let nome = document.getElementById('nome').value.trim();
-  let telefone = document.getElementById('telefone').value.trim();
-  if(!nome || !telefone){ erro.textContent='⚠️ Preenche nome e telefone!'; erro.style.display='block'; return; }
-  if(modoEntrega==='entrega'){
-    let pais = document.getElementById('pais').value.trim();
-    let cidade = document.getElementById('cidade').value.trim();
-    let ref = document.getElementById('referenciaZona').value.trim();
-    if(!pais || !cidade || !ref){ erro.textContent='⚠️ Preenche País, Cidade e Referência da Zona!'; erro.style.display='block'; return; }
-  }
-  // 2º e 3º OBRIGATÓRIOS
-  if(!comprovativoData){ erro.textContent='⚠️ 2º - Sobe o comprovativo! PDF, PNG ou foto.'; erro.style.display='block'; document.getElementById('comprovativo').scrollIntoView({behavior:'smooth'}); return; }
-  if(!document.getElementById('checkPago').checked){ erro.textContent='⚠️ 3º - Marca "Confirmo que já fiz o pagamento"!'; erro.style.display='block'; return; }
-  if(!cliente){
-    let novoCliente = {nome, telefone, morada: document.getElementById('referenciaZona').value.trim(), email:'', senha:''};
-    localStorage.setItem('cliente_casa_nova', JSON.stringify(novoCliente)); cliente = novoCliente;
-  }
-  let total = carrinho.reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
-  let aPagar = modoEntrega==='entrega' ? Math.round(total/2) : total;
-  document.getElementById('textoFinalizar').textContent = `Pagaste ${aPagar.toLocaleString()} Kz • Vais receber o código ${codigoRef} • Vais ser levado para o WhatsApp.`;
-  document.getElementById('modalFinalizar').classList.add('aberto');
-}
-function fecharFinalizar(){ document.getElementById('modalFinalizar').classList.remove('aberto'); }
-function confirmarFinalizar(){
-  fecharFinalizar();
-  let carrinho = getCarrinho();
-  let nome = document.getElementById('nome').value.trim();
-  let telefone = document.getElementById('telefone').value.trim();
-  let pagamento = document.getElementById('pagamento').value;
-  let total = carrinho.reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
-  let pag = _pagAtivos.find(x=>x.tipo===pagamento);
-  let detalhePag='';
-  if(pag){
-    if(pag.tipo==='Multicaixa Express') detalhePag=`\n📱 Multicaixa: ${pag.telefone||''} (${pag.nome||''})`;
-    else if(pag.tipo==='PayPay') detalhePag=`\n💸 PayPay - Ref: ${pag.referencia||pag.conta||''} | Tel: ${pag.telefone||''}`;
-    else if(pag.tipo==='IBAN') detalhePag=`\n🏦 IBAN: ${pag.iban||pag.conta||''} (${pag.nome||pag.titular||''})`;
-  }
-  // 4º MOSTRA O CÓDIGO
-  document.getElementById('boxCodigo').style.display='block';
-  document.getElementById('p4').className='feito';
-  let msg='';
-  if(modoEntrega==='entrega'){
-    let pais = document.getElementById('pais').value.trim();
-    let cidade = document.getElementById('cidade').value.trim();
-    let ref = document.getElementById('referenciaZona').value.trim();
-    let metade = Math.round(total/2);
-    msg = `🛒 *NOVO PEDIDO - CASA NOVA*\n\n🚚 *ENTREGA A DOMICÍLIO*\n👤 Cliente: ${nome}\n📞 ${telefone}\n🌍 País: ${pais}\n🏙️ Cidade: ${cidade}\n📍 Referência Zona: ${ref}\n💳 Pagamento: ${pagamento}${detalhePag}\n✅ *Pagamento confirmado pelo cliente*\n📎 Comprovativo: ${comprovativoNome} (anexado)\n🔖 *Código de Referência: ${codigoRef}*\n\n📦 *Produtos:*\n` + carrinho.map(i=>`• ${i.nome} - ${Number(i.preco).toLocaleString()} Kz x ${i.qtd} = ${(Number(i.preco)*(i.qtd||1)).toLocaleString()} Kz`).join('\n') + `\n\n💰 *Total: ${total.toLocaleString()} Kz*\n✅ *Pago agora 50%: ${metade.toLocaleString()} Kz*\n📦 *Falta pagar na entrega: ${(total-metade).toLocaleString()} Kz*`;
-  } else {
-    msg = `🛒 *NOVO PEDIDO - CASA NOVA*\n\n🏪 *RECEBER NA LOJA*\n👤 Cliente: ${nome}\n📞 ${telefone}\n🏪 Loja: ${_lojaInfo.pais}, ${_lojaInfo.cidade}, ${_lojaInfo.bairro}\n💳 Pagamento: ${pagamento}${detalhePag}\n✅ *Pagamento confirmado pelo cliente*\n📎 Comprovativo: ${comprovativoNome} (anexado)\n🔖 *Código de Referência: ${codigoRef}*\n\n📦 *Produtos:*\n` + carrinho.map(i=>`• ${i.nome} - ${Number(i.preco).toLocaleString()} Kz x ${i.qtd} = ${(Number(i.preco)*(i.qtd||1)).toLocaleString()} Kz`).join('\n') + `\n\n💰 *Total pago: ${total.toLocaleString()} Kz*`;
-  }
-  // Guarda para a área de mensagens que vai ser criada
+  // Tenta guardar também no Supabase (se a tabela existir)
   try{
-    let refs = JSON.parse(localStorage.getItem('minhas_referencias')||'[]');
-    refs.push({codigo: codigoRef, data: new Date().toISOString(), total, nome, telefone, tipo:modoEntrega, comprovativo: comprovativoNome, pagamento});
-    localStorage.setItem('minhas_referencias', JSON.stringify(refs));
-    localStorage.setItem('ultimo_comprovativo', comprovativoData||'');
-  }catch(e){}
-  let numero = getWhatsAppLoja();
-  window.open('https://wa.me/'+numero+'?text='+encodeURIComponent(msg), '_blank');
-  mostrarToast('✅ Código gerado: ' + codigoRef);
-  gerarCodigo(); // novo código para o próximo pedido
+    if(typeof db !== 'undefined'){
+      await db.from('clientes').insert([{nome, telefone, email, morada, senha}]);
+    }
+  }catch(e){ console.log('Supabase clientes:', e.message); }
+
+  mostrarOk('✅ Conta criada! A entrar...');
+  toast('✅ Conta criada!');
+  setTimeout(()=>{ location.href = 'index.html'; }, 800);
 }
+
+async function entrar(){
+  let email = document.getElementById('emailEntrar').value.trim().toLowerCase();
+  let senha = document.getElementById('senhaEntrar').value;
+  if(!email || !senha){ mostrarErro('⚠️ Preenche email e senha!'); return; }
+
+  // 1. Tenta no telemóvel
+  try{
+    let salvo = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null');
+    if(salvo && salvo.email === email && salvo.senha === senha){
+      mostrarOk('✅ Bem-vindo de volta, ' + salvo.nome + '!');
+      setTimeout(()=>{ location.href = 'index.html'; }, 600);
+      return;
+    }
+  }catch(e){}
+
+  // 2. Tenta no Supabase
+  try{
+    if(typeof db !== 'undefined'){
+      let {data} = await db.from('clientes').select('*').eq('email', email).eq('senha', senha).maybeSingle();
+      if(data){
+        localStorage.setItem('cliente_casa_nova', JSON.stringify(data));
+        mostrarOk('✅ Bem-vindo de volta, ' + (data.nome||'') + '!');
+        setTimeout(()=>{ location.href = 'index.html'; }, 600);
+        return;
+      }
+    }
+  }catch(e){ console.log(e); }
+
+  mostrarErro('⚠️ Email ou senha errada! Se ainda não tens conta, cria uma.');
+}
+
+function continuarSemConta(){
+  location.href = 'index.html';
+}
+
 async function carregarLogoTopo(){
   try{
     if(typeof db === 'undefined') return;
-    const r = await db.from('loja_config').select('*').eq('id',1).maybeSingle();
-    let cfg = r.data || {};
-    if(cfg.logo_url){ let logo=document.getElementById('logoTopo'); logo.src=cfg.logo_url; logo.style.display='block'; document.getElementById('topoSite').classList.add('tem-logo'); }
-    if(cfg.whatsapp){ _whatsLoja=cfg.whatsapp; localStorage.setItem('whatsapp_loja', cfg.whatsapp); }
-    if(cfg.loja_pais) _lojaInfo.pais=cfg.loja_pais;
-    if(cfg.loja_cidade) _lojaInfo.cidade=cfg.loja_cidade;
-    if(cfg.loja_bairro) _lojaInfo.bairro=cfg.loja_bairro;
-    if(localStorage.getItem('loja_pais')) _lojaInfo.pais=localStorage.getItem('loja_pais');
-    if(localStorage.getItem('loja_cidade')) _lojaInfo.cidade=localStorage.getItem('loja_cidade');
-    if(localStorage.getItem('loja_bairro')) _lojaInfo.bairro=localStorage.getItem('loja_bairro');
-    document.getElementById('lojaPaisTxt').textContent=_lojaInfo.pais;
-    document.getElementById('lojaCidadeTxt').textContent=_lojaInfo.cidade;
-    document.getElementById('lojaBairroTxt').textContent=_lojaInfo.bairro;
+    let r = await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();
+    if(r.data?.logo_url){
+      let img = document.getElementById('logoTopo');
+      img.src = r.data.logo_url; img.style.display='block';
+      document.getElementById('topoSite').classList.add('tem-logo');
+    }
   }catch(e){}
 }
 carregarLogoTopo();
-carregarPagamentosCarrinho();
-renderizar();
 </script>
 </body>
 </html>

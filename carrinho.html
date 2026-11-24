@@ -34,10 +34,12 @@ h1{font-size:1.4rem;margin-bottom:12px}
 .form label{font-weight:700;font-size:14px;display:block;margin:12px 0 6px}
 .total{font-size:1.2rem;font-weight:800;margin:12px 0}
 .btn-whats{background:#0b5ed7;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;cursor:pointer}
+.btn-whats:disabled{background:#9ca3af;cursor:not-allowed}
 .btn-limpar{background:#eee;border:0;padding:10px;border-radius:10px;width:100%;margin-top:8px;cursor:pointer}
 .btn-verde{background:#16a34a;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;cursor:pointer}
 .vazio{text-align:center;padding:30px;color:#666}
 .erro{background:#fee2e2;color:#dc2626;padding:10px;border-radius:10px;font-size:13px;margin-bottom:10px;display:none;word-break:break-word}
+.aviso-unico{background:#fee2e2;border:1px solid #fca5a5;padding:12px;border-radius:12px;font-size:13px;margin:10px 0;display:none;line-height:1.6}
 #infoPagamento{background:#e0f2fe;border:1px solid #93c5fd;padding:12px;border-radius:10px;font-size:14px;margin-bottom:10px;display:none;line-height:1.7;word-break:break-word}
 .abas-entrega{display:flex;background:#eef2ff;border-radius:12px;padding:4px;margin:12px 0}
 .aba-entrega{flex:1;padding:12px;border:0;border-radius:9px;background:transparent;font-weight:700;cursor:pointer;font-size:14px}
@@ -50,15 +52,12 @@ h1{font-size:1.4rem;margin-bottom:12px}
 .passo div{flex:1;text-align:center;font-size:11px;font-weight:700;padding:8px 2px;border-radius:10px;background:#eef2ff;color:#666;word-break:break-word}
 .passo div.ativo{background:#0b5ed7;color:#fff}
 .passo div.feito{background:#dcfce7;color:#15803d}
-/* --- COMPROVATIVO CORRIGIDO --- */
 .upload-box{border:2px dashed #0b5ed7;border-radius:12px;padding:14px;text-align:center;background:#f8fafc;margin:10px 0;overflow:hidden;width:100%}
+.upload-box.adicionado{border-color:#16a34a;background:#f0fdf4;border-style:solid}
+.upload-box.bloqueado{opacity:.6;pointer-events:none}
 .upload-box input{display:none}
 .upload-box b,.upload-box small{display:block;word-break:break-word}
 #nomeFicheiro{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-size:12px}
-.upload-preview{margin-top:10px;overflow:hidden;width:100%;border-radius:10px}
-.upload-preview img{max-width:100%;max-height:160px;width:auto;display:block;margin:0 auto;border-radius:10px;object-fit:contain}
-.nome-ficheiro-curto{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:#666;margin-top:6px}
-.comp-ok{background:#f1f5f9;padding:12px;text-align:center;border-radius:10px;overflow:hidden}
 .check-pago{display:flex;gap:10px;align-items:flex-start;background:#f0fdf4;border:1px solid #86efac;padding:12px;border-radius:12px;margin:10px 0;font-size:14px}
 .check-pago input{width:22px;height:22px;flex:none;margin:0}
 #toast{position:fixed;top:82px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:30px;font-size:14px;z-index:200;opacity:0;transition:.3s;pointer-events:none;max-width:90%;text-align:center}
@@ -84,6 +83,7 @@ h1{font-size:1.4rem;margin-bottom:12px}
 <div id="formBox" class="form" style="display:none">
   <h3>Dados de Entrega</h3>
   <div id="erroForm" class="erro"></div>
+  <div id="avisoUnico" class="aviso-unico">🔒 <b>Pedido já confirmado!</b><br>Este pedido já gerou o código <b id="codigoUnicoTxt"></b>. Guarda o código, faz print. <b>Não é possível gerar outro código com o mesmo comprovativo.</b><br>Se quiseres fazer outro pedido, limpa o carrinho e começa um novo.</div>
   <input id="nome" placeholder="Teu nome completo">
   <input id="telefone" placeholder="Teu telefone / WhatsApp">
   <label>🚚 Como queres receber?</label>
@@ -121,22 +121,21 @@ h1{font-size:1.4rem;margin-bottom:12px}
   <select id="pagamento" onchange="mostrarInfoPagamento()"></select>
   <div id="infoPagamento"></div>
   <label>📎 2º - Sobe o comprovativo</label>
-  <div class="upload-box" onclick="document.getElementById('comprovativo').click()">
-    <div style="font-size:32px">📎</div>
-    <b>Clica para subir o comprovativo</b><br>
-    <small style="color:#666">PDF, PNG, JPG ou Foto</small><br>
-    <small style="color:#0b5ed7;font-weight:700" id="nomeFicheiro">Nenhum ficheiro escolhido</small>
+  <div class="upload-box" id="boxUpload" onclick="document.getElementById('comprovativo').click()">
+    <div style="font-size:32px" id="iconeUpload">📎</div>
+    <b id="textoUpload">Clica para subir o comprovativo</b>
+    <small style="color:#666">PDF, PNG, JPG ou Foto</small>
+    <small style="color:#16a34a;font-weight:700;display:none" id="nomeFicheiro">✅ Adicionado</small>
     <input type="file" id="comprovativo" accept=".pdf,.png,.jpg,.jpeg,.webp,image/*,application/pdf" onchange="lerComprovativo(event)">
   </div>
-  <div id="previewComp" class="upload-preview" style="display:none"></div>
   <label>✅ 3º - Confirma o pagamento</label>
   <label class="check-pago"><input type="checkbox" id="checkPago" onchange="atualizarPassos()"> <span><b>Confirmo que já fiz o pagamento</b><br><small>Já paguei o valor indicado e subi o comprovativo.</small></span></label>
   <div id="boxCodigo" style="display:none">
     <div class="box-ref">
       <div style="font-size:13px;opacity:.8">✅ PAGAMENTO CONFIRMADO</div>
-      <div style="font-size:13px;opacity:.8;margin-top:6px">TUA REFERÊNCIA</div>
+      <div style="font-size:13px;opacity:.8;margin-top:6px">TUA REFERÊNCIA - GUARDA BEM, É ÚNICA</div>
       <b id="codigoRef">CN-000000</b>
-      <div style="font-size:12px;opacity:.8">Mostra este código na loja / entrega</div>
+      <div style="font-size:12px;opacity:.8">Faz print! Se perderes, não geramos outro.</div>
     </div>
   </div>
   <div class="total" id="total">Total: 0 Kz</div>
@@ -150,7 +149,7 @@ h1{font-size:1.4rem;margin-bottom:12px}
   <div class="modal-box"><div style="font-size:40px">🗑️</div><h3 style="margin:8px 0">Limpar todo o carrinho?</h3><button class="btn-whats" style="background:#dc2626" onclick="confirmarLimpar()">Sim, Limpar</button><button class="btn-limpar" onclick="fecharLimpar()">Cancelar</button></div>
 </div>
 <div id="modalFinalizar" class="modal-fundo" onclick="if(event.target.id==='modalFinalizar') fecharFinalizar()">
-  <div class="modal-box"><div style="font-size:40px">✅</div><h3 style="margin:8px 0">Confirmar pedido?</h3><p style="color:#666;font-size:14px;margin-bottom:16px" id="textoFinalizar">Vais receber o código de referência.</p><button class="btn-whats" onclick="confirmarFinalizar()">Sim, Confirmar e Enviar</button><button class="btn-limpar" onclick="fecharFinalizar()">Cancelar</button></div>
+  <div class="modal-box"><div style="font-size:40px">⚠️</div><h3 style="margin:8px 0">Confirmar só 1 vez?</h3><p style="color:#666;font-size:14px;margin-bottom:16px" id="textoFinalizar">Vais receber o código de referência.</p><p style="color:#dc2626;font-size:13px;font-weight:700">⚠️ ATENÇÃO: Só podes confirmar 1 vez! Guarda o código, faz print. Se perderes, não geramos outro.</p><button class="btn-whats" onclick="confirmarFinalizar()">Sim, Confirmar 1 Única Vez</button><button class="btn-limpar" onclick="fecharFinalizar()">Cancelar</button></div>
 </div>
 <div id="toast"></div>
 <script>
@@ -164,14 +163,33 @@ let codigoRef = '';
 let comprovativoData = null;
 let comprovativoNome = '';
 let comprovativoTipo = '';
+// TRAVA - 1 ÚNICO PEDIDO POR COMPROVATIVO
+let pedidoJaConfirmado = false;
+let codigoJaGerado = '';
 function gerarCodigo(){
+  // Se já gerou, NÃO gera outro - devolve o mesmo
+  if(codigoJaGerado) { codigoRef = codigoJaGerado; return codigoRef; }
   codigoRef = 'CN-' + Math.floor(100000 + Math.random()*900000);
+  codigoJaGerado = codigoRef;
   let el = document.getElementById('codigoRef');
   if(el) el.textContent = codigoRef;
   return codigoRef;
 }
 gerarCodigo();
+function bloquearPedido(){
+  pedidoJaConfirmado = true;
+  document.getElementById('btnFinalizar').disabled = true;
+  document.getElementById('btnFinalizar').textContent = '🔒 Pedido Já Confirmado - Código: ' + codigoRef;
+  document.getElementById('checkPago').disabled = true;
+  document.getElementById('comprovativo').disabled = true;
+  document.getElementById('boxUpload').classList.add('bloqueado');
+  document.getElementById('avisoUnico').style.display = 'block';
+  document.getElementById('codigoUnicoTxt').textContent = codigoRef;
+  document.getElementById('boxCodigo').style.display = 'block';
+  document.getElementById('p4').className = 'feito';
+}
 function trocarModo(modo){
+  if(pedidoJaConfirmado){ mostrarToast('🔒 Pedido já confirmado, não podes trocar'); return; }
   modoEntrega = modo;
   document.getElementById('abaEntrega').classList.toggle('ativa', modo==='entrega');
   document.getElementById('abaLoja').classList.toggle('ativa', modo==='loja');
@@ -201,25 +219,23 @@ function atualizarPassos(){
   document.getElementById('p1').className = temComp||check ? 'feito' : 'ativo';
   document.getElementById('p2').className = temComp ? 'feito' : '';
   document.getElementById('p3').className = check ? 'feito' : '';
-  document.getElementById('p4').className = '';
+  if(!pedidoJaConfirmado) document.getElementById('p4').className = '';
 }
 function lerComprovativo(e){
+  if(pedidoJaConfirmado){ mostrarToast('🔒 Pedido já confirmado'); return; }
   let f = e.target.files[0];
   if(!f) return;
   comprovativoNome = f.name; comprovativoTipo = f.type;
-  let nomeCurto = f.name.length > 28 ? f.name.slice(0,16) + '...' + f.name.slice(-10) : f.name;
-  document.getElementById('nomeFicheiro').textContent = '✅ ' + nomeCurto;
   let reader = new FileReader();
   reader.onload = function(ev){
     comprovativoData = ev.target.result;
-    let prev = document.getElementById('previewComp');
-    prev.style.display='block';
-    if(f.type.includes('pdf') || f.name.toLowerCase().endsWith('.pdf')){
-      prev.innerHTML = `<div class="comp-ok">📄 <b>PDF carregado</b><br><span class="nome-ficheiro-curto">${nomeCurto}</span><br><small style="color:#16a34a;font-weight:700">✅ Pronto para enviar</small></div>`;
-    } else {
-      prev.innerHTML = `<img src="${comprovativoData}"><span class="nome-ficheiro-curto">${nomeCurto}</span>`;
-    }
-    atualizarPassos(); mostrarToast('📎 Comprovativo carregado');
+    document.getElementById('boxUpload').classList.add('adicionado');
+    document.getElementById('iconeUpload').textContent = '✅';
+    document.getElementById('textoUpload').textContent = 'Comprovativo adicionado';
+    let nf = document.getElementById('nomeFicheiro');
+    nf.style.display = 'block';
+    nf.textContent = '✅ Adicionado - clica para trocar';
+    atualizarPassos(); mostrarToast('✅ Comprovativo adicionado');
   };
   reader.readAsDataURL(f);
 }
@@ -297,12 +313,35 @@ async function renderizar(){
   }).join('');
   atualizarTotais();
 }
-function mudarQtd(idx, delta){ let c = getCarrinho(); c[idx].qtd = (c[idx].qtd||1) + delta; if(c[idx].qtd <= 0) c.splice(idx,1); setCarrinho(c); renderizar(); }
-function remover(idx){ let c = getCarrinho(); c.splice(idx,1); setCarrinho(c); renderizar(); }
+function mudarQtd(idx, delta){
+  if(pedidoJaConfirmado){ mostrarToast('🔒 Pedido já confirmado'); return; }
+  let c = getCarrinho(); c[idx].qtd = (c[idx].qtd||1) + delta; if(c[idx].qtd <= 0) c.splice(idx,1); setCarrinho(c); renderizar();
+}
+function remover(idx){
+  if(pedidoJaConfirmado){ mostrarToast('🔒 Pedido já confirmado'); return; }
+  let c = getCarrinho(); c.splice(idx,1); setCarrinho(c); renderizar();
+}
 function abrirLimpar(){ document.getElementById('modalLimpar').classList.add('aberto'); }
 function fecharLimpar(){ document.getElementById('modalLimpar').classList.remove('aberto'); }
-function confirmarLimpar(){ fecharLimpar(); setCarrinho([]); renderizar(); mostrarToast('🗑️ Carrinho limpo'); }
+function confirmarLimpar(){
+  fecharLimpar();
+  // Limpar desbloqueia para um NOVO pedido - mas o código antigo já foi enviado para o WhatsApp e fica guardado
+  pedidoJaConfirmado = false; codigoJaGerado = ''; comprovativoData = null; comprovativoNome = '';
+  document.getElementById('btnFinalizar').disabled = false;
+  document.getElementById('btnFinalizar').textContent = '✅ Confirmar Pedido e Receber Código';
+  document.getElementById('checkPago').disabled = false; document.getElementById('checkPago').checked = false;
+  document.getElementById('comprovativo').disabled = false; document.getElementById('comprovativo').value = '';
+  document.getElementById('boxUpload').classList.remove('bloqueado','adicionado');
+  document.getElementById('iconeUpload').textContent = '📎';
+  document.getElementById('textoUpload').textContent = 'Clica para subir o comprovativo';
+  document.getElementById('nomeFicheiro').style.display = 'none';
+  document.getElementById('avisoUnico').style.display = 'none';
+  document.getElementById('boxCodigo').style.display = 'none';
+  gerarCodigo();
+  setCarrinho([]); renderizar(); mostrarToast('🗑️ Carrinho limpo - podes começar um NOVO pedido');
+}
 function finalizar(){
+  if(pedidoJaConfirmado){ mostrarToast('🔒 Já confirmaste! Teu código é ' + codigoRef); return; }
   let carrinho = getCarrinho(); let erro = document.getElementById('erroForm'); erro.style.display='none';
   if(!carrinho.length){ mostrarToast('🛒 Carrinho vazio'); return; }
   let nome = document.getElementById('nome').value.trim();
@@ -322,12 +361,15 @@ function finalizar(){
   }
   let total = carrinho.reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
   let aPagar = modoEntrega==='entrega' ? Math.round(total/2) : total;
-  document.getElementById('textoFinalizar').textContent = `Pagaste ${aPagar.toLocaleString()} Kz • Vais receber o código ${codigoRef} • Vais ser levado para o WhatsApp.`;
+  document.getElementById('textoFinalizar').textContent = `Pagaste ${aPagar.toLocaleString()} Kz • Vais receber o código ÚNICO ${codigoRef} • Vais ser levado para o WhatsApp.`;
   document.getElementById('modalFinalizar').classList.add('aberto');
 }
 function fecharFinalizar(){ document.getElementById('modalFinalizar').classList.remove('aberto'); }
 function confirmarFinalizar(){
+  if(pedidoJaConfirmado){ fecharFinalizar(); mostrarToast('🔒 Já confirmaste! Teu código é ' + codigoRef); return; }
   fecharFinalizar();
+  // TRAVA LOGO - NÃO DEIXA CLICAR 2 VEZES
+  bloquearPedido();
   let carrinho = getCarrinho();
   let nome = document.getElementById('nome').value.trim();
   let telefone = document.getElementById('telefone').value.trim();
@@ -340,28 +382,28 @@ function confirmarFinalizar(){
     else if(pag.tipo==='PayPay') detalhePag=`\n💸 PayPay - Ref: ${pag.referencia||pag.conta||''} | Tel: ${pag.telefone||''}`;
     else if(pag.tipo==='IBAN') detalhePag=`\n🏦 IBAN: ${pag.iban||pag.conta||''} (${pag.nome||pag.titular||''})`;
   }
-  document.getElementById('boxCodigo').style.display='block';
-  document.getElementById('p4').className='feito';
   let msg='';
   if(modoEntrega==='entrega'){
     let pais = document.getElementById('pais').value.trim();
     let cidade = document.getElementById('cidade').value.trim();
     let ref = document.getElementById('referenciaZona').value.trim();
     let metade = Math.round(total/2);
-    msg = `🛒 *NOVO PEDIDO - CASA NOVA*\n\n🚚 *ENTREGA A DOMICÍLIO*\n👤 Cliente: ${nome}\n📞 ${telefone}\n🌍 País: ${pais}\n🏙️ Cidade: ${cidade}\n📍 Referência Zona: ${ref}\n💳 Pagamento: ${pagamento}${detalhePag}\n✅ *Pagamento confirmado pelo cliente*\n📎 Comprovativo: ${comprovativoNome} (anexado)\n🔖 *Código de Referência: ${codigoRef}*\n\n📦 *Produtos:*\n` + carrinho.map(i=>`• ${i.nome} - ${Number(i.preco).toLocaleString()} Kz x ${i.qtd} = ${(Number(i.preco)*(i.qtd||1)).toLocaleString()} Kz`).join('\n') + `\n\n💰 *Total: ${total.toLocaleString()} Kz*\n✅ *Pago agora 50%: ${metade.toLocaleString()} Kz*\n📦 *Falta pagar na entrega: ${(total-metade).toLocaleString()} Kz*`;
+    msg = `🛒 *NOVO PEDIDO - CASA NOVA*\n\n🚚 *ENTREGA A DOMICÍLIO*\n👤 Cliente: ${nome}\n📞 ${telefone}\n🌍 País: ${pais}\n🏙️ Cidade: ${cidade}\n📍 Referência Zona: ${ref}\n💳 Pagamento: ${pagamento}${detalhePag}\n✅ *Pagamento confirmado pelo cliente*\n📎 Comprovativo: ${comprovativoNome} (anexado)\n🔖 *Código ÚNICO de Referência: ${codigoRef}*\n⚠️ *Este código só foi gerado 1 vez. Não aceites outro código com este comprovativo.*\n\n📦 *Produtos:*\n` + carrinho.map(i=>`• ${i.nome} - ${Number(i.preco).toLocaleString()} Kz x ${i.qtd} = ${(Number(i.preco)*(i.qtd||1)).toLocaleString()} Kz`).join('\n') + `\n\n💰 *Total: ${total.toLocaleString()} Kz*\n✅ *Pago agora 50%: ${metade.toLocaleString()} Kz*\n📦 *Falta pagar na entrega: ${(total-metade).toLocaleString()} Kz*`;
   } else {
-    msg = `🛒 *NOVO PEDIDO - CASA NOVA*\n\n🏪 *RECEBER NA LOJA*\n👤 Cliente: ${nome}\n📞 ${telefone}\n🏪 Loja: ${_lojaInfo.pais}, ${_lojaInfo.cidade}, ${_lojaInfo.bairro}\n💳 Pagamento: ${pagamento}${detalhePag}\n✅ *Pagamento confirmado pelo cliente*\n📎 Comprovativo: ${comprovativoNome} (anexado)\n🔖 *Código de Referência: ${codigoRef}*\n\n📦 *Produtos:*\n` + carrinho.map(i=>`• ${i.nome} - ${Number(i.preco).toLocaleString()} Kz x ${i.qtd} = ${(Number(i.preco)*(i.qtd||1)).toLocaleString()} Kz`).join('\n') + `\n\n💰 *Total pago: ${total.toLocaleString()} Kz*`;
+    msg = `🛒 *NOVO PEDIDO - CASA NOVA*\n\n🏪 *RECEBER NA LOJA*\n👤 Cliente: ${nome}\n📞 ${telefone}\n🏪 Loja: ${_lojaInfo.pais}, ${_lojaInfo.cidade}, ${_lojaInfo.bairro}\n💳 Pagamento: ${pagamento}${detalhePag}\n✅ *Pagamento confirmado pelo cliente*\n📎 Comprovativo: ${comprovativoNome} (anexado)\n🔖 *Código ÚNICO de Referência: ${codigoRef}*\n⚠️ *Este código só foi gerado 1 vez. Não aceites outro código com este comprovativo.*\n\n📦 *Produtos:*\n` + carrinho.map(i=>`• ${i.nome} - ${Number(i.preco).toLocaleString()} Kz x ${i.qtd} = ${(Number(i.preco)*(i.qtd||1)).toLocaleString()} Kz`).join('\n') + `\n\n💰 *Total pago: ${total.toLocaleString()} Kz*`;
   }
   try{
     let refs = JSON.parse(localStorage.getItem('minhas_referencias')||'[]');
-    refs.push({codigo: codigoRef, data: new Date().toISOString(), total, nome, telefone, tipo:modoEntrega, comprovativo: comprovativoNome, pagamento});
+    // Não deixa guardar 2 vezes o mesmo comprovativo + mesmo código
+    let jaExiste = refs.some(r=>r.comprovativo===comprovativoNome && r.codigo===codigoRef);
+    if(!jaExiste) refs.push({codigo: codigoRef, data: new Date().toISOString(), total, nome, telefone, tipo:modoEntrega, comprovativo: comprovativoNome, pagamento});
     localStorage.setItem('minhas_referencias', JSON.stringify(refs));
     localStorage.setItem('ultimo_comprovativo', comprovativoData||'');
   }catch(e){}
   let numero = getWhatsAppLoja();
   window.open('https://wa.me/'+numero+'?text='+encodeURIComponent(msg), '_blank');
-  mostrarToast('✅ Código gerado: ' + codigoRef);
-  gerarCodigo();
+  mostrarToast('✅ Código ÚNICO gerado: ' + codigoRef + ' - Faz print!');
+  // NÃO chama gerarCodigo() aqui - se chamasse, ia gerar outro código e ele podia mentir
 }
 async function carregarLogoTopo(){
   try{

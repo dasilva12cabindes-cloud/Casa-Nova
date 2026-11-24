@@ -1,91 +1,192 @@
 <!DOCTYPE html>
-<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Cadastrar - Casa Nova</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js"></script>
-<script src="js/supabase.js"></script>
-<style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
-.topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}
-.topo .logo{display:flex;align-items:center;gap:8px}
-.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none}
-.topo.tem-logo .logo-text{display:none}
-.topo a{color:#fff;text-decoration:none;font-weight:700}
-.caixa{background:#fff;padding:18px;border-radius:14px;margin-top:12px}
-.caixa h3{margin:0 0 4px}
-.caixa p{color:#666;font-size:13px;margin:0 0 12px}
-label{font-size:13px;font-weight:700;display:block;margin:12px 0 4px}
-input{width:100%;padding:12px;border:1px solid #cfd5df;border-radius:8px;font-size:15px}
-.btn{border:0;padding:13px;border-radius:8px;width:100%;font-weight:700;cursor:pointer;font-size:15px;margin-top:16px}
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entrar / Cadastrar - Casa Nova</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,Arial,sans-serif;background:#f5f6f8;color:#1d2330;padding:16px}
+.topo{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.topo a{color:#0b5ed7;font-weight:700;text-decoration:none}
+.card{background:#fff;border-radius:20px;padding:20px;max-width:480px;margin:0 auto}
+h1{font-size:1.4rem;margin-bottom:4px}
+.sub{color:#666;font-size:13px;margin-bottom:16px}
+.abas{display:flex;background:#eef2ff;border-radius:12px;padding:4px;margin-bottom:16px}
+.aba{flex:1;padding:11px;border:0;border-radius:9px;background:transparent;font-weight:700;cursor:pointer;font-size:15px}
+.aba.ativa{background:#0b5ed7;color:#fff}
+label{font-weight:700;font-size:14px;display:block;margin:12px 0 6px}
+input{width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;font-size:15px}
+.btn{width:100%;padding:14px;border:0;border-radius:12px;font-weight:800;font-size:16px;cursor:pointer;margin-top:16px}
 .btn-verde{background:#16a34a;color:#fff}
-.btn-cinza{background:#e5e7eb;color:#111}
-.link-recuperar{display:block;text-align:center;margin-top:12px;color:#0b5ed7;font-weight:700;font-size:14px;text-decoration:none}
-#toast{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:14px 18px;border-radius:14px;z-index:9999;font-weight:700;max-width:92%;text-align:center;transition:.35s;opacity:0;pointer-events:none}
-#toast.mostrar{transform:translateX(-50%) translateY(0);opacity:1}
-#toast.sucesso{background:#16a34a}
-#toast.erro{background:#dc2626}
-</style></head>
+.btn-azul{background:#0b5ed7;color:#fff}
+.link{display:block;text-align:center;margin-top:14px;color:#0b5ed7;font-weight:700;cursor:pointer;text-decoration:none;font-size:14px;background:none;border:0;width:100%}
+.erro{background:#fee2e2;color:#dc2626;padding:10px;border-radius:10px;font-size:13px;margin-top:10px;display:none}
+.sucesso{background:#dcfce7;color:#15803d;padding:10px;border-radius:10px;font-size:13px;margin-top:10px;display:none}
+#modalRecuperar{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+#modalRecuperar.aberto{display:flex}
+.modal-rec-box{background:#fff;width:100%;max-width:380px;border-radius:20px;padding:22px;text-align:center}
+.modal-rec-box input{margin-top:10px}
+</style>
+</head>
 <body>
-<div id="toast"></div>
-<div class="topo" id="topoSite"><div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>Casa Nova</b></span></div><a href="index.html">← Voltar</a></div>
+<div class="topo"><a href="index.html">⬅ Voltar à Loja</a></div>
+<div class="card">
+<h1 id="titulo">👤 Cadastrar Cliente</h1>
+<p class="sub" id="subtitulo">Cria a tua conta para comprar mais rápido na Casa Nova.</p>
 
-<div class="caixa">
-<h3>👤 Cadastrar Cliente</h3>
-<p>Cria a tua conta para comprar mais rápido na Casa Nova.</p>
+<div class="abas">
+  <button class="aba" id="abaEntrar" onclick="mostrarAba('entrar')">Entrar</button>
+  <button class="aba ativa" id="abaCadastrar" onclick="mostrarAba('cadastrar')">Cadastrar</button>
+</div>
 
-<label>👤 Nome Completo *</label>
-<input id="nome" placeholder="Ex: João Silva">
+<div id="formEntrar" style="display:none">
+  <label>📧 Email *</label>
+  <input id="loginEmail" type="email" placeholder="Ex: silva@gmail.com">
+  <label>🔒 Senha *</label>
+  <input id="loginSenha" type="password" placeholder="Tua senha">
+  <div id="erroLogin" class="erro"></div>
+  <div id="sucessoLogin" class="sucesso"></div>
+  <button class="btn btn-azul" onclick="fazerLogin()">Entrar na Minha Conta</button>
+  <button class="link" onclick="abrirRecuperar()">🔑 Esqueci a minha senha / Recuperar conta</button>
+  <button class="link" style="color:#666" onclick="mostrarAba('cadastrar')">Ainda não tens conta? Cadastrar agora</button>
+</div>
 
-<label>📞 Telefone / WhatsApp *</label>
-<input id="telefone" placeholder="Ex: 923 000 000" type="tel">
+<div id="formCadastrar">
+  <label>👤 Nome Completo *</label>
+  <input id="nome" placeholder="Ex: Cosme Bento">
+  <label>📞 Telefone / WhatsApp *</label>
+  <input id="telefone" placeholder="Ex: 942788931">
+  <label>📍 Morada *</label>
+  <input id="morada" placeholder="Ex: Viana, Luanda">
+  <label>📧 Email *</label>
+  <input id="email" type="email" placeholder="Ex: silva@gmail.com">
+  <label>🔒 Criar Senha *</label>
+  <input id="senha" type="password" placeholder="Mínimo 6 caracteres">
+  <div id="erroCad" class="erro"></div>
+  <div id="sucessoCad" class="sucesso"></div>
+  <button class="btn btn-verde" onclick="cadastrar()">✅ Cadastrar</button>
+  <button class="link" onclick="mostrarAba('entrar')">Já tens conta? Entrar</button>
+</div>
+</div>
 
-<label>📍 Morada / Bairro</label>
-<input id="morada" placeholder="Ex: Viana, Luanda">
-
-<label>📧 Email *</label>
-<input id="email" placeholder="Ex: joao@gmail.com" type="email">
-<small style="color:#666">Obrigatório para recuperar a tua conta se perderes o acesso.</small>
-
-<label>🔒 Criar Senha *</label>
-<input id="senha" type="password" placeholder="Mínimo 6 caracteres">
-
-<button class="btn btn-verde" onclick="cadastrar()">✅ Cadastrar</button>
-<a class="link-recuperar" href="#" onclick="recuperarConta();return false;">🔑 Esqueci a minha senha / Recuperar conta</a>
-<button class="btn btn-cinza" onclick="location.href='index.html'">Cancelar</button>
+<div id="modalRecuperar" onclick="if(event.target.id==='modalRecuperar') fecharRecuperar()">
+  <div class="modal-rec-box">
+    <div style="font-size:40px">🔑</div>
+    <h3 style="margin:8px 0">Recuperar Conta</h3>
+    <p style="color:#666;font-size:14px">Escreve o teu email cadastrado para recuperar a conta:</p>
+    <input id="recEmail" type="email" placeholder="Teu email cadastrado">
+    <div id="recNovaSenhaBox" style="display:none">
+      <label style="text-align:left">Nova Senha *</label>
+      <input id="recNovaSenha" type="password" placeholder="Nova senha, mínimo 6 caracteres">
+    </div>
+    <div id="recMsg" class="erro" style="display:none"></div>
+    <div id="recOk" class="sucesso" style="display:none"></div>
+    <button class="btn btn-azul" id="btnRecuperar" onclick="procurarConta()">Procurar Minha Conta</button>
+    <button class="btn" style="background:#e5e7eb" onclick="fecharRecuperar()">Cancelar</button>
+  </div>
 </div>
 
 <script>
-let toastTimer;
-function aviso(msg,tipo){let t=document.getElementById('toast');t.textContent=msg;t.className='mostrar '+(tipo||'sucesso');clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='';},3000);}
-async function carregarLogoTopo(){
-  try{let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();let logo=r.data?.logo_url;if(logo){let img=document.getElementById('logoTopo');img.src=logo;img.style.display='block';document.getElementById('topoSite').classList.add('tem-logo');}}catch(e){}
+function getClientes(){
+  try{ return JSON.parse(localStorage.getItem('clientes_casa_nova')||'[]'); }catch(e){ return []; }
 }
-async function cadastrar(){
+function setClientes(l){ localStorage.setItem('clientes_casa_nova', JSON.stringify(l)); }
+
+function mostrarAba(qual){
+  document.getElementById('formEntrar').style.display = qual==='entrar' ? 'block' : 'none';
+  document.getElementById('formCadastrar').style.display = qual==='cadastrar' ? 'block' : 'none';
+  document.getElementById('abaEntrar').classList.toggle('ativa', qual==='entrar');
+  document.getElementById('abaCadastrar').classList.toggle('ativa', qual==='cadastrar');
+  document.getElementById('titulo').textContent = qual==='entrar' ? '👋 Entrar na Conta' : '👤 Cadastrar Cliente';
+  document.getElementById('subtitulo').textContent = qual==='entrar' ? 'Bem-vindo de volta! Entra para comprar.' : 'Cria a tua conta para comprar mais rápido na Casa Nova.';
+}
+let params = new URLSearchParams(location.search);
+if(params.get('aba')==='entrar') mostrarAba('entrar');
+
+function cadastrar(){
   let nome=document.getElementById('nome').value.trim();
   let telefone=document.getElementById('telefone').value.trim();
   let morada=document.getElementById('morada').value.trim();
   let email=document.getElementById('email').value.trim().toLowerCase();
   let senha=document.getElementById('senha').value;
-  if(!nome||!telefone) return aviso('⚠️ Preenche nome e telefone','erro');
-  if(!email || !email.includes('@')) return aviso('⚠️ O Email é obrigatório para recuperar a conta','erro');
-  if(!senha || senha.length<6) return aviso('⚠️ A senha precisa de no mínimo 6 caracteres','erro');
-  localStorage.setItem('cliente_casa_nova', JSON.stringify({nome,telefone,morada,email}));
-  let r=await db.from('clientes').insert([{nome_cliente:nome,telefone:telefone,morada:morada,email:email,senha:senha}]);
-  if(r.error){
-    if(r.error.message.includes('duplicate') || r.error.code=='23505') return aviso('⚠️ Este email já está cadastrado. Usa Recuperar Conta.','erro');
-    return aviso('❌ '+r.error.message,'erro');
+  let erro=document.getElementById('erroCad');
+  let ok=document.getElementById('sucessoCad');
+  erro.style.display='none'; ok.style.display='none';
+  if(!nome||!telefone||!morada||!email||!senha){ erro.textContent='Preenche todos os campos!'; erro.style.display='block'; return; }
+  if(senha.length<6){ erro.textContent='Senha deve ter no mínimo 6 caracteres!'; erro.style.display='block'; return; }
+  let lista=getClientes();
+  if(lista.find(c=>c.email===email)){ erro.textContent='Este email já está cadastrado! Tenta Entrar.'; erro.style.display='block'; return; }
+  let cliente={nome,telefone,morada,email,senha};
+  lista.push(cliente); setClientes(lista);
+  localStorage.setItem('cliente_casa_nova', JSON.stringify(cliente));
+  ok.textContent='✅ Conta criada! A entrar...'; ok.style.display='block';
+  setTimeout(()=>location.href='index.html',1000);
+}
+
+function fazerLogin(){
+  let email=document.getElementById('loginEmail').value.trim().toLowerCase();
+  let senha=document.getElementById('loginSenha').value;
+  let erro=document.getElementById('erroLogin');
+  let ok=document.getElementById('sucessoLogin');
+  erro.style.display='none'; ok.style.display='none';
+  if(!email||!senha){ erro.textContent='Escreve email e senha!'; erro.style.display='block'; return; }
+  let lista=getClientes();
+  let atual=null;
+  try{ atual=JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
+  if(atual && !lista.find(c=>c.email===atual.email)) lista.push(atual);
+  let achado=lista.find(c=>c.email===email && c.senha===senha);
+  if(!achado){
+    let existe=lista.find(c=>c.email===email);
+    erro.textContent= existe ? 'Senha errada! Tenta de novo ou clica em Recuperar conta.' : 'Conta não encontrada! Clica em Cadastrar.';
+    erro.style.display='block'; return;
   }
-  aviso('✅ Bem-vindo, '+nome+'! Cadastro feito.');
-  setTimeout(()=>location.href='index.html',1500);
+  localStorage.setItem('cliente_casa_nova', JSON.stringify(achado));
+  ok.textContent='✅ Bem-vindo de volta, '+achado.nome.split(' ')[0]+'!'; ok.style.display='block';
+  setTimeout(()=>location.href='index.html',1000);
 }
-async function recuperarConta(){
-  let email=prompt('Escreve o teu email cadastrado para recuperar a conta:');
-  if(!email) return;
-  email=email.trim().toLowerCase();
-  let r=await db.from('clientes').select('*').eq('email',email).maybeSingle();
-  if(!r.data) return aviso('❌ Email não encontrado','erro');
-  // Envia email de recuperação via Supabase Auth se o cliente existir no Auth, senão avisa o dono
-  await db.auth.resetPasswordForEmail(email,{redirectTo: location.origin + '/recuperar.html'});
-  aviso('✅ Se o email existir, enviámos link de recuperação para '+email);
+
+let emailRecuperar='';
+function abrirRecuperar(){
+  document.getElementById('recEmail').value=document.getElementById('loginEmail').value||'';
+  document.getElementById('recNovaSenhaBox').style.display='none';
+  document.getElementById('btnRecuperar').textContent='Procurar Minha Conta';
+  document.getElementById('btnRecuperar').onclick=procurarConta;
+  document.getElementById('recMsg').style.display='none';
+  document.getElementById('recOk').style.display='none';
+  document.getElementById('modalRecuperar').classList.add('aberto');
 }
-carregarLogoTopo();
-</script></body></html>
+function fecharRecuperar(){ document.getElementById('modalRecuperar').classList.remove('aberto'); }
+function procurarConta(){
+  let email=document.getElementById('recEmail').value.trim().toLowerCase();
+  let msg=document.getElementById('recMsg');
+  let okBox=document.getElementById('recOk');
+  msg.style.display='none'; okBox.style.display='none';
+  if(!email){ msg.textContent='Escreve o teu email!'; msg.style.display='block'; return; }
+  let lista=getClientes();
+  let atual=null;
+  try{ atual=JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
+  if(atual && !lista.find(c=>c.email===atual.email)) lista.push(atual);
+  let achado=lista.find(c=>c.email===email);
+  if(!achado){ msg.textContent='Email não encontrado! Verifica ou cria uma conta nova.'; msg.style.display='block'; return; }
+  emailRecuperar=email;
+  document.getElementById('recNovaSenhaBox').style.display='block';
+  document.getElementById('btnRecuperar').textContent='Guardar Nova Senha e Entrar';
+  document.getElementById('btnRecuperar').onclick=salvarNovaSenha;
+  okBox.textContent='✅ Conta encontrada: '+achado.nome+'. Cria uma nova senha abaixo.';
+  okBox.style.display='block';
+}
+function salvarNovaSenha(){
+  let nova=document.getElementById('recNovaSenha').value;
+  let msg=document.getElementById('recMsg');
+  msg.style.display='none';
+  if(!nova||nova.length<6){ msg.textContent='Nova senha deve ter no mínimo 6 caracteres!'; msg.style.display='block'; return; }
+  let lista=getClientes();
+  let idx=lista.findIndex(c=>c.email===emailRecuperar);
+  if(idx>=0){ lista[idx].senha=nova; setClientes(lista); localStorage.setItem('cliente_casa_nova', JSON.stringify(lista[idx])); }
+  fecharRecuperar();
+  setTimeout(()=>location.href='index.html',600);
+}
+</script>
+</body>
+</html>

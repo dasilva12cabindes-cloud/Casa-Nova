@@ -11,7 +11,6 @@ body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
 .topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
 .topo.tem-logo .logo-text{display:none}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
-/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
 @keyframes logoZoom{
   0%{transform:scale(0.7) translateY(0) rotate(0deg)}
   25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
@@ -29,6 +28,11 @@ body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
 .caixa h3{background:#eff6ff;border:2px solid #0b5ed7;border-radius:999px;padding:10px 14px;text-align:center;margin:0 0 8px}
 .btn-sair{background:#dc2626;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer}
 .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-top:10px;line-height:1.7;font-size:14px}
+.msg-prep{background:#dcfce7;border:2px solid #16a34a;padding:14px;border-radius:12px;text-align:center;margin-top:12px;font-weight:800}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700}
+.badge-novo{background:#dbeafe;color:#1e40af}
+.badge-prep{background:#fef3c7;color:#92400e}
+.badge-entregue{background:#dcfce7;color:#166534}
 </style></head>
 <body>
 <div class="topo" id="topoSite"><div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>🔖 Meus Códigos</b></span></div><div style="display:flex;gap:8px"><a href="index.html">Loja →</a><button class="btn-sair" onclick="sairCliente()">🚪 Sair</button></div></div>
@@ -36,6 +40,7 @@ body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
 <div class="caixa">
   <h3>Os teus códigos ficam aqui 5 minutos</h3>
   <p style="color:#666;font-size:13px;text-align:center">Depois de 5 minutos o código some sozinho.<br>Aponta o código antes.</p>
+  <div id="areaMensagemPreparacao"></div>
   <div id="listaCodigos"></div>
 </div>
 
@@ -43,36 +48,105 @@ body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
 if(performance.getEntriesByType('navigation')[0]?.type === 'reload'){
   localStorage.removeItem('cliente_casa_nova');
 }
-
 function sairCliente(){
   if(!confirm('Queres mesmo sair?')) return;
   localStorage.removeItem('cliente_casa_nova');
   localStorage.removeItem('meus_codigos');
   location.href = 'index.html';
 }
-
+let statusPorCodigo = {};
+function badgeStatus(status){
+  let s=(status||'Novo').toLowerCase();
+  if(s.includes('entregue')) return '<span class="badge badge-entregue">✅ Entregue</span>';
+  if(s.includes('prepar')||s.includes('aceite')) return '<span class="badge badge-prep">🔥 Em Preparação</span>';
+  return '<span class="badge badge-novo">🆕 Novo - Aguarda resposta</span>';
+}
+function mostrarMensagemPreparacao(codigo){
+  let area = document.getElementById('areaMensagemPreparacao');
+  area.innerHTML = `<div class="msg-prep">✅ Teu pedido ${codigo} foi colocado em Preparação!<br><small style="font-weight:400">A loja já está a preparar. Esta mensagem some em 5 minutos depois de abrires.</small><br><small id="contagemMsg">Some em 05:00</small></div>`;
+  // Notificação na barra do cliente
+  if("Notification" in window && Notification.permission === "granted"){
+    try{ new Notification('✅ Casa Nova', {body: 'Teu pedido '+codigo+' foi colocado em Preparação!'}); }catch(e){}
+  }
+  // Some em 5 min depois de abrir / ver
+  let fim = Date.now() + 5*60*1000;
+  let timer = setInterval(()=>{
+    let falta = fim - Date.now();
+    if(falta <= 0){ clearInterval(timer); area.innerHTML=''; return; }
+    let m = Math.floor(falta/60000);
+    let s = Math.floor((falta%60000)/1000);
+    let el = document.getElementById('contagemMsg');
+    if(el) el.textContent = 'Some em 0'+m+':'+(s<10?'0'+s:s);
+  },1000);
+}
 function renderizar(){
   let meus = [];
   try{ meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]'); }catch(e){}
   let agora = Date.now();
   meus = meus.filter(m => (agora - (m.criado_em||0)) < 5*60*1000);
   localStorage.setItem('meus_codigos', JSON.stringify(meus));
-
   let div = document.getElementById('listaCodigos');
   if(!meus.length){
     div.innerHTML = `<p style="color:#666;text-align:center">Nenhum código.<br>Os códigos somem depois de 5 minutos.<br><a href="index.html" style="color:#0b5ed7;font-weight:700">Fazer um pedido →</a></p>`;
     return;
   }
-  div.innerHTML = meus.map(m => `
+  div.innerHTML = meus.map(m => {
+    let falta = 5*60*1000 - (agora - (m.criado_em||0));
+    let mm = Math.floor(falta/60000);
+    let ss = Math.floor((falta%60000)/1000);
+    let tempo = '0'+mm+':'+(ss<10?'0'+ss:ss);
+    let st = statusPorCodigo[m.codigo] || 'Novo';
+    return `
     <div class="card">
-      <div style="text-align:center;background:#111;color:#fff;padding:12px;border-radius:10px"><small>TEU CÓDIGO</small><br><b style="font-size:24px;letter-spacing:2px">${m.codigo}</b></div>
+      <div style="text-align:center;background:#111;color:#fff;padding:12px;border-radius:10px"><small>TEU CÓDIGO</small><br><b style="font-size:24px;letter-spacing:2px">${m.codigo}</b><br><small style="color:#fbbf24">⏰ Some em ${tempo} - Escreve / faz print!</small></div>
+      <div style="text-align:center;margin-top:8px">${badgeStatus(st)}</div>
       <div style="margin-top:10px">👤 ${m.nome||''}<br>📦 ${m.itens||''}<br>💰 Total: ${Number(m.total||0).toLocaleString()} Kz<br>✅ Pago: ${Number(m.pago||0).toLocaleString()} Kz<br>❗ Falta: ${Number(m.falta||0).toLocaleString()} Kz<br>🚚 ${m.tipo==='loja' ? 'Receber na Loja' : 'Entrega a Domicílio'}</div>
     </div>
-  `).join('');
+  `}).join('');
+}
+// Ouvir em tempo real se o pedido foi para Preparação
+function ligarTempoReal(){
+  try{
+    let meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]');
+    if(!meus.length) return;
+    // Pedir permissão para notificação na barra
+    if("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied"){
+      Notification.requestPermission();
+    }
+    meus.forEach(m=>{
+      db.channel('meu-pedido-'+m.codigo)
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'pedidos',filter:'codigo=eq.'+m.codigo}, payload=>{
+        let novo = payload.new.status || payload.new.estado || '';
+        statusPorCodigo[m.codigo] = novo;
+        renderizar();
+        if(novo === 'Em Preparação' || novo === 'Aceite'){
+          mostrarMensagemPreparacao(m.codigo);
+        }
+      }).subscribe();
+    });
+    // Também verifica o status atual no Supabase
+    meus.forEach(async m=>{
+      try{
+        let r = await db.from('pedidos').select('status,estado').eq('codigo', m.codigo).maybeSingle();
+        if(r.data){
+          let st = r.data.status || r.data.estado || 'Novo';
+          statusPorCodigo[m.codigo] = st;
+          renderizar();
+          if(st === 'Em Preparação' || st === 'Aceite'){
+            // Se já está em preparação e ele abriu agora, mostra a mensagem
+            mostrarMensagemPreparacao(m.codigo);
+          }
+        }
+      }catch(e){}
+    });
+  }catch(e){ console.log(e); }
 }
 async function carregarLogoTopo(){
   try{ let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle(); let logo=r.data?.logo_url; if(logo){ let img=document.getElementById('logoTopo'); img.src=logo; img.style.display='block'; document.getElementById('topoSite').classList.add('tem-logo'); } }catch(e){}
 }
 carregarLogoTopo();
 renderizar();
+ligarTempoReal();
+// Atualiza a contagem a cada 1 segundo para o código sumir em 5 min
+setInterval(renderizar, 1000);
 </script></body></html>

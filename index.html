@@ -22,7 +22,7 @@ a { color: inherit; text-decoration: none; }
 .topo nav { display: flex; gap: 16px; align-items: center; }
 .topo nav a, #auth-links { display: inline-flex; gap: 12px; }
 
-/* BANNERS / PUBLICIDADE - DE VOLTA */
+/* BANNERS / PUBLICIDADE */
 .banners { width: 100%; max-width: 1100px; margin: 12px auto 0; padding: 0 16px; display: none; }
 .banners img { width: 100%; height: 180px; object-fit: cover; display: block; border-radius: 12px; background: #eef0f4; }
 @media (max-width: 700px){ .banners img{ height: 140px; } }
@@ -81,6 +81,17 @@ a { color: inherit; text-decoration: none; }
 let todosProdutos = [];
 let categoriaAtual = 'Todas';
 
+// CATEGORIA AUTOMATICA PELO NOME - resolve o problema do "Outros"
+function categoriaAuto(p){
+  if(p.categoria && p.categoria !== 'Outros' && p.categoria.trim() !== '') return p.categoria;
+  let n = (p.nome||'').toLowerCase();
+  if(n.includes('samsung') || n.includes('galaxy') || n.includes('iphone') || n.includes('telemovel') || n.includes('telemóvel') || n.includes('telefone') || n.includes('smartphone')) return 'Telemóveis';
+  if(n.includes('arca') || n.includes('geleira') || n.includes('frigorifico') || n.includes('frigorífico') || n.includes('fogao') || n.includes('fogão') || n.includes('microondas') || n.includes('micro-ondas') || n.includes('maquina') || n.includes('máquina') || n.includes('liquidificadora') || n.includes('fritadeira') || n.includes('ventilador') || n.includes('ar condicionado') || n.includes('ferro') || n.includes('chaleira')) return 'Eletrodomésticos';
+  if(n.includes('tv') || n.includes('televisao') || n.includes('televisão') || n.includes('coluna') || n.includes('som') || n.includes('smart tv')) return 'TV e Som';
+  if(n.includes('computador') || n.includes('portatil') || n.includes('portátil') || n.includes('tablet') || n.includes('laptop')) return 'Informática';
+  return 'Outros';
+}
+
 function atualizarCarrinho(){
   let carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
   let qtd = carrinho.reduce((s,i)=>s + (i.qtd||1), 0);
@@ -107,7 +118,7 @@ function filtrarCategoria(cat, btn){
 function filtrar(){
   let termo = document.getElementById('busca').value.toLowerCase().trim();
   let lista = todosProdutos.filter(p=>{
-    let okCat = categoriaAtual==='Todas' || (p.categoria||'Outros')===categoriaAtual;
+    let okCat = categoriaAtual==='Todas' || categoriaAuto(p)===categoriaAtual;
     let okBusca = !termo || (p.nome||'').toLowerCase().includes(termo);
     return okCat && okBusca;
   });
@@ -133,7 +144,6 @@ async function carregarLoja(){
   try{
     const r = await db.from('loja_config').select('*').eq('id',1).maybeSingle();
     cfg = r.data || {};
-    // LOGOTIPO
     if(cfg.logo_url){
       const logo = document.getElementById('logoTopo');
       logo.src = cfg.logo_url;
@@ -143,7 +153,6 @@ async function carregarLoja(){
       document.getElementById('logoTopo').style.display = 'none';
       document.getElementById('topoSite').classList.remove('tem-logo');
     }
-    // BANNERS
     let banners = [];
     try{
       if(typeof cfg.banners === 'string') banners = JSON.parse(cfg.banners || '[]');
@@ -162,11 +171,12 @@ async function carregarLoja(){
     }
   }catch(e){ console.log(e); }
 
-  // 2. PRODUTOS
+  // 2. PRODUTOS + CATEGORIAS AUTOMATICAS
   try{
     const r2 = await db.from('produtos').select('*').order('id',{ascending:false});
     todosProdutos = r2.data || [];
-    let cats = [...new Set(todosProdutos.map(p=>p.categoria||'Outros'))];
+    todosProdutos.forEach(p => { p.categoria = categoriaAuto(p); });
+    let cats = [...new Set(todosProdutos.map(p=>p.categoria))];
     document.getElementById('categorias').innerHTML =
       `<button class="chip ativo" onclick="filtrarCategoria('Todas',this)">Todas</button>` +
       cats.map(c=>`<button class="chip" onclick="filtrarCategoria('${c}',this)">${c}</button>`).join('');

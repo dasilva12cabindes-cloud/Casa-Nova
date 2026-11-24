@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Logotipo & Banner - Casa Nova</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
+.topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}
+.topo .logo{display:flex;align-items:center;gap:8px}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:#fff;border-radius:8px;padding:2px;display:none}
+.topo.tem-logo .logo-text{display:none}
+.topo a{color:#fff;text-decoration:none;font-weight:700}
+.caixa{background:#fff;padding:14px;border-radius:12px;margin-top:12px}
+input{width:100%;padding:11px;margin-bottom:8px;border:1px solid #cfd5df;border-radius:8px;font-size:15px}
+.btn{background:#0b5ed7;color:#fff;border:0;padding:11px;border-radius:8px;width:100%;font-weight:700;cursor:pointer}
+.btn-verde{background:#16a34a;color:#fff;border:0;padding:11px;border-radius:8px;width:100%;font-weight:700;cursor:pointer}
+.btn-vermelho{background:#dc2626;color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
+.btn-cinza{background:#e5e7eb;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
+#toast{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:14px 18px;border-radius:14px;z-index:9999;font-size:15px;font-weight:700;max-width:92%;text-align:center;transition:.35s;opacity:0;pointer-events:none}
+#toast.mostrar{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.sucesso{background:#16a34a}
+#toast.erro{background:#dc2626}
+#toast.aviso{background:#f59e0b;color:#111}
+#modalFundo{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9998;padding:16px}
+#modalFundo.mostrar{display:flex}
+#modalCaixa{background:#fff;width:100%;max-width:360px;border-radius:18px;padding:20px;text-align:center}
+</style></head>
+<body>
+<div id="toast"></div>
+<div id="modalFundo"><div id="modalCaixa"><h3>Confirmar?</h3><p id="modalTexto"></p><button class="btn-verde" id="modalSim" style="margin-top:10px">✅ Sim, continuar</button><button class="btn-cinza" onclick="fecharModal(false)" style="margin-top:8px">Cancelar</button></div></div>
+
+<div class="topo" id="topoSite">
+  <div class="logo">
+    <img id="logoTopo" class="logo-img" src="">
+    <span class="logo-text"><b>Casa Nova</b></span>
+  </div>
+  <a href="admin.html">← Voltar</a>
+</div>
+
+<div class="caixa"><h3>🏠 Logotipo da Loja</h3>
+<p style="color:#666;font-size:14px">Este logotipo aparece sozinho no topo do site. Quando trocas aqui, troca para TODAS as páginas.</p>
+<div id="logoAtual">A carregar...</div>
+<input type="file" id="fileLogo" accept="image/*">
+<button class="btn" onclick="subirLogo()">📤 Subir Logotipo</button>
+</div>
+
+<div class="caixa"><h3>🖼️ Banners / Publicidade</h3>
+<input id="urlBanner" placeholder="Cola o link da foto aqui...">
+<button class="btn" onclick="adicionarBanner()">+ Adicionar Banner</button>
+<p style="text-align:center;color:#888">OU</p>
+<input type="file" id="fileBanner" accept="image/*">
+<button class="btn" onclick="subirBanner()">📤 Subir Foto do Telefone</button>
+<div id="listaBanners">A carregar...</div>
+</div>
+
+<script>
+let toastTimer;
+function aviso(msg, tipo){
+  let t=document.getElementById('toast');
+  t.textContent=msg; t.className='mostrar '+(tipo||'sucesso');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{ t.className=''; }, 3000);
+}
+let resolverModal=null;
+function perguntar(texto){
+  return new Promise(res=>{
+    resolverModal=res;
+    document.getElementById('modalTexto').textContent=texto;
+    document.getElementById('modalFundo').classList.add('mostrar');
+  });
+}
+function fecharModal(v){
+  document.getElementById('modalFundo').classList.remove('mostrar');
+  if(resolverModal){ resolverModal(v); resolverModal=null; }
+}
+document.getElementById('modalSim').onclick=()=>fecharModal(true);
+
+let banners=[];
+function mostrarBanners(){
+  let div=document.getElementById('listaBanners');
+  if(!banners.length){div.innerHTML='<p>Nenhum banner ainda.</p>';return}
+  div.innerHTML=banners.map((b,i)=>'<div style="border-top:1px solid #eee;padding:10px 0"><img src="'+b+'" style="width:100%;border-radius:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><b>Banner '+(i+1)+'</b><button class="btn-vermelho" onclick="apagarBanner('+i+')">🗑️ Apagar</button></div></div>').join('');
+}
+async function carregarTudo(){
+  const r=await db.from('loja_config').select('*').eq('id',1).maybeSingle();
+  let cfg=r.data||{};
+  if(cfg.logo_url){
+    document.getElementById('logoAtual').innerHTML='<img src="'+cfg.logo_url+'" style="width:100%;max-height:150px;object-fit:contain;background:#0b5ed7;border-radius:8px"><p style="text-align:center;color:green">✅ Logotipo atual</p>';
+    let imgTopo=document.getElementById('logoTopo');
+    imgTopo.src=cfg.logo_url; imgTopo.style.display='block';
+    document.getElementById('topoSite').classList.add('tem-logo');
+  } else {
+    document.getElementById('logoAtual').innerHTML='<p>Sem logotipo ainda.</p>';
+  }
+  try{banners=typeof cfg.banners==='string'?JSON.parse(cfg.banners||'[]'):(cfg.banners||[])}catch(e){banners=[]}
+  if(!banners.length && cfg.banner_url) banners=[cfg.banner_url];
+  mostrarBanners();
+}
+async function subirLogo(){
+  const f=document.getElementById('fileLogo').files[0];
+  if(!f) return aviso('⚠️ Escolhe o logotipo primeiro','aviso');
+  const nome='logo_'+Date.now()+'_'+f.name.replace(/\s/g,'_');
+  const up=await db.storage.from('produtos').upload(nome,f,{upsert:true});
+  if(up.error) return aviso('❌ Erro: '+up.error.message,'erro');
+  const pub=db.storage.from('produtos').getPublicUrl(nome);
+  const url=pub.data.publicUrl;
+  const r=await db.from('loja_config').update({logo_url:url}).eq('id',1);
+  if(r.error) return aviso('❌ Erro: '+r.error.message,'erro');
+  aviso('✅ Logotipo guardado!'); carregarTudo();
+}
+async function guardar(){
+  const r=await db.from('loja_config').update({banners:JSON.stringify(banners), banner_url:banners[0]||null}).eq('id',1);
+  if(r.error) return aviso('❌ Erro: '+r.error.message,'erro');
+  mostrarBanners(); aviso('✅ Guardado!');
+}
+async function adicionarBanner(){
+  const v=document.getElementById('urlBanner').value.trim();
+  if(!v) return aviso('⚠️ Cola o link primeiro','aviso');
+  banners.push(v); document.getElementById('urlBanner').value=''; await guardar();
+}
+async function subirBanner(){
+  const f=document.getElementById('fileBanner').files[0];
+  if(!f) return aviso('⚠️ Escolhe uma foto','aviso');
+  const nome='banner_'+Date.now()+'_'+f.name.replace(/\s/g,'_');
+  const up=await db.storage.from('produtos').upload(nome,f,{upsert:true});
+  if(up.error) return aviso('❌ Erro: '+up.error.message,'erro');
+  const pub=db.storage.from('produtos').getPublicUrl(nome);
+  banners.push(pub.data.publicUrl); await guardar();
+}
+async function apagarBanner(i){
+  let ok=await perguntar('Apagar este banner?');
+  if(!ok) return;
+  banners.splice(i,1); await guardar();
+}
+carregarTudo();
+</script></body></html>

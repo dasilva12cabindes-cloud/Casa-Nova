@@ -31,11 +31,13 @@ h1{font-size:1.4rem;margin-bottom:12px}
 .form{background:#fff;border-radius:16px;padding:16px;margin-top:10px}
 .form h3{margin-bottom:12px}
 .form input,.form select,.form textarea{width:100%;padding:12px;border:1px solid #cfd5df;border-radius:10px;margin-bottom:10px;font-size:15px}
+.form label{font-weight:700;font-size:14px;display:block;margin:12px 0 6px}
 .total{font-size:1.2rem;font-weight:800;margin:12px 0}
 .btn-whats{background:#0b5ed7;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;cursor:pointer}
 .btn-limpar{background:#eee;border:0;padding:10px;border-radius:10px;width:100%;margin-top:8px;cursor:pointer}
 .vazio{text-align:center;padding:30px;color:#666}
 .erro{background:#fee2e2;color:#dc2626;padding:10px;border-radius:10px;font-size:13px;margin-bottom:10px;display:none}
+#infoPagamento{background:#e0f2fe;border:1px solid #93c5fd;padding:12px;border-radius:10px;font-size:14px;margin-bottom:10px;display:none;line-height:1.7}
 #toast{position:fixed;top:82px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:30px;font-size:14px;z-index:200;opacity:0;transition:.3s;pointer-events:none}
 #toast.mostrar{opacity:1}
 .modal-fundo{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
@@ -62,11 +64,12 @@ h1{font-size:1.4rem;margin-bottom:12px}
   <input id="nome" placeholder="Teu nome completo">
   <input id="telefone" placeholder="Teu telefone / WhatsApp">
   <textarea id="morada" placeholder="Morada de entrega" rows="2"></textarea>
-  <select id="pagamento">
-    <option>Multicaixa Express</option>
-    <option>Dinheiro na entrega</option>
-    <option>Transferência</option>
-  </select>
+
+  <!-- RETIFICADO: PAGAMENTO VEM DO ADMIN -->
+  <label>💳 Forma de Pagamento</label>
+  <select id="pagamento" onchange="mostrarInfoPagamento()"></select>
+  <div id="infoPagamento"></div>
+
   <div class="total" id="total">Total: 0 Kz</div>
   <button class="btn-whats" onclick="finalizar()">Finalizar Pedido no WhatsApp</button>
   <button class="btn-limpar" onclick="abrirLimpar()">🗑️ Limpar Carrinho</button>
@@ -99,7 +102,54 @@ function setCarrinho(c){ localStorage.setItem('carrinho', JSON.stringify(c)); }
 // CORRIGIDO: NÃO MANDA MAIS PARA O CADASTRO
 let cliente = null;
 try{ cliente = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){ cliente=null; }
-// Se não tem cliente no telemóvel, só mostra aviso, NÃO redireciona
+
+// ===== RETIFICADO: SISTEMA DE PAGAMENTO + WHATSAPP DO ADMIN =====
+let _pagAtivos = [];
+let _whatsLoja = localStorage.getItem('whatsapp_loja') || '';
+
+function carregarPagamentosCarrinho(){
+  let select = document.getElementById('pagamento');
+  let lista = [];
+  try{ lista = JSON.parse(localStorage.getItem('pagamentos_casa_nova')||'[]'); }catch(e){}
+  // Se ainda não adicionaste nenhum no admin, mostra os 4 padrões vazios
+  if(!lista.length){
+    lista = [
+      {tipo:'Multicaixa Express', telefone:'', nome:'', ativo:true},
+      {tipo:'PayPay', referencia:'', telefone:'', ativo:true},
+      {tipo:'IBAN', iban:'', nome:'', ativo:true},
+      {tipo:'Dinheiro na Entrega', ativo:true}
+    ];
+  }
+  _pagAtivos = lista.filter(p=>p.ativo);
+  select.innerHTML = _pagAtivos.map(p=>`<option value="${p.tipo}">${p.tipo}</option>`).join('');
+  mostrarInfoPagamento();
+}
+function mostrarInfoPagamento(){
+  let select = document.getElementById('pagamento');
+  let div = document.getElementById('infoPagamento');
+  let p = _pagAtivos.find(x=>x.tipo===select.value);
+  if(!p){ div.style.display='none'; return; }
+  let txt = '';
+  if(p.tipo==='Multicaixa Express') txt = `<b>📱 Multicaixa Express</b><br>📞 Telefone: <b>${p.telefone||'---'}</b><br>👤 Nome: <b>${p.nome||'---'}</b>`;
+  else if(p.tipo==='PayPay') txt = `<b>💸 PayPay</b><br>🔢 Referência: <b>${p.referencia||p.conta||'---'}</b><br>📞 Telefone: <b>${p.telefone||'---'}</b>`;
+  else if(p.tipo==='IBAN') txt = `<b>🏦 IBAN</b><br>🏦 IBAN: <b>${p.iban||p.conta||'---'}</b><br>👤 Nome: <b>${p.nome||p.titular||'---'}</b>`;
+  else txt = `<b>💵 Dinheiro na Entrega</b><br>Paga quando receberes a encomenda.`;
+  div.innerHTML = txt; div.style.display='block';
+}
+async function carregarWhatsAppLoja(){
+  // 1. Já tem no localStorage (guardado no admin)
+  if(_whatsLoja) return;
+  // 2. Tenta buscar no Supabase loja_config
+  try{
+    if(typeof db !== 'undefined'){
+      let r = await db.from('loja_config').select('whatsapp').eq('id',1).maybeSingle();
+      if(r.data && r.data.whatsapp){ _whatsLoja = r.data.whatsapp; localStorage.setItem('whatsapp_loja', _whatsLoja); }
+    }
+  }catch(e){}
+}
+function getWhatsAppLoja(){
+  return _whatsLoja || localStorage.getItem('whatsapp_loja') || '244942788931';
+}
 
 async function corrigirItensAntigos(){
   let carrinho = getCarrinho();
@@ -157,7 +207,6 @@ function finalizar(){
   let telefone = document.getElementById('telefone').value.trim();
   let morada = document.getElementById('morada').value.trim();
   if(!nome || !telefone || !morada){ erro.textContent='⚠️ Preenche nome, telefone e morada!'; erro.style.display='block'; return; }
-  // Se não estava logado, guarda os dados como cliente para a próxima vez - assim não volta a pedir cadastro
   if(!cliente){
     let novoCliente = {nome, telefone, morada, email: '', senha: ''};
     localStorage.setItem('cliente_casa_nova', JSON.stringify(novoCliente));
@@ -176,8 +225,18 @@ function confirmarFinalizar(){
   let morada = document.getElementById('morada').value.trim();
   let pagamento = document.getElementById('pagamento').value;
   let total = carrinho.reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
-  let msg = `🛒 *NOVO PEDIDO - CASA NOVA*\n\n👤 Cliente: ${nome}\n📞 ${telefone}\n📍 ${morada}\n💳 Pagamento: ${pagamento}\n\n📦 *Produtos:*\n` + carrinho.map(i=>`• ${i.nome} - ${Number(i.preco).toLocaleString()} Kz x ${i.qtd} = ${(Number(i.preco)*(i.qtd||1)).toLocaleString()} Kz`).join('\n') + `\n\n💰 *Total: ${total.toLocaleString()} Kz*`;
-  let numero = '244900000000';
+  // Detalhe do pagamento que vai no WhatsApp
+  let pag = _pagAtivos.find(x=>x.tipo===pagamento);
+  let detalhePag = '';
+  if(pag){
+    if(pag.tipo==='Multicaixa Express') detalhePag = `\n📱 Multicaixa Express: ${pag.telefone||''} (${pag.nome||''})`;
+    else if(pag.tipo==='PayPay') detalhePag = `\n💸 PayPay - Ref: ${pag.referencia||pag.conta||''} | Tel: ${pag.telefone||''}`;
+    else if(pag.tipo==='IBAN') detalhePag = `\n🏦 IBAN: ${pag.iban||pag.conta||''} (${pag.nome||pag.titular||''})`;
+    else detalhePag = `\n💵 Paga na entrega`;
+  }
+  let msg = `🛒 *NOVO PEDIDO - CASA NOVA*\n\n👤 Cliente: ${nome}\n📞 ${telefone}\n📍 ${morada}\n💳 Pagamento: ${pagamento}${detalhePag}\n\n📦 *Produtos:*\n` + carrinho.map(i=>`• ${i.nome} - ${Number(i.preco).toLocaleString()} Kz x ${i.qtd} = ${(Number(i.preco)*(i.qtd||1)).toLocaleString()} Kz`).join('\n') + `\n\n💰 *Total: ${total.toLocaleString()} Kz*`;
+  // RETIFICADO: usa o WhatsApp do admin, não o número fixo
+  let numero = getWhatsAppLoja();
   window.open('https://wa.me/'+numero+'?text='+encodeURIComponent(msg), '_blank');
 }
 async function carregarLogoTopo(){
@@ -190,9 +249,12 @@ async function carregarLogoTopo(){
       logo.src = cfg.logo_url; logo.style.display = 'block';
       document.getElementById('topoSite').classList.add('tem-logo');
     }
+    if(cfg.whatsapp){ _whatsLoja = cfg.whatsapp; localStorage.setItem('whatsapp_loja', cfg.whatsapp); }
   }catch(e){ console.log(e); }
 }
 carregarLogoTopo();
+carregarPagamentosCarrinho();
+carregarWhatsAppLoja();
 renderizar();
 </script>
 </body>

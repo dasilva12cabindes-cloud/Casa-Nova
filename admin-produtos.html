@@ -80,6 +80,17 @@ let todos=[]; let catAtual='Todas';
 async function carregar(){
   let r=await db.from('produtos').select('*').order('id',{ascending:false});
   todos=r.data||[];
+  // 🔥 NOVO: VOLTA SOZINHO SE JÁ PASSOU A DATA
+  let hoje=new Date(); hoje.setHours(0,0,0,0);
+  for(let p of todos){
+    if(p.preco_antigo && p.promo_fim){
+      let fim=new Date(p.promo_fim);
+      if(fim < hoje){
+        await db.from('produtos').update({preco:Number(p.preco_antigo), preco_antigo:null, promo_fim:null}).eq('id',p.id);
+        p.preco=p.preco_antigo; p.preco_antigo=null; p.promo_fim=null;
+      }
+    }
+  }
   document.getElementById('total').textContent='('+todos.length+')';
   let cats=['Todas',...new Set(todos.map(p=>p.categoria).filter(Boolean))];
   document.getElementById('cats').innerHTML=cats.map(c=>`<button class="chip ${c===catAtual?'ativo':''}" onclick="mudarCat('${c}',this)">${c}</button>`).join('');
@@ -98,10 +109,14 @@ function filtrar(){
   g.innerHTML=lista.map(p=>{
     let antigo=Number(p.preco_antigo||0), novo=Number(p.preco||0);
     let perc=(antigo>novo&&antigo>0)?Math.round((1-novo/antigo)*100):0;
+    // 🔥 NOVO: CALCULA DIAS QUE FALTAM
+    let diasFaltam=p.promo_fim?Math.ceil((new Date(p.promo_fim)-new Date())/(1000*60*60*24)):null;
+    let dataBonita=p.promo_fim?new Date(p.promo_fim).toLocaleDateString('pt-PT',{day:'2-digit',month:'2-digit'}):'';
     return `
     <div class="card ${perc?'promo':''}">
       <img src="${p.imagem||p.imagem_url||'https://via.placeholder.com/300'}" onerror="this.src='https://via.placeholder.com/300'">
       ${perc?`<div style="margin-top:6px"><span class="selo-promo">🔥 PROMOÇÃO -${perc}%</span></div>`:''}
+      ${perc&&diasFaltam!==null?`<div style="font-size:12px;font-weight:800;color:#dc2626;margin-top:4px">⏰ Termina dia ${dataBonita} - Faltam ${diasFaltam} dia(s)</div>`:''}
       <h3>${p.nome}</h3>
       <div style="color:#666;font-size:12px">${p.categoria||''}</div>
       ${perc?`<div><span class="preco-antigo">${antigo.toLocaleString()} Kz</span> <span class="desconto">-${perc}%</span></div>`:''}
@@ -110,6 +125,8 @@ function filtrar(){
         <label style="font-size:12px;font-weight:800;color:#dc2626">🔥 Preço da promoção (novo preço mais baixo):</label>
         <div style="font-size:12px;color:#666;margin:2px 0">Preço atual: <b>${novo.toLocaleString()} Kz</b> - vai ficar riscado</div>
         <input id="promo-${p.id}" type="number" placeholder="Ex: 114000" value="${perc?novo:''}" style="margin:6px 0">
+        <label style="font-size:12px;font-weight:800;color:#dc2626">📅 Dia e mês que vai terminar:</label>
+        <input id="data-${p.id}" type="date" value="${p.promo_fim||''}" style="margin:6px 0">
         <button class="btn btn-vermelho" onclick="salvarPromo(${p.id})">💾 Guardar Promoção</button>
         ${perc?`<button class="btn btn-cinza" onclick="tirarPromo(${p.id})" style="margin-top:6px">❌ Tirar Promoção (volta a ${antigo.toLocaleString()} Kz)</button>`:''}
       </div>
@@ -118,26 +135,30 @@ function filtrar(){
     </div>
   `}).join('');
 }
-// 🔥 CORRIGIDO: TU METES O PREÇO NOVO MAIS BAIXO, ELE GUARDA O ATUAL COMO ANTIGO
+// 🔥 CORRIGIDO: TU METES O PREÇO NOVO + A DATA, ELE GUARDA TUDO
 async function salvarPromo(id){
   let novoPreco=Number(document.getElementById('promo-'+id).value||0);
+  let dataFim=document.getElementById('data-'+id).value;
   if(!novoPreco){ aviso('⚠️ Escreve o preço novo da promoção! Ex: 114000','aviso'); return; }
+  if(!dataFim){ aviso('⚠️ Escolhe o dia e mês que vai terminar!','aviso'); return; }
   let p=todos.find(x=>x.id==id);
   let precoAtual=Number(p.preco);
+  if(percJaExiste(p)) precoAtual=Number(p.preco_antigo||p.preco);
   if(novoPreco >= precoAtual){ aviso('⚠️ O preço da promoção tem que ser MENOR que '+precoAtual.toLocaleString()+' Kz','aviso'); return; }
   let perc=Math.round((1-novoPreco/precoAtual)*100);
-  let ok=await perguntar('Confirmar promoção?\nPreço atual '+precoAtual.toLocaleString()+' Kz vai ficar riscado.\nNovo preço: '+novoPreco.toLocaleString()+' Kz (-'+perc+'%)');
+  let ok=await perguntar('Confirmar promoção?\nPreço atual '+precoAtual.toLocaleString()+' Kz vai ficar riscado.\nNovo preço: '+novoPreco.toLocaleString()+' Kz (-'+perc+'%)\nTermina dia: '+dataFim);
   if(!ok) return;
-  let r=await db.from('produtos').update({preco:novoPreco, preco_antigo:precoAtual}).eq('id',id);
+  let r=await db.from('produtos').update({preco:novoPreco, preco_antigo:precoAtual, promo_fim:dataFim}).eq('id',id);
   if(r.error) return aviso('❌ '+r.error.message,'erro');
-  aviso('✅ Promoção guardada! -'+perc+'% na loja');
+  aviso('✅ Promoção guardada! Termina dia '+dataFim);
   carregar();
 }
+function percJaExiste(p){ return Number(p.preco_antigo||0) > Number(p.preco||0); }
 async function tirarPromo(id){
   let p=todos.find(x=>x.id==id);
   let ok=await perguntar('Tirar promoção? O preço volta a '+Number(p.preco_antigo).toLocaleString()+' Kz');
   if(!ok) return;
-  let r=await db.from('produtos').update({preco:Number(p.preco_antigo), preco_antigo:null}).eq('id',id);
+  let r=await db.from('produtos').update({preco:Number(p.preco_antigo), preco_antigo:null, promo_fim:null}).eq('id',id);
   if(r.error) return aviso('❌ '+r.error.message,'erro');
   aviso('✅ Promoção tirada, preço voltou ao normal');
   carregar();

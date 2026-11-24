@@ -1,16 +1,15 @@
 <!DOCTYPE html>
 <html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Vendas - Casa Nova</title>
+<title>Relatório de Vendas - Casa Nova</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
 <style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
 .topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}
 .topo .logo{display:flex;align-items:center;gap:8px}
-.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
 .topo.tem-logo .logo-text{display:none}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
-/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
 @keyframes logoZoom{
   0%{transform:scale(0.7) translateY(0) rotate(0deg)}
   25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
@@ -25,113 +24,238 @@
   100%{transform:scale(1) translateY(0) rotate(0deg)}
 }
 .caixa{background:#fff;padding:14px;border-radius:12px;margin-top:12px}
-.caixa h3{background:#eff6ff;border:2px solid #0b5ed7;border-radius:999px;padding:10px 14px;text-align:center;margin:0 0 12px}
-input,select{width:100%;padding:11px;margin-bottom:8px;border:1px solid #cfd5df;border-radius:8px;font-size:15px}
-.btn{background:#0b5ed7;color:#fff;border:0;padding:11px;border-radius:8px;width:100%;font-weight:700;cursor:pointer}
-.resumo{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
-.resumo div{background:#f8fafc;padding:12px;border-radius:10px;text-align:center}
-.resumo b{font-size:20px;display:block}
-.resumo small{color:#666}
-.linha{border-bottom:1px solid #eee;padding:10px 0;display:flex;justify-content:space-between;gap:8px}
+.caixa h3{background:#eff6ff;border:2px solid #0b5ed7;border-radius:999px;padding:10px 14px;text-align:center;margin:0 0 8px}
+.btn{border:0;padding:12px;border-radius:8px;width:100%;font-weight:700;cursor:pointer;font-size:14px}
+.btn-azul{background:#0b5ed7;color:#fff}
+.btn-verde{background:#16a34a;color:#fff}
+.btn-laranja{background:#f59e0b;color:#111}
+.btn-cinza{background:#e5e7eb;color:#111}
+.btn-vermelho{background:#dc2626;color:#fff}
+.card{background:#fff;padding:14px;border-radius:12px;margin-top:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+#toast{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:14px 18px;border-radius:14px;z-index:9999;font-weight:700;max-width:92%;text-align:center;transition:.35s;opacity:0;pointer-events:none}
+#toast.mostrar{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.sucesso{background:#16a34a}
+#toast.erro{background:#dc2626}
+.modal-fundo{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:5000;display:none;align-items:center;justify-content:center;padding:10px}
+.modal-fundo.aberto{display:flex}
+.modal-box{background:#fff;width:100%;max-width:420px;border-radius:20px;padding:0;max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+.fatura-topo{background:#111;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.fatura-topo button{background:#fff;color:#111;border:0;width:36px;height:36px;border-radius:50%;font-size:18px;font-weight:900;cursor:pointer}
+.fatura-conteudo{overflow-y:auto;flex:1}
+.fatura-rodape{background:#fff;padding:12px;display:flex;gap:8px;border-top:1px solid #eee;flex-shrink:0}
+@media print{ body *{visibility:hidden} #areaImprimir, #areaImprimir *{visibility:visible} #areaImprimir{position:absolute;left:0;top:0;width:100%;padding:10px;background:#fff} }
 </style></head>
 <body>
+<div id="toast"></div>
 <div class="topo" id="topoSite"><div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>Casa Nova</b></span></div><a href="admin.html">← Voltar</a></div>
 
 <div class="caixa">
 <h3>💰 Relatório de Venda Diária</h3>
-<label style="font-size:13px;color:#666">Escolhe o dia:</label>
-<input type="date" id="dataDia">
-<button class="btn" onclick="carregarVendas()">📊 Ver Vendas do Dia</button>
-<button class="btn" onclick="hoje()" style="margin-top:8px;background:#16a34a">Hoje</button>
+<p style="color:#666;font-size:13px;text-align:center">Escolhe o dia:</p>
+<input type="date" id="dataEscolhida" style="width:100%;padding:12px;border:2px solid #0b5ed7;border-radius:10px;text-align:center;font-size:16px;font-weight:700">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+<button class="btn btn-azul" onclick="carregarDia()">📊 Ver Vendas do Dia</button>
+<button class="btn btn-verde" onclick="irHoje()">📅 Hoje</button>
+</div>
+</div>
 
-<div class="resumo">
-  <div><b id="totalVendas">0 Kz</b><small>Total Vendido</small></div>
-  <div><b id="qtdPedidos">0</b><small>Pedidos</small></div>
-  <div><b id="qtdItens">0</b><small>Produtos Vendidos</small></div>
+<div class="caixa" style="border:2px solid #dc2626;background:#fef2f2">
+<h3 style="background:#fee2e2;border-color:#dc2626">⏰ Limpeza Automática - 14 Dias - 23h</h3>
+<p style="font-size:13px;color:#666;text-align:center;margin:6px 0">⚠️ <b>ATENÇÃO:</b> Se não gerares o relatório a tempo, o sistema <b>APAGA MESMO</b> às 23h do último dia da 2ª semana.<br>Isso é para ficares atento!<br><br>Pedidos <b>Entregues com +14 dias</b> → APAGAM às 23h<br>Pedidos <b>Novo / Recebido / Em Preparação / Aceite</b> → <b>NUNCA APAGAM</b>, ficam ativos<br>Relatório → Sai <b>TUDO</b>, entregues + pendentes</p>
+<div id="infoLimpeza" style="font-size:13px;text-align:center;font-weight:700"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+<button class="btn btn-laranja" onclick="gerarRelatorioCompleto()">📄 Gerar Relatório Completo - TUDO (Entregues + Pendentes)</button>
+<button class="btn" style="background:#e0e7ff;color:#3730a3" onclick="verRelatoriosGuardados()">📂 Ver Relatórios Guardados</button>
+</div>
+<div id="listaParaApagar" style="margin-top:10px;font-size:13px"></div>
+</div>
+
+<div class="caixa">
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+<div><b id="totalDia" style="font-size:20px">0 Kz</b><br><small style="color:#666">Total Vendido</small></div>
+<div><b id="qtdPedidos" style="font-size:20px">0</b><br><small style="color:#666">Pedidos</small></div>
+<div><b id="qtdProdutos" style="font-size:20px">0</b><br><small style="color:#666">Produtos Vendidos</small></div>
 </div>
 </div>
 
 <div class="caixa">
-<h3>📋 Detalhe do Dia <span id="dataLabel" style="font-size:13px;color:#666"></span></h3>
-<div id="lista">Escolhe um dia e clica em Ver Vendas.</div>
+<h3>📋 Detalhe do Dia - <span id="labelDia">-</span></h3>
+<div id="listaDia"><p style="text-align:center;color:#888">Escolhe um dia e carrega em Ver Vendas do Dia</p></div>
 </div>
 
-<div class="caixa">
-<h3>📅 Últimos 7 Dias</h3>
-<div id="ultimos7">A carregar...</div>
+<div class="caixa" id="caixaGuardados" style="display:none">
+<h3>📂 Relatórios Guardados - Prova</h3>
+<div id="listaGuardados"></div>
 </div>
+
+<div id="modalRelatorio" class="modal-fundo" onclick="if(event.target.id==='modalRelatorio') fecharRelatorio()"><div class="modal-box">
+<div class="fatura-topo"><b>📄 Relatório Completo - Prova</b><button onclick="fecharRelatorio()">❌</button></div>
+<div class="fatura-conteudo"><div id="areaImprimir"></div></div>
+<div class="fatura-rodape">
+<button class="btn btn-azul" onclick="imprimirRelatorio()">🖨️ Imprimir / Guardar PDF no Telefone</button>
+<button class="btn btn-verde" onclick="guardarRelatorio()">💾 Guardar como Prova</button>
+<button class="btn btn-cinza" onclick="fecharRelatorio()">❌ Fechar</button>
+</div>
+</div></div>
 
 <script>
+let toastTimer;
+let listaTodos = [];
+let relatorioAtualHTML = '';
+function aviso(msg,tipo){let t=document.getElementById('toast');t.textContent=msg;t.className='mostrar '+(tipo||'sucesso');clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='';},3000);}
 async function carregarLogoTopo(){
   try{let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();let logo=r.data?.logo_url;if(logo){let img=document.getElementById('logoTopo');img.src=logo;img.style.display='block';document.getElementById('topoSite').classList.add('tem-logo');}}catch(e){}
 }
-function hoje(){
-  let d=new Date(); let s=d.toISOString().slice(0,10);
-  document.getElementById('dataDia').value=s;
-  carregarVendas();
+function hojeISO(){ let d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function irHoje(){ document.getElementById('dataEscolhida').value = hojeISO(); carregarDia(); }
+function formatarData(iso){ if(!iso) return ''; return iso.split('-').reverse().join('/'); }
+async function carregarTodos(){
+  let r = await db.from('pedidos').select('*').order('created_at',{ascending:false});
+  if(r.error){ let r2 = await db.from('encomendas').select('*').order('created_at',{ascending:false}); if(!r2.error) listaTodos = r2.data||[]; }
+  else listaTodos = r.data||[];
+  return listaTodos;
 }
-async function carregarVendas(){
-  let dia=document.getElementById('dataDia').value;
-  if(!dia) return alert('Escolhe o dia primeiro');
-  document.getElementById('dataLabel').textContent='- '+dia.split('-').reverse().join('/');
-  let lista=[]; let erro=null;
-  let r=await db.from('pedidos').select('*').order('created_at',{ascending:false});
-  if(!r.error) lista=r.data||[];
-  else {
-    let r2=await db.from('encomendas').select('*').order('created_at',{ascending:false});
-    if(!r2.error) lista=r2.data||[];
-    else erro=r2.error;
-  }
-  if(erro){ document.getElementById('lista').innerHTML='<p style="color:#dc2626">Ainda não tens tabela de pedidos. As vendas vão aparecer aqui quando o cliente fizer pedido no carrinho.</p>'; return; }
-  let doDia=lista.filter(p=>{
-    let d=(p.created_at||'').slice(0,10);
-    return d===dia;
-  });
-  let total=0; let itens=0;
-  doDia.forEach(p=>{
-    let v=Number(p.total||p.valor_total||p.preco_total||0);
-    total+=v;
-    try{
-      let it=p.itens||p.produtos||p.items;
-      if(typeof it==='string') it=JSON.parse(it);
-      if(Array.isArray(it)) itens+=it.reduce((s,i)=>s+(i.qtd||i.quantidade||1),0);
-      else itens+=1;
-    }catch(e){ itens+=1; }
-  });
-  document.getElementById('totalVendas').textContent=total.toLocaleString()+' Kz';
-  document.getElementById('qtdPedidos').textContent=doDia.length;
-  document.getElementById('qtdItens').textContent=itens;
-  if(!doDia.length){ document.getElementById('lista').innerHTML='<p style="text-align:center;color:#888;padding:20px">Nenhuma venda neste dia.</p>'; return; }
-  document.getElementById('lista').innerHTML=doDia.map(p=>{
-    let nome=p.nome_cliente||p.cliente_nome||p.nome||p.telefone||'Cliente';
+function carregarDia(){
+  let data = document.getElementById('dataEscolhida').value;
+  if(!data){ aviso('Escolhe um dia primeiro','erro'); return; }
+  document.getElementById('labelDia').textContent = formatarData(data);
+  let filtrados = listaTodos.filter(p=> (p.created_at||'').slice(0,10) === data);
+  let total = filtrados.reduce((s,p)=> s + Number(p.total||0), 0);
+  let qtdProd = 0;
+  filtrados.forEach(p=>{ try{ let it=p.itens||p.produtos; if(typeof it==='string') it=JSON.parse(it); if(Array.isArray(it)) qtdProd += it.reduce((s,i)=> s + Number(i.qtd||i.quantidade||1),0); }catch(e){} });
+  document.getElementById('totalDia').textContent = total.toLocaleString()+' Kz';
+  document.getElementById('qtdPedidos').textContent = filtrados.length;
+  document.getElementById('qtdProdutos').textContent = qtdProd;
+  if(!filtrados.length){ document.getElementById('listaDia').innerHTML = '<p style="text-align:center;color:#888">Nenhuma venda neste dia.</p>'; return; }
+  document.getElementById('listaDia').innerHTML = filtrados.map(p=>{
+    let nome=p.nome_cliente||p.cliente_nome||p.nome||'Cliente';
     let tel=p.telefone||p.whatsapp||'';
-    let valor=Number(p.total||p.valor_total||p.preco_total||0).toLocaleString();
-    let status=p.status||p.estado||'Novo';
     let hora=(p.created_at||'').slice(11,16);
-    return `<div class="linha"><div><b>${nome}</b><br><small>${tel} • ${hora} • ${status}</small></div><b style="color:#0b5ed7">${valor} Kz</b></div>`;
-  }).join('') + `<div style="text-align:center;margin-top:10px"><a href="admin-pedidos.html" style="color:#0b5ed7;font-weight:700">Ver todos os pedidos →</a></div>`;
-}
-async function ultimos7Dias(){
-  let r=await db.from('pedidos').select('*');
-  let lista=r.data||[];
-  if(!lista.length){
-    let r2=await db.from('encomendas').select('*');
-    lista=r2.data||[];
-  }
-  let dias={};
-  for(let i=0;i<7;i++){
-    let d=new Date(); d.setDate(d.getDate()-i);
-    let s=d.toISOString().slice(0,10);
-    dias[s]=0;
-  }
-  lista.forEach(p=>{
-    let d=(p.created_at||'').slice(0,10);
-    if(dias[d]!==undefined) dias[d]+=Number(p.total||p.valor_total||p.preco_total||0);
-  });
-  document.getElementById('ultimos7').innerHTML=Object.keys(dias).map(d=>{
-    let label=d.split('-').reverse().join('/');
-    return `<div class="linha"><span>${label}</span><b>${dias[d].toLocaleString()} Kz</b></div>`;
+    let status=p.status||p.estado||'Novo';
+    return `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee"><div><b>${nome}</b><br><small style="color:#666">${tel} • ${hora} • ${status}</small></div><b style="color:#0b5ed7">${Number(p.total||0).toLocaleString()} Kz</b></div>`;
   }).join('');
 }
-carregarLogoTopo(); hoje(); ultimos7Dias();
+function diasParaApagar(p){
+  let criado = new Date(p.created_at||Date.now());
+  let limite = new Date(criado.getTime() + 14*24*60*60*1000);
+  limite.setHours(23,0,0,0);
+  let agora = new Date();
+  let diff = limite - agora;
+  let dias = Math.ceil(diff / (24*60*60*1000));
+  return {limite, dias, passou: diff <= 0};
+}
+function atualizarInfoLimpeza(){
+  let entregues = listaTodos.filter(p=> (p.status||p.estado)==='Entregue');
+  let proximos = entregues.map(p=> ({p, ...diasParaApagar(p)})).sort((a,b)=> a.dias - b.dias);
+  let paraApagarHoje = proximos.filter(x=> x.passou || x.dias <= 1);
+  let info = document.getElementById('infoLimpeza');
+  if(!entregues.length){ info.innerHTML = 'Nenhum pedido entregue para limpar.'; document.getElementById('listaParaApagar').innerHTML=''; return; }
+  info.innerHTML = `📦 ${entregues.length} pedidos entregues guardados • Próximo a apagar: <b>${proximos[0].p.codigo||''}</b> em <b>${proximos[0].dias} dia(s)</b> às 23h`;
+  if(paraApagarHoje.length){
+    document.getElementById('listaParaApagar').innerHTML = `<div style="background:#fee2e2;border:1px solid #dc2626;border-radius:8px;padding:10px"><b>⚠️ ATENÇÃO - Vão apagar hoje às 23h se não gerares o relatório:</b><br>${paraApagarHoje.map(x=> `• ${x.p.codigo} - ${x.p.nome_cliente||x.p.nome||''} - ${Number(x.p.total||0).toLocaleString()} Kz`).join('<br>')}<br><br><button class="btn btn-verde" onclick="gerarRelatorioCompleto()">📄 Gera já o Relatório Completo antes de apagar!</button></div>`;
+  } else {
+    document.getElementById('listaParaApagar').innerHTML = `<div style="background:#dcfce7;border-radius:8px;padding:10px">✅ Nenhum pedido apaga hoje. Mas gera o relatório já para não esqueceres.</div>`;
+  }
+}
+// RELATÓRIO COMPLETO - SAI TUDO: ENTREGUES + PENDENTES
+function gerarRelatorioCompleto(){
+  let todos = [...listaTodos].sort((a,b)=> new Date(a.created_at) - new Date(b.created_at));
+  if(!todos.length){ aviso('Nenhum pedido para relatório','erro'); return; }
+  let entregues = todos.filter(p=> (p.status||p.estado)==='Entregue');
+  let pendentes = todos.filter(p=> ['Novo','Recebido','Em Preparação','Aceite'].includes(p.status||p.estado||'Novo'));
+  let totalGeral = todos.reduce((s,p)=> s + Number(p.total||0), 0);
+  let totalEntregue = entregues.reduce((s,p)=> s + Number(p.total||0), 0);
+  let totalPendente = pendentes.reduce((s,p)=> s + Number(p.total||0), 0);
+  let inicio = (todos[0].created_at||'').slice(0,10).split('-').reverse().join('/');
+  let fim = (todos[todos.length-1].created_at||'').slice(0,10).split('-').reverse().join('/');
+  let hoje = new Date().toLocaleDateString('pt-PT') + ' ' + new Date().toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
+  function linhas(lista){
+    return lista.map(p=>{
+      let nome=p.nome_cliente||p.cliente_nome||p.nome||'Cliente';
+      let data=(p.created_at||'').slice(0,10).split('-').reverse().join('/')+' '+(p.created_at||'').slice(11,16);
+      let status=p.status||p.estado||'Novo';
+      let itens='';
+      try{ let it=p.itens||p.produtos; if(typeof it==='string') it=JSON.parse(it); if(Array.isArray(it)) itens=it.map(i=>`${i.nome||i.produto} x${i.qtd||1}`).join(', '); }catch(e){}
+      return `<tr><td style="border:1px solid #ddd;padding:6px">${data}</td><td style="border:1px solid #ddd;padding:6px">${p.codigo||''}</td><td style="border:1px solid #ddd;padding:6px">${nome}</td><td style="border:1px solid #ddd;padding:6px">${itens}</td><td style="border:1px solid #ddd;padding:6px">${status}</td><td style="border:1px solid #ddd;padding:6px;text-align:right">${Number(p.total||0).toLocaleString()} Kz</td></tr>`;
+    }).join('');
+  }
+  relatorioAtualHTML = `
+    <div style="padding:16px;font-size:14px;line-height:1.6;background:#fff;color:#111">
+      <div style="text-align:center"><div style="font-size:28px;font-weight:900">CASA<span style="color:#f97316">NOVA</span></div><div style="font-size:11px;letter-spacing:2px">ELETRODOMÉSTICOS</div></div>
+      <h2 style="text-align:center">📄 Relatório Completo de Vendas - Prova - TUDO</h2>
+      <p style="text-align:center;color:#666">Período: ${inicio} até ${fim}<br>Gerado em: ${hoje}<br><b>Este relatório tem TUDO: Entregues + Pendentes.</b><br>Se não gerares a tempo, os entregues com +14 dias apagam às 23h.</p>
+      <div style="border:2px solid #0b5ed7;border-radius:10px;padding:12px">
+        <div style="display:flex;justify-content:space-between"><span><b>Total Geral (Tudo):</b> ${todos.length} pedidos</span><span><b>${totalGeral.toLocaleString()} Kz</b></span></div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px"><span>✅ Entregues: ${entregues.length} pedidos</span><span>${totalEntregue.toLocaleString()} Kz</span></div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px"><span>⏳ Pendentes (Não apagam): ${pendentes.length} pedidos</span><span>${totalPendente.toLocaleString()} Kz</span></div>
+      </div>
+      <h3>✅ 1 - Pedidos Entregues (Vão apagar após 14 dias às 23h)</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="border:1px solid #ddd;padding:6px;background:#dcfce7">Data</th><th style="border:1px solid #ddd;padding:6px;background:#dcfce7">Código</th><th style="border:1px solid #ddd;padding:6px;background:#dcfce7">Cliente</th><th style="border:1px solid #ddd;padding:6px;background:#dcfce7">Produtos</th><th style="border:1px solid #ddd;padding:6px;background:#dcfce7">Status</th><th style="border:1px solid #ddd;padding:6px;background:#dcfce7">Total</th></tr></thead><tbody>${linhas(entregues) || '<tr><td colspan="6" style="text-align:center;padding:10px">Nenhum entregue</td></tr>'}</tbody></table>
+      <h3>⏳ 2 - Pedidos Pendentes (Ficam sempre ativos - Não apagam)</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="border:1px solid #ddd;padding:6px;background:#fef3c7">Data</th><th style="border:1px solid #ddd;padding:6px;background:#fef3c7">Código</th><th style="border:1px solid #ddd;padding:6px;background:#fef3c7">Cliente</th><th style="border:1px solid #ddd;padding:6px;background:#fef3c7">Produtos</th><th style="border:1px solid #ddd;padding:6px;background:#fef3c7">Status</th><th style="border:1px solid #ddd;padding:6px;background:#fef3c7">Total</th></tr></thead><tbody>${linhas(pendentes) || '<tr><td colspan="6" style="text-align:center;padding:10px">Nenhum pendente</td></tr>'}</tbody></table>
+      <p style="text-align:center;margin-top:16px"><b>Total Geral: ${totalGeral.toLocaleString()} Kz</b><br><small>Assinatura: ______________________ &nbsp; Data: ____/____/________</small></p>
+      <p style="text-align:center;color:#666;font-size:12px">🏠 Casa Nova - Relatório completo antes da limpeza de 14 dias às 23h. Pendentes mantêm-se ativos.</p>
+    </div>
+  `;
+  document.getElementById('areaImprimir').innerHTML = relatorioAtualHTML;
+  document.getElementById('modalRelatorio').classList.add('aberto');
+}
+function fecharRelatorio(){ document.getElementById('modalRelatorio').classList.remove('aberto'); }
+function imprimirRelatorio(){ window.print(); }
+function guardarRelatorio(){
+  if(!relatorioAtualHTML){ aviso('Gera o relatório primeiro','erro'); return; }
+  let guardados = [];
+  try{ guardados = JSON.parse(localStorage.getItem('relatorios_casa_nova')||'[]'); }catch(e){}
+  let id = 'REL-'+Date.now();
+  guardados.unshift({id, data: new Date().toLocaleString('pt-PT'), html: relatorioAtualHTML});
+  localStorage.setItem('relatorios_casa_nova', JSON.stringify(guardados.slice(0,20)));
+  aviso('💾 Relatório guardado como prova! Podes ver em Relatórios Guardados.');
+  verRelatoriosGuardados();
+}
+function verRelatoriosGuardados(){
+  let guardados = [];
+  try{ guardados = JSON.parse(localStorage.getItem('relatorios_casa_nova')||'[]'); }catch(e){}
+  let caixa = document.getElementById('caixaGuardados');
+  caixa.style.display = 'block';
+  if(!guardados.length){ document.getElementById('listaGuardados').innerHTML = '<p style="text-align:center;color:#888">Nenhum relatório guardado ainda.</p>'; return; }
+  document.getElementById('listaGuardados').innerHTML = guardados.map((g,i)=> `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eee"><div><b>${g.id}</b><br><small>${g.data}</small></div><div style="display:flex;gap:6px"><button class="btn btn-azul" style="width:auto;padding:8px 12px" onclick="abrirGuardado(${i})">👁️ Ver</button><button class="btn btn-vermelho" style="width:auto;padding:8px 12px" onclick="apagarGuardado(${i})">🗑️</button></div></div>`).join('');
+  caixa.scrollIntoView({behavior:'smooth'});
+}
+function abrirGuardado(i){
+  let guardados = JSON.parse(localStorage.getItem('relatorios_casa_nova')||'[]');
+  if(!guardados[i]) return;
+  relatorioAtualHTML = guardados[i].html;
+  document.getElementById('areaImprimir').innerHTML = relatorioAtualHTML;
+  document.getElementById('modalRelatorio').classList.add('aberto');
+}
+function apagarGuardado(i){
+  if(!confirm('Apagar este relatório guardado?')) return;
+  let guardados = JSON.parse(localStorage.getItem('relatorios_casa_nova')||'[]');
+  guardados.splice(i,1);
+  localStorage.setItem('relatorios_casa_nova', JSON.stringify(guardados));
+  verRelatoriosGuardados();
+}
+// LIMPEZA AUTOMÁTICA - APAGA MESMO SE NÃO FIZERES RELATÓRIO
+async function verificarLimpezaAutomatica(){
+  let entregues = listaTodos.filter(p=> (p.status||p.estado)==='Entregue');
+  let paraApagar = entregues.filter(p=> diasParaApagar(p).passou);
+  if(!paraApagar.length) return;
+  // NÃO guarda cópia automática - se não geraste, perdes mesmo. É para ficares atento.
+  for(let p of paraApagar){
+    await db.from('pedidos').delete().eq('id', p.id);
+  }
+  aviso(`🧹 Limpeza feita às 23h: ${paraApagar.length} pedidos entregues com +14 dias apagados. Pendentes ficaram ativos.`);
+  await carregarTodos();
+  atualizarInfoLimpeza();
+  carregarDia();
+}
+async function iniciar(){
+  document.getElementById('dataEscolhida').value = hojeISO();
+  await carregarTodos();
+  carregarDia();
+  atualizarInfoLimpeza();
+  await verificarLimpezaAutomatica();
+  setInterval(async ()=>{ let h=new Date().getHours(); if(h>=23){ await carregarTodos(); await verificarLimpezaAutomatica(); } }, 60*60*1000);
+}
+carregarLogoTopo(); iniciar();
 </script></body></html>

@@ -80,11 +80,14 @@ async function carregar(){
     const prodR=await db.from('produtos').select('*').order('id',{ascending:false});
     const prod=prodR.data||[];
     let fotosBanner=[];
-    if(cfg && cfg.banner_url) fotosBanner.push(cfg.banner_url);
-    // Usa fotos dos produtos que já existem - nunca fica preto / ?
-    prod.forEach(p=>{let f=foto(p); if(f && !f.includes('placeholder')) fotosBanner.push(f)});
-    // Se depois subires banner2.jpg etc, descomenta:
-    // fotosBanner.push('banner2.jpg','banner3.jpg');
+try{
+  let b=cfg?.banners;
+  if(typeof b==='string') b=JSON.parse(b||'[]');
+  if(Array.isArray(b) && b.length) fotosBanner=b;
+  else if(cfg?.banner_url) fotosBanner=[cfg.banner_url];
+}catch(e){}
+if(!fotosBanner.length) prod.forEach(p=>{let f=foto(p); if(f && !f.includes('placeholder')) fotosBanner.push(f)});
+iniciarBanner(fotosBanner);
     iniciarBanner(fotosBanner);
     if(!prod.length){document.getElementById('lista').innerHTML='Nenhum produto ainda.';return}
     document.getElementById('pubTexto').textContent='🔥 '+prod.slice(0,3).map(p=>p.nome+' - '+Number(p.preco).toLocaleString()+' Kz').join('  |  ')+' 🔥';

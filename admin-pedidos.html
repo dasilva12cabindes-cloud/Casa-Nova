@@ -44,8 +44,9 @@
 #toast.erro{background:#dc2626}
 .modal-fundo{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:5000;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-fundo.aberto{display:flex}
-.modal-box{background:#fff;width:100%;max-width:360px;border-radius:20px;padding:22px;text-align:center}
+.modal-box{background:#fff;width:100%;max-width:380px;border-radius:20px;padding:22px;text-align:center;max-height:90vh;overflow-y:auto}
 .modal-box input{width:100%;padding:14px;border:2px solid #0b5ed7;border-radius:10px;margin:12px 0;font-size:18px;text-align:center;font-weight:800;letter-spacing:2px;text-transform:uppercase;box-sizing:border-box}
+.fatura{text-align:left;font-size:14px;line-height:1.7;border:1px dashed #999;padding:12px;border-radius:10px;background:#fff}
 </style></head>
 <body>
 <div id="toast"></div>
@@ -53,7 +54,7 @@
 
 <div class="caixa">
 <h3>📦 Pedidos Recebidos</h3>
-<p style="color:#666;font-size:13px;text-align:center">Aqui aparecem todos os pedidos que os clientes fazem no carrinho.</p>
+<p style="color:#666;font-size:13px;text-align:center">Aqui aparecem todos os pedidos que os clientes fazem no carrinho.<br>Para confirmar se está em <b>Preparação</b> ou <b>Recebido</b>, clica em <b>🧾 Ver Fatura</b> em cada pedido.</p>
 <div id="contadorNovos" style="background:#fef3c7;border:2px solid #f59e0b;border-radius:12px;padding:12px;text-align:center;font-weight:800;margin:10px 0;display:none">🆕 Pedidos Novos: <span id="numNovos">0</span> - Aguarda tua confirmação</div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
 <button class="btn btn-verde" onclick="location.href='admin-vendas.html'">💰 Ver Vendas do Dia →</button>
@@ -63,7 +64,7 @@
 
 <div id="lista"><p style="text-align:center;color:#888">A carregar pedidos...</p></div>
 
-<!-- MODAL FINALIZAR COM CÓDIGO - ÚNICO LUGAR ONDE PEDE CÓDIGO -->
+<!-- MODAL FINALIZAR COM CÓDIGO -->
 <div id="modalCodigo" class="modal-fundo" onclick="if(event.target.id==='modalCodigo') fecharModalCodigo()"><div class="modal-box">
 <div style="font-size:40px">🔖</div>
 <h3 style="margin:8px 0">Finalizar Entrega com Código</h3>
@@ -72,6 +73,15 @@
 <p id="erroCodigo" style="color:#dc2626;font-size:13px;display:none"></p>
 <button class="btn btn-verde" onclick="confirmarComCodigo()">✅ Confirmar Código - Entregar Automático</button>
 <button class="btn btn-cinza" style="margin-top:8px" onclick="fecharModalCodigo()">Cancelar</button>
+</div></div>
+
+<!-- MODAL FATURA -->
+<div id="modalFatura" class="modal-fundo" onclick="if(event.target.id==='modalFatura') fecharFatura()"><div class="modal-box">
+<div style="font-size:36px">🧾</div>
+<h3 style="margin:8px 0">Fatura - Casa Nova</h3>
+<div id="conteudoFatura" class="fatura"></div>
+<button class="btn btn-azul" style="margin-top:12px" onclick="window.print()">🖨️ Imprimir Fatura</button>
+<button class="btn btn-cinza" style="margin-top:8px" onclick="fecharFatura()">Fechar</button>
 </div></div>
 
 <script>
@@ -113,12 +123,8 @@ async function carregar(){
     let tel=p.telefone||p.whatsapp||'';
     let morada=p.morada||p.endereco||p.localizacao||'';
     let total=Number(p.total||p.valor_total||p.preco_total||0);
-    let pago=Number(p.valor_pago||p.pago||p.valor_pago||0);
-    // Se não tiver valor_pago, tenta adivinhar: se tipo_entrega loja = 100%, se entrega = 50%
-    if(!pago){
-      let tipo = p.tipo_entrega||'';
-      pago = (tipo==='loja') ? total : Math.round(total/2);
-    }
+    let pago=Number(p.valor_pago||p.pago||0);
+    if(!pago){ let tipo = p.tipo_entrega||''; pago = (tipo==='loja') ? total : Math.round(total/2); }
     let falta = total - pago;
     let pagouTudo = pago >= total;
     let status=p.status||p.estado||'Novo';
@@ -135,23 +141,25 @@ async function carregar(){
     let isRecebidoOuPrep = ['Recebido','Em Preparação','Aceite'].includes(status);
     let isEntregue = status === 'Entregue';
     let waMsg=encodeURIComponent('Olá '+nome+', recebemos o teu pedido na Casa Nova de '+total.toLocaleString()+' Kz. Obrigado!');
-
-    // BOTÕES CONFORME O TIPO - SEM SELECT, SEM BOTÃO ENTREGUE
     let botoesAcao = '';
     if(isNovo){
       if(pagouTudo){
-        // PAGOU 100% - SÓ RECEBIDO
         botoesAcao = `<button class="btn" style="background:#4338ca;color:#fff" onclick="marcarRecebido(${p.id})">💙 Recebido - Pagamento Recebido</button>
         <p style="font-size:12px;color:#666;text-align:center;margin:6px 0">Pagou 100% (${total.toLocaleString()} Kz). Quando ele vier com o código, finalizas em baixo.</p>`;
       } else {
-        // PAGOU 50% - SÓ EM PREPARAÇÃO / ACEITE
         botoesAcao = `<button class="btn btn-laranja" onclick="marcarPreparacao(${p.id})">🔥 Em Preparação / Aceite</button>
         <p style="font-size:12px;color:#666;text-align:center;margin:6px 0">Pagou 50% (${pago.toLocaleString()} Kz). Falta: ${falta.toLocaleString()} Kz. Estamos a preparar.</p>`;
       }
     } else if(isRecebidoOuPrep){
       botoesAcao = `<div style="background:#dcfce7;border:1px solid #16a34a;border-radius:8px;padding:10px;text-align:center;font-size:13px">✅ Cliente já foi avisado: <b>${status}</b><br>Agora espera ele vir com o código para finalizar.</div>`;
+      // CORRIGIR: se pagou 100% mas ficou em Preparação por engano
+      if(pagouTudo && status==='Em Preparação'){
+        botoesAcao += `<button class="btn" style="background:#fff7ed;color:#92400e;margin-top:8px;border:1px solid #f59e0b" onclick="marcarRecebido(${p.id})">🔄 Corrigir para Recebido (Pagou 100%)</button>`;
+      }
+      if(!pagouTudo && status==='Recebido'){
+        botoesAcao += `<button class="btn btn-laranja" style="margin-top:8px" onclick="marcarPreparacao(${p.id})">🔄 Corrigir para Em Preparação (Pagou 50%)</button>`;
+      }
     }
-
     let botaoFinalizar = '';
     if(!isEntregue && (isRecebidoOuPrep || isNovo)){
       botaoFinalizar = `<button class="btn btn-verde" style="margin-top:8px" onclick="abrirModalCodigo(${p.id},'${codigo}')">📦 Finalizar Entrega com Código - Fica Entregue Automático</button>`;
@@ -159,7 +167,6 @@ async function carregar(){
     if(isEntregue){
       botaoFinalizar = `<div style="background:#dcfce7;border-radius:8px;padding:10px;text-align:center;font-weight:800;margin-top:8px">✅ Entregue - Fatura entregue ao cliente</div>`;
     }
-
     return `<div class="card-pedido">
       <div style="display:flex;justify-content:space-between"><b>${nome}</b>${badge(status)}</div>
       <div style="color:#666;font-size:13px;margin:4px 0">${data} • ${tel}<br>${morada}</div>
@@ -169,43 +176,78 @@ async function carregar(){
       <div style="font-weight:800;color:#0b5ed7;margin:8px 0">Total: ${total.toLocaleString()} Kz<br><span style="color:#16a34a;font-size:13px">Pago: ${pago.toLocaleString()} Kz</span> <span style="color:#dc2626;font-size:13px">• Falta: ${falta.toLocaleString()} Kz</span><br><span style="font-size:12px;color:#666">${pagouTudo ? '💙 Pagou 100% - Levantamento na Loja' : '🚚 Pagou 50% - Entrega a Domicílio'}</span></div>
       ${botoesAcao}
       ${botaoFinalizar}
+      <button class="btn" style="background:#e0e7ff;color:#3730a3;margin-top:8px" onclick="abrirFatura(${p.id})">🧾 Ver Fatura - Confirmar se está em Preparação ou Recebido</button>
       <button class="btn btn-vermelho" style="margin-top:8px;background:#fee2e2;color:#991b1b" onclick="cancelarPedido(${p.id})">❌ Cancelar Pedido</button>
       <button class="btn btn-verde" style="margin-top:8px" onclick="window.open('https://wa.me/${String(tel||'').replace(/[^0-9]/g,'')}?text=${waMsg}','_blank')">💬 Falar no WhatsApp</button>
     </div>`;
   }).join('');
 }
-// 1º PASSO - PAGOU 100% -> RECEBIDO (SEM CÓDIGO, só para baixar notificação e avisar cliente)
+function abrirFatura(id){
+  let p = listaAtual.find(x=>x.id==id);
+  if(!p) return;
+  let nome=p.nome_cliente||p.cliente_nome||p.nome||'Cliente';
+  let tel=p.telefone||p.whatsapp||'';
+  let morada=p.morada||p.endereco||p.localizacao||'';
+  let total=Number(p.total||0);
+  let pago=Number(p.valor_pago||p.pago||0);
+  if(!pago){ let tipo=p.tipo_entrega||''; pago = (tipo==='loja') ? total : Math.round(total/2); }
+  let falta = total - pago;
+  let status=p.status||p.estado||'Novo';
+  let codigo=p.codigo||'';
+  let data=(p.created_at||'').slice(0,10).split('-').reverse().join('/')+' '+(p.created_at||'').slice(11,16);
+  let itens='';
+  try{
+    let it=p.itens||p.produtos||p.items||p.detalhes;
+    if(typeof it==='string') it=JSON.parse(it);
+    if(Array.isArray(it)) itens=it.map(i=>`• ${i.nome||i.produto||'Produto'} x${i.qtd||i.quantidade||1} - ${Number(i.preco||0).toLocaleString()} Kz`).join('<br>');
+    else if(it) itens=it;
+  }catch(e){}
+  let selo = status==='Entregue' ? '<div style="background:#dcfce7;padding:10px;border-radius:8px;text-align:center;font-weight:800">✅ ENTREGUE - FATURA ENTREGUE AO CLIENTE</div>' : '<div style="background:#fef3c7;padding:10px;border-radius:8px;text-align:center;font-weight:800">⚠️ AGUARDA CÓDIGO - NÃO ENTREGUE AINDA<br><small>Cliente tem que apresentar o código '+codigo+'</small></div>';
+  document.getElementById('conteudoFatura').innerHTML = `
+    <b>🏠 CASA NOVA</b><br>
+    Data: ${data}<br>
+    Código: <b>${codigo}</b><br>
+    <hr>
+    <b>Cliente:</b> ${nome}<br>
+    Tel: ${tel}<br>
+    Morada: ${morada}<br>
+    <hr>
+    <b>Produtos:</b><br>${itens}<br>
+    <hr>
+    Total: <b>${total.toLocaleString()} Kz</b><br>
+    Pago: <b>${pago.toLocaleString()} Kz</b><br>
+    Falta: <b>${falta.toLocaleString()} Kz</b><br>
+    <hr>
+    <b>STATUS ATUAL: ${status.toUpperCase()}</b><br>
+    ${status==='Recebido' ? '💙 Recebido - Pagamento de 100% recebido, espera código para entregar' : ''}
+    ${status==='Em Preparação' ? '🔥 Em Preparação / Aceite - Estamos a preparar, espera código para entregar' : ''}
+    ${status==='Novo' ? '🆕 Novo - Aguarda tua confirmação (Recebido ou Preparação)' : ''}
+    ${status==='Entregue' ? '✅ Entregue - Código confirmado, fatura entregue' : ''}
+    <br><br>${selo}
+  `;
+  document.getElementById('modalFatura').classList.add('aberto');
+}
+function fecharFatura(){ document.getElementById('modalFatura').classList.remove('aberto'); }
 async function marcarRecebido(id){
   let r = await db.from('pedidos').update({status:'Recebido'}).eq('id', id);
-  if(r.error){
-    let r2 = await db.from('pedidos').update({estado:'Recebido'}).eq('id', id);
-    if(r2.error){ aviso('❌ '+r2.error.message,'erro'); return; }
-  }
+  if(r.error){ let r2 = await db.from('pedidos').update({estado:'Recebido'}).eq('id', id); if(r2.error){ aviso('❌ '+r2.error.message,'erro'); return; } }
   aviso('💙 Recebido! Cliente avisado que recebemos o pagamento.');
   listaAtual = listaAtual.map(p=> p.id===id ? {...p, status:'Recebido'} : p);
-  atualizarContador();
-  carregar();
+  atualizarContador(); carregar();
 }
-// 1º PASSO - PAGOU 50% -> EM PREPARAÇÃO / ACEITE (SEM CÓDIGO, só para baixar notificação e avisar cliente)
 async function marcarPreparacao(id){
   let r = await db.from('pedidos').update({status:'Em Preparação'}).eq('id', id);
-  if(r.error){
-    let r2 = await db.from('pedidos').update({estado:'Em Preparação'}).eq('id', id);
-    if(r2.error){ aviso('❌ '+r2.error.message,'erro'); return; }
-  }
+  if(r.error){ let r2 = await db.from('pedidos').update({estado:'Em Preparação'}).eq('id', id); if(r2.error){ aviso('❌ '+r2.error.message,'erro'); return; } }
   aviso('🔥 Em Preparação! Cliente avisado.');
   listaAtual = listaAtual.map(p=> p.id===id ? {...p, status:'Em Preparação'} : p);
-  atualizarContador();
-  carregar();
+  atualizarContador(); carregar();
 }
 async function cancelarPedido(id){
   if(!confirm('Cancelar este pedido?')) return;
   let r = await db.from('pedidos').update({status:'Cancelado'}).eq('id', id);
   if(r.error){ let r2 = await db.from('pedidos').update({estado:'Cancelado'}).eq('id', id); if(r2.error){ aviso('❌ '+r2.error.message,'erro'); return; } }
-  aviso('❌ Pedido cancelado');
-  carregar();
+  aviso('❌ Pedido cancelado'); carregar();
 }
-// 2º PASSO - FINAL - SÓ COM CÓDIGO -> ENTREGUE AUTOMÁTICO
 function abrirModalCodigo(id, codigo){
   pedidoParaFinalizar = {id: id, codigo: codigo};
   document.getElementById('codigoPedidoModal').textContent = codigo || '(sem código)';
@@ -226,10 +268,7 @@ async function confirmarComCodigo(){
     return;
   }
   let r = await db.from('pedidos').update({status:'Entregue'}).eq('id', pedidoParaFinalizar.id);
-  if(r.error){
-    let r2 = await db.from('pedidos').update({estado:'Entregue'}).eq('id', pedidoParaFinalizar.id);
-    if(r2.error){ aviso('❌ '+r2.error.message,'erro'); return; }
-  }
+  if(r.error){ let r2 = await db.from('pedidos').update({estado:'Entregue'}).eq('id', pedidoParaFinalizar.id); if(r2.error){ aviso('❌ '+r2.error.message,'erro'); return; } }
   fecharModalCodigo();
   aviso('✅ Entregue automático! Código certo. Entrega a fatura ao cliente.');
   carregar();

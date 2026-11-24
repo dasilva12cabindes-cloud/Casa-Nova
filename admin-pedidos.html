@@ -7,10 +7,25 @@
 <style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
 .topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}
 .topo .logo{display:flex;align-items:center;gap:8px}
-.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
 .topo.tem-logo .logo-text{display:none}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
+/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
+@keyframes logoZoom{
+  0%{transform:scale(0.7) translateY(0) rotate(0deg)}
+  25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
+  40%{transform:scale(1.45) translateY(0) rotate(0deg)}
+  48%{transform:scale(1.45) translateY(0) rotate(-6deg)}
+  56%{transform:scale(1.45) translateY(0) rotate(6deg)}
+  64%{transform:scale(1.45) translateY(0) rotate(-5deg)}
+  72%{transform:scale(1.45) translateY(0) rotate(4deg)}
+  80%{transform:scale(1.25) translateY(4px) rotate(0deg)}
+  88%{transform:scale(1.08) translateY(-3px) rotate(0deg)}
+  94%{transform:scale(0.96) translateY(2px) rotate(0deg)}
+  100%{transform:scale(1) translateY(0) rotate(0deg)}
+}
 .caixa{background:#fff;padding:14px;border-radius:12px;margin-top:12px}
+.caixa h3{background:#eff6ff;border:2px solid #0b5ed7;border-radius:999px;padding:10px 14px;text-align:center;margin:0 0 8px}
 .btn{border:0;padding:11px;border-radius:8px;width:100%;font-weight:700;cursor:pointer}
 .btn-azul{background:#0b5ed7;color:#fff}
 .btn-verde{background:#16a34a;color:#fff}
@@ -34,7 +49,7 @@ select{padding:10px;border:1px solid #cfd5df;border-radius:8px;width:100%;font-s
 
 <div class="caixa">
 <h3>📦 Pedidos Recebidos</h3>
-<p style="color:#666;font-size:13px">Aqui aparecem todos os pedidos que os clientes fazem no carrinho.</p>
+<p style="color:#666;font-size:13px;text-align:center">Aqui aparecem todos os pedidos que os clientes fazem no carrinho.</p>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
 <button class="btn btn-verde" onclick="location.href='admin-vendas.html'">💰 Ver Vendas do Dia →</button>
 <button class="btn btn-azul" onclick="carregar()">🔄 Atualizar</button>
@@ -98,15 +113,11 @@ async function carregar(){
   }).join('');
 }
 async function mudarStatus(id,status,tabela){
-  // CORRIGIDO: tenta só UMA coluna de cada vez
-  // 1º tenta 'status'
   let r = await db.from(tabela).update({status: status}).eq('id', id);
   if(!r.error){ aviso('✅ Pedido atualizado para: '+status); carregar(); return; }
-  // 2º se 'status' não existe, tenta 'estado'
   if(r.error.message.includes('status') || r.error.message.includes('column')){
     let r2 = await db.from(tabela).update({estado: status}).eq('id', id);
     if(!r2.error){ aviso('✅ Pedido atualizado para: '+status); carregar(); return; }
-    // 3º se nenhuma existe, avisa para criar a coluna
     return aviso('❌ Falta a coluna status/estado na tabela '+tabela+'. Vai ao Supabase > SQL e corre: ALTER TABLE '+tabela+' ADD COLUMN status TEXT DEFAULT \'Novo\';','erro');
   }
   return aviso('❌ '+r.error.message,'erro');

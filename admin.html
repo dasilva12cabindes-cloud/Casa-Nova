@@ -54,9 +54,9 @@ async function subirBanner(){
   const f=document.getElementById('fileBanner').files[0];
   if(!f) return alert('Escolhe uma foto');
   const nome='banner_'+Date.now()+'_'+f.name.replace(/\s/g,'_');
-  const up=await db.storage.from('loja').upload(nome,f,{upsert:true});
-  if(up.error) return alert('Cria o bucket loja PUBLIC no Storage. Erro: '+up.error.message);
-  const pub=db.storage.from('loja').getPublicUrl(nome);
+  const up=await db.storage.from('produtos').upload(nome,f,{upsert:true});
+if(up.error) return alert('Erro: '+up.error.message);
+const pub=db.storage.from('produtos').getPublicUrl(nome);
   banners.push(pub.data.publicUrl); await guardar();
 }
 async function apagarBanner(i){

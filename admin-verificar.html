@@ -9,6 +9,8 @@
 #visorComp.aberto{display:flex}
 #visorComp img{max-width:100%;max-height:92vh;border-radius:10px;object-fit:contain}
 #visorComp span{position:absolute;top:12px;right:16px;color:#fff;font-size:20px;font-weight:800;cursor:pointer;background:#dc2626;padding:8px 14px;border-radius:20px}
+.item-pedido{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-top:10px;cursor:pointer;background:#fff}
+.item-pedido:active{background:#eff6ff}
 </style></head>
 <body>
 <div class="topo"><b>🔍 Verificar Pedido</b><a href="admin.html">← Voltar</a></div>
@@ -18,6 +20,16 @@
   <input id="codigoInput" placeholder="CN-123456">
   <button class="btn btn-azul" onclick="verificar()">🔍 VERIFICAR PEDIDO</button>
 </div>
+
+<!-- NOVO: SE ESQUECESTE O CÓDIGO -->
+<div class="caixa">
+  <h3 style="margin:0">😅 Esqueceste o código?</h3>
+  <p style="color:#666;font-size:13px">Procura pelo nome ou telefone do cliente, clica no pedido e ele verifica sozinho.</p>
+  <input id="buscaInput" placeholder="Ex: Cosme ou 942788931" style="text-transform:none;letter-spacing:0;text-align:left" oninput="listarPedidos()">
+  <button class="btn" style="background:#111;color:#fff" onclick="listarPedidos()">📋 VER TODOS OS PEDIDOS</button>
+  <div id="listaPedidos"></div>
+</div>
+
 <div id="resultado"></div>
 <div id="visorComp" onclick="fecharComp()"><span>✕ Fechar</span><img id="imgGrande" src=""></div>
 <script>
@@ -38,6 +50,38 @@ function getUrlComprovativo(valor){
     if(r2 && r2.data && r2.data.publicUrl) return r2.data.publicUrl;
   }catch(e){}
   return null;
+}
+
+// NOVO: LISTA PEDIDOS COM CÓDIGO À MOSTRA
+async function listarPedidos(){
+  let busca = document.getElementById('buscaInput').value.trim().toLowerCase();
+  let div = document.getElementById('listaPedidos');
+  div.innerHTML = '<p style="text-align:center">A procurar...</p>';
+  let q = db.from('pedidos').select('*').order('created_at',{ascending:false}).limit(20);
+  let r = await q;
+  if(r.error || !r.data || !r.data.length){ div.innerHTML = '<p style="text-align:center;color:#999">Nenhum pedido encontrado.</p>'; return; }
+  let filtrados = r.data.filter(p => {
+    if(!busca) return true;
+    let texto = ((p.nome_cliente||p.nome||'') + ' ' + (p.telefone||'') + ' ' + (p.codigo||'')).toLowerCase();
+    return texto.includes(busca);
+  });
+  if(!filtrados.length){ div.innerHTML = '<p style="text-align:center;color:#999">Nenhum pedido com esse nome / telefone.</p>'; return; }
+  div.innerHTML = filtrados.map(p => {
+    let st = String(p.status||p.estado||'Novo');
+    let cor = st.toLowerCase()==='entregue' ? '#dc2626' : '#16a34a';
+    let data = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-PT') + ' ' + new Date(p.created_at).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}) : '';
+    return `<div class="item-pedido" onclick="escolherPedido('${p.codigo}')">
+      <b>${p.nome_cliente||p.nome||'-'}</b> <span style="float:right;color:${cor};font-weight:800;font-size:12px">${st}</span><br>
+      <small style="color:#666">${data} • ${p.telefone||''}</small><br>
+      <div style="background:#fef3c7;border:1px dashed #f59e0b;padding:8px;border-radius:8px;margin-top:8px">🔖 <b>Código: ${p.codigo}</b> <span style="color:#0b5ed7;font-weight:800;float:right">👆 Clica para verificar →</span></div>
+      <small>Total: <b>${Number(p.total||p.valor_total||0).toLocaleString()} Kz</b></small>
+    </div>`;
+  }).join('');
+}
+function escolherPedido(cod){
+  document.getElementById('codigoInput').value = cod;
+  verificar();
+  window.scrollTo(0,0);
 }
 
 async function verificar(){
@@ -68,8 +112,6 @@ async function verificar(){
     if(Array.isArray(it)) itens = it.map(i=>`• ${i.nome||i.produto} x${i.qtd||i.quantidade||1} - ${Number(i.preco||0).toLocaleString()} Kz`).join('<br>');
     else itens = it || '-';
   }catch(e){ itens = p.itens || '-'; }
-
-  // RETIFICADO: SEM IFRAME - NÃO MOSTRA MAIS O ERRO 404
   let comp = '';
   let urlComp = getUrlComprovativo(p.comprovativo_url);
   if(urlComp){
@@ -97,7 +139,6 @@ async function verificar(){
   } else {
     comp = `<p style="color:#999">Sem comprovativo enviado</p>`;
   }
-
   document.getElementById('resultado').innerHTML = `<div class="caixa">
     <div style="text-align:center"><span style="background:#dcfce7;color:#166534;padding:6px 14px;border-radius:20px;font-weight:700">✅ PEDIDO ENCONTRADO - ${p.codigo}</span></div>
     <div class="linha">👤 <b>Nome:</b> ${nome}</div>
@@ -115,8 +156,6 @@ async function verificar(){
     <button onclick="marcarEntregue('${p.codigo}')" style="background:#16a34a;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;margin-top:14px;cursor:pointer">✅ MARCAR COMO ENTREGUE - Invalidar Código</button>
     <p style="text-align:center;color:#666;font-size:12px;margin-top:8px">📄 O comprovativo fica guardado por 1 mês e depois é apagado sozinho do Supabase.<br><span style="color:#dc2626;font-weight:700">⚠️ Depois de clicares, este código nunca mais vai funcionar.</span></p>
   </div>`;
-
-  // VERIFICA SE O PDF EXISTE SEM MOSTRAR O 404
   if(urlComp && urlComp.toLowerCase().includes('.pdf')){
     try{
       let res = await fetch(urlComp, {method:'HEAD'});
@@ -126,8 +165,6 @@ async function verificar(){
 }
 async function marcarEntregue(cod){
   if(!confirm('Tens a certeza que já entregaste este pedido?\n\nDepois disso o código ' + cod + ' NUNCA mais vai funcionar.\n\nO comprovativo vai ficar guardado por 1 mês e depois vai ser apagado sozinho.')) return;
-  // RETIFICADO: NÃO APAGA O COMPROVATIVO AQUI - SÓ MARCA COMO ENTREGUE
-  // A limpeza de 1 mês é feita sozinha pelo Supabase
   let r1 = await db.from('pedidos').update({status:'Entregue', estado:'Entregue'}).eq('codigo', cod);
   if(r1.error){ alert('Erro: ' + r1.error.message); return; }
   alert('✅ Pedido marcado como ENTREGUE!\n📄 Comprovativo vai ficar guardado por 1 mês.');

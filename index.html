@@ -58,7 +58,7 @@ function iniciarBanner(fotos){
       s.onclick=()=>mostrarBanner(Array.from(div.children).indexOf(im));
       if(div.children.length===1) s.classList.add('ativo');
       pontos.appendChild(s);
-      if(div.children.length>1 && !bannerTimer) bannerTimer=setInterval(()=>mostrarBanner(bannerAtual+1),4000);
+      if(div.children.length>1 && !bannerTimer) bannerTimer=setInterval(()=>mostrarBanner(bannerAtual+1),8000);
     };
     im.onerror=()=>{};
     im.src=f;

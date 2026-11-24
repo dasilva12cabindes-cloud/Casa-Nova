@@ -3,13 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Produto</title>
+<title>Produto - Casa Nova</title>
 <link rel="stylesheet" href="css/style.css">
+<style>
+.topo{display:flex;justify-content:space-between;align-items:center;padding:8px 16px;background:#0b5ed7;color:#fff;height:72px}
+.topo .logo{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:700;font-size:1.3rem}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
+.topo.tem-logo .logo-text{display:none}
+/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
+@keyframes logoZoom{
+  0%{transform:scale(0.7) translateY(0) rotate(0deg)}
+  25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
+  40%{transform:scale(1.45) translateY(0) rotate(0deg)}
+  48%{transform:scale(1.45) translateY(0) rotate(-6deg)}
+  56%{transform:scale(1.45) translateY(0) rotate(6deg)}
+  64%{transform:scale(1.45) translateY(0) rotate(-5deg)}
+  72%{transform:scale(1.45) translateY(0) rotate(4deg)}
+  80%{transform:scale(1.25) translateY(4px) rotate(0deg)}
+  88%{transform:scale(1.08) translateY(-3px) rotate(0deg)}
+  94%{transform:scale(0.96) translateY(2px) rotate(0deg)}
+  100%{transform:scale(1) translateY(0) rotate(0deg)}
+}
+#produto h2{background:#eff6ff;border:2px solid #0b5ed7;border-radius:999px;padding:10px 14px;text-align:center;margin:12px 0}
+#produto img{border-radius:16px}
+#produto .preco{font-size:1.4rem;font-weight:800;color:#0b5ed7;margin:10px 0}
+</style>
 </head>
 <body>
 
-<header class="topo">
-  <a href="index.html" class="logo">Casa Nova</a>
+<header class="topo" id="topoSite">
+  <a href="index.html" class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text">Casa Nova</span></a>
+  <a href="carrinho.html" style="color:#fff;text-decoration:none;font-weight:700">🛒 Carrinho</a>
 </header>
 
 <main class="container">
@@ -25,57 +49,41 @@
 <script src="js/supabase.js"></script>
 
 <script>
-
-async function carregarProduto(){
-
-  const params =
-    new URLSearchParams(location.search);
-
-  const id = params.get("id");
-
-  const r = await db
-    .from("produtos")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if(!r.data){
-    document.getElementById("produto").innerHTML =
-      "<p>Produto não encontrado.</p>";
-    return;
-  }
-
-  const p = r.data;
-
-  document.getElementById("produto").innerHTML = `
-    <img src="${p.imagem_url}" style="width:100%;max-width:400px">
-
-    <h2>${p.nome}</h2>
-
-    <p class="preco">${kz(p.preco)}</p>
-
-    <p>${p.descricao || ""}</p>
-
-    <p>Stock: ${p.stock}</p>
-
-    <button id="comprar" class="btn">
-      Adicionar ao carrinho
-    </button>
-  `;
-
-  document
-    .getElementById("comprar")
-    .onclick = function(){
-
-      adicionarAoCarrinho(p);
-
-      alert("Adicionado ao carrinho");
-
-    };
+function kz(v){ return Number(v||0).toLocaleString() + ' Kz'; }
+function adicionarAoCarrinho(p){
+  let carrinho = JSON.parse(localStorage.getItem('carrinho')||'[]');
+  let achou = carrinho.find(i=>i.id==p.id);
+  if(achou){ achou.qtd=(achou.qtd||1)+1; } else { carrinho.push({id:p.id,nome:p.nome,preco:Number(p.preco),imagem:p.imagem||p.imagem_url||'',qtd:1}); }
+  localStorage.setItem('carrinho', JSON.stringify(carrinho));
 }
 
+async function carregarProduto(){
+  const params = new URLSearchParams(location.search);
+  const id = params.get("id");
+  const r = await db.from("produtos").select("*").eq("id", id).single();
+  if(!r.data){
+    document.getElementById("produto").innerHTML = "<p>Produto não encontrado.</p>";
+    return;
+  }
+  const p = r.data;
+  document.getElementById("produto").innerHTML = `
+    <img src="${p.imagem_url || p.imagem || ''}" style="width:100%;max-width:400px" onerror="this.src='https://via.placeholder.com/400'">
+    <h2>${p.nome}</h2>
+    <p class="preco">${kz(p.preco)}</p>
+    <p>${p.descricao || ""}</p>
+    <p>Stock: ${p.stock ?? '-'}</p>
+    <button id="comprar" class="btn">Adicionar ao carrinho</button>
+  `;
+  document.getElementById("comprar").onclick = function(){
+    adicionarAoCarrinho(p);
+    alert("Adicionado ao carrinho");
+  };
+}
+async function carregarLogoTopo(){
+  try{ let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle(); let logo=r.data?.logo_url; if(logo){ let img=document.getElementById('logoTopo'); img.src=logo; img.style.display='block'; document.getElementById('topoSite').classList.add('tem-logo'); } }catch(e){}
+}
+carregarLogoTopo();
 carregarProduto();
-
 </script>
 
 </body>

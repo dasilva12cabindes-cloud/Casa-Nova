@@ -46,7 +46,6 @@
 .modal-fundo.aberto{display:flex}
 .modal-box{background:#fff;width:100%;max-width:380px;border-radius:20px;padding:22px;text-align:center;max-height:90vh;overflow-y:auto}
 .modal-box input{width:100%;padding:14px;border:2px solid #0b5ed7;border-radius:10px;margin:12px 0;font-size:18px;text-align:center;font-weight:800;letter-spacing:2px;text-transform:uppercase;box-sizing:border-box}
-.fatura{text-align:left;font-size:14px;line-height:1.7;border:1px dashed #999;padding:12px;border-radius:10px;background:#fff}
 </style></head>
 <body>
 <div id="toast"></div>
@@ -75,13 +74,13 @@
 <button class="btn btn-cinza" style="margin-top:8px" onclick="fecharModalCodigo()">Cancelar</button>
 </div></div>
 
-<!-- MODAL FATURA -->
-<div id="modalFatura" class="modal-fundo" onclick="if(event.target.id==='modalFatura') fecharFatura()"><div class="modal-box">
-<div style="font-size:36px">🧾</div>
-<h3 style="margin:8px 0">Fatura - Casa Nova</h3>
-<div id="conteudoFatura" class="fatura"></div>
-<button class="btn btn-azul" style="margin-top:12px" onclick="window.print()">🖨️ Imprimir Fatura</button>
-<button class="btn btn-cinza" style="margin-top:8px" onclick="fecharFatura()">Fechar</button>
+<!-- MODAL FATURA - ÚNICA, BONITA, IGUAL À DO VERIFICAR -->
+<div id="modalFatura" class="modal-fundo" onclick="if(event.target.id==='modalFatura') fecharFatura()"><div class="modal-box" style="max-width:420px;padding:0;overflow:hidden">
+<div id="conteudoFatura" style="background:#fff"></div>
+<div style="padding:12px;display:flex;gap:8px;background:#fff">
+<button class="btn btn-azul" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+<button class="btn btn-cinza" onclick="fecharFatura()">❌ Fechar</button>
+</div>
 </div></div>
 
 <script>
@@ -152,7 +151,6 @@ async function carregar(){
       }
     } else if(isRecebidoOuPrep){
       botoesAcao = `<div style="background:#dcfce7;border:1px solid #16a34a;border-radius:8px;padding:10px;text-align:center;font-size:13px">✅ Cliente já foi avisado: <b>${status}</b><br>Agora espera ele vir com o código para finalizar.</div>`;
-      // CORRIGIR: se pagou 100% mas ficou em Preparação por engano
       if(pagouTudo && status==='Em Preparação'){
         botoesAcao += `<button class="btn" style="background:#fff7ed;color:#92400e;margin-top:8px;border:1px solid #f59e0b" onclick="marcarRecebido(${p.id})">🔄 Corrigir para Recebido (Pagou 100%)</button>`;
       }
@@ -187,43 +185,60 @@ function abrirFatura(id){
   if(!p) return;
   let nome=p.nome_cliente||p.cliente_nome||p.nome||'Cliente';
   let tel=p.telefone||p.whatsapp||'';
+  let email=p.email||'';
   let morada=p.morada||p.endereco||p.localizacao||'';
   let total=Number(p.total||0);
   let pago=Number(p.valor_pago||p.pago||0);
   if(!pago){ let tipo=p.tipo_entrega||''; pago = (tipo==='loja') ? total : Math.round(total/2); }
   let falta = total - pago;
+  let pagouTudo = pago >= total;
   let status=p.status||p.estado||'Novo';
   let codigo=p.codigo||'';
+  let tipo = p.tipo_entrega || (pagouTudo ? 'loja' : 'entrega');
+  let pagamento = p.pagamento || 'PayPay';
   let data=(p.created_at||'').slice(0,10).split('-').reverse().join('/')+' '+(p.created_at||'').slice(11,16);
-  let itens='';
+  let linhas='';
   try{
     let it=p.itens||p.produtos||p.items||p.detalhes;
     if(typeof it==='string') it=JSON.parse(it);
-    if(Array.isArray(it)) itens=it.map(i=>`• ${i.nome||i.produto||'Produto'} x${i.qtd||i.quantidade||1} - ${Number(i.preco||0).toLocaleString()} Kz`).join('<br>');
-    else if(it) itens=it;
+    if(Array.isArray(it)) linhas=it.map(i=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee"><span>${i.nome||i.produto||'Produto'} x${i.qtd||i.quantidade||1}</span><b>${Number(i.preco||0).toLocaleString()} Kz</b></div>`).join('');
+    else if(it) linhas=it;
   }catch(e){}
-  let selo = status==='Entregue' ? '<div style="background:#dcfce7;padding:10px;border-radius:8px;text-align:center;font-weight:800">✅ ENTREGUE - FATURA ENTREGUE AO CLIENTE</div>' : '<div style="background:#fef3c7;padding:10px;border-radius:8px;text-align:center;font-weight:800">⚠️ AGUARDA CÓDIGO - NÃO ENTREGUE AINDA<br><small>Cliente tem que apresentar o código '+codigo+'</small></div>';
+  let seloStatus = '';
+  if(status==='Entregue') seloStatus = '<div style="background:#dcfce7;border:2px solid #16a34a;color:#166534;padding:10px;border-radius:10px;text-align:center;font-weight:800;margin-top:10px">✅ ENTREGUE - FATURA ENTREGUE AO CLIENTE</div>';
+  else if(status==='Recebido') seloStatus = '<div style="background:#e0e7ff;border:2px solid #4338ca;color:#3730a3;padding:10px;border-radius:10px;text-align:center;font-weight:800;margin-top:10px">💙 RECEBIDO - Pagamento Recebido, aguarda código</div>';
+  else if(status==='Em Preparação' || status==='Aceite') seloStatus = '<div style="background:#fef3c7;border:2px solid #f59e0b;color:#92400e;padding:10px;border-radius:10px;text-align:center;font-weight:800;margin-top:10px">🔥 EM PREPARAÇÃO / ACEITE - Aguarda código</div>';
+  else seloStatus = '<div style="background:#fef3c7;border:2px solid #f59e0b;padding:10px;border-radius:10px;text-align:center;font-weight:800;margin-top:10px">🆕 NOVO - Aguarda confirmação</div>';
+  let seloPago = pagouTudo
+    ? '<div style="border:3px solid #16a34a;color:#16a34a;border-radius:10px;padding:8px;text-align:center;font-weight:900;transform:rotate(-3deg);margin:12px 40px">✅ PAGO TOTAL</div>'
+    : '<div style="border:3px solid #f59e0b;color:#92400e;border-radius:10px;padding:8px;text-align:center;font-weight:900;transform:rotate(-3deg);margin:12px 40px">💰 PAGO 50% - FALTA '+falta.toLocaleString()+' Kz</div>';
   document.getElementById('conteudoFatura').innerHTML = `
-    <b>🏠 CASA NOVA</b><br>
-    Data: ${data}<br>
-    Código: <b>${codigo}</b><br>
-    <hr>
-    <b>Cliente:</b> ${nome}<br>
-    Tel: ${tel}<br>
-    Morada: ${morada}<br>
-    <hr>
-    <b>Produtos:</b><br>${itens}<br>
-    <hr>
-    Total: <b>${total.toLocaleString()} Kz</b><br>
-    Pago: <b>${pago.toLocaleString()} Kz</b><br>
-    Falta: <b>${falta.toLocaleString()} Kz</b><br>
-    <hr>
-    <b>STATUS ATUAL: ${status.toUpperCase()}</b><br>
-    ${status==='Recebido' ? '💙 Recebido - Pagamento de 100% recebido, espera código para entregar' : ''}
-    ${status==='Em Preparação' ? '🔥 Em Preparação / Aceite - Estamos a preparar, espera código para entregar' : ''}
-    ${status==='Novo' ? '🆕 Novo - Aguarda tua confirmação (Recebido ou Preparação)' : ''}
-    ${status==='Entregue' ? '✅ Entregue - Código confirmado, fatura entregue' : ''}
-    <br><br>${selo}
+    <div style="background:#111;color:#fff;padding:16px;text-align:center">
+      <div style="font-size:28px;font-weight:900">CASA<span style="color:#f97316">NOVA</span></div>
+      <div style="font-size:11px;letter-spacing:2px">ELETRODOMÉSTICOS</div>
+    </div>
+    <div style="padding:16px;text-align:left;font-size:14px;line-height:1.7">
+      <div style="text-align:center;color:#666">Fatura / Recibo de Pagamento</div>
+      <div style="text-align:center;font-size:18px;font-weight:900">Fatura Nº ${codigo}</div>
+      <div style="text-align:center;color:#666;font-size:12px">${data}</div>
+      <hr style="border:1px solid #0b5ed7">
+      <b>Cliente:</b> ${nome}<br>
+      <b>Telefone:</b> ${tel}<br>
+      ${email ? `<b>E-mail:</b> ${email}<br>` : ''}
+      <b>Morada / Entrega:</b> ${morada}<br>
+      <b>Tipo:</b> ${tipo} • <b>Pagamento:</b> ${pagamento}<br>
+      <b>Status:</b> ${status}
+      <hr style="border:1px solid #0b5ed7">
+      ${linhas}
+      <div style="border:1px solid #0b5ed7;border-radius:10px;padding:12px;margin-top:10px">
+        <div style="display:flex;justify-content:space-between"><span>Total:</span><b>${total.toLocaleString()} Kz</b></div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px"><span>Já pago:</span><b style="color:#16a34a">${pago.toLocaleString()} Kz</b></div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px"><span>Falta pagar:</span><b style="color:#dc2626">${falta.toLocaleString()} Kz</b></div>
+      </div>
+      ${seloPago}
+      ${seloStatus}
+      <p style="text-align:center;color:#666;font-size:12px;margin:10px 0 0">Obrigado pela preferência! 🏠 Casa Nova<br>Esta fatura serve como comprovativo de pagamento e entrega.</p>
+    </div>
   `;
   document.getElementById('modalFatura').classList.add('aberto');
 }

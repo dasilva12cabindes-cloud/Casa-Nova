@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Promoção - Casa Nova</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<style>body{margin:0;font-family:Arial;background:#f1f3f6;padding:14px}h2{text-align:center}input{width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;margin:6px 0;font-size:16px;box-sizing:border-box}button{background:#dc2626;color:#fff;border:0;padding:13px;border-radius:10px;width:100%;font-weight:800;font-size:15px;margin-top:6px}button.azul{background:#0b5ed7}.card{background:#fff;border-radius:14px;padding:12px;margin-bottom:12px;display:flex;gap:10px;align-items:center}.card img{width:70px;height:70px;object-fit:cover;border-radius:10px}.preco-antigo{color:#999;text-decoration:line-through;font-size:12px}.desconto{color:#dc2626;font-size:11px;font-weight:800}</style></head>
+<body>
+<h2>🔥 Promoção - Casa Nova</h2>
+<p style="text-align:center;color:#666;font-size:13px">Mete o preço antigo e ele calcula o % sozinho</p>
+<input id="busca" placeholder="🔍 Pesquisar produto..." oninput="filtrar()">
+<div id="lista">A carregar...</div>
+<script>
+let todos=[];
+async function carregar(){
+  let r=await db.from('produtos').select('*').order('id',{ascending:false});
+  todos=r.data||[];
+  mostrar(todos);
+}
+function filtrar(){
+  let t=document.getElementById('busca').value.toLowerCase();
+  mostrar(todos.filter(p=>(p.nome||'').toLowerCase().includes(t)));
+}
+function mostrar(lista){
+  document.getElementById('lista').innerHTML=lista.map(p=>{
+    let antigo=Number(p.preco_antigo||0), novo=Number(p.preco||0);
+    let perc=(antigo>novo&&antigo>0)?Math.round((1-novo/antigo)*100):0;
+    return `<div class="card">
+      <img src="${p.imagem||p.imagem_url||''}" onerror="this.src='https://via.placeholder.com/70'">
+      <div style="flex:1">
+        <b>${p.nome}</b><br>
+        ${perc?`<span class="preco-antigo">${antigo.toLocaleString()} Kz</span> <span class="desconto">-${perc}%</span><br>`:''}
+        <b style="color:#0b5ed7">${novo.toLocaleString()} Kz</b><br>
+        <input id="ant-${p.id}" type="number" placeholder="Preço antigo (ex: 150000)" value="${antigo||''}">
+        <button onclick="salvar(${p.id})">💾 Guardar Promoção</button>
+        ${perc?`<button class="azul" onclick="tirar(${p.id})">❌ Tirar Promoção</button>`:''}
+      </div>
+    </div>`;
+  }).join('')||'Nenhum produto';
+}
+async function salvar(id){
+  let v=Number(document.getElementById('ant-'+id).value||0);
+  if(!v){alert('Escreve o preço antigo! Ex: 150000');return;}
+  let r=await db.from('produtos').update({preco_antigo:v}).eq('id',id);
+  if(r.error){alert('Erro: '+r.error.message);return;}
+  alert('✅ Promoção guardada!'); carregar();
+}
+async function tirar(id){
+  await db.from('produtos').update({preco_antigo:null}).eq('id',id);
+  alert('✅ Promoção tirada!'); carregar();
+}
+carregar();
+</script>
+</body></html>

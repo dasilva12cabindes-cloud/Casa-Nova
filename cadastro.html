@@ -66,7 +66,7 @@ input{width:100%;padding:13px;border:1px solid #cfd5df;border-radius:10px;font-s
   <div id="erroCad" class="erro"></div>
   <div id="sucessoCad" class="sucesso"></div>
   <button class="btn btn-verde" onclick="cadastrar()">✅ Cadastrar</button>
-  <button class="link" onclick="mostrarAba('entrar')">Já tens conta? Entrar</button>
+  <button class="link" onclick="abrirRecuperar()">🔑 Esqueci a minha senha</button>
 </div>
 </div>
 
@@ -92,7 +92,6 @@ function getClientes(){
   try{ return JSON.parse(localStorage.getItem('clientes_casa_nova')||'[]'); }catch(e){ return []; }
 }
 function setClientes(l){ localStorage.setItem('clientes_casa_nova', JSON.stringify(l)); }
-
 function mostrarAba(qual){
   document.getElementById('formEntrar').style.display = qual==='entrar' ? 'block' : 'none';
   document.getElementById('formCadastrar').style.display = qual==='cadastrar' ? 'block' : 'none';
@@ -103,7 +102,6 @@ function mostrarAba(qual){
 }
 let params = new URLSearchParams(location.search);
 if(params.get('aba')==='entrar') mostrarAba('entrar');
-
 function cadastrar(){
   let nome=document.getElementById('nome').value.trim();
   let telefone=document.getElementById('telefone').value.trim();
@@ -123,7 +121,6 @@ function cadastrar(){
   ok.textContent='✅ Conta criada! A entrar...'; ok.style.display='block';
   setTimeout(()=>location.href='index.html',1000);
 }
-
 function fazerLogin(){
   let email=document.getElementById('loginEmail').value.trim().toLowerCase();
   let senha=document.getElementById('loginSenha').value;
@@ -145,7 +142,6 @@ function fazerLogin(){
   ok.textContent='✅ Bem-vindo de volta, '+achado.nome.split(' ')[0]+'!'; ok.style.display='block';
   setTimeout(()=>location.href='index.html',1000);
 }
-
 let emailRecuperar='';
 function abrirRecuperar(){
   document.getElementById('recEmail').value=document.getElementById('loginEmail').value||'';

@@ -111,9 +111,11 @@ input,select,textarea{font-size:16px !important}
 .modal-preco { color: #0b5ed7; font-weight: 800; font-size: 1.3rem; margin: 10px 0; }
 .modal-desc { color: #333; font-size: .95rem; line-height: 1.5; margin-bottom: 14px; }
 .fechar { float: right; font-size: 1.4rem; border: 0; background: #f0f0f0; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
-.btn-cadastro-flutuante{position:fixed;bottom:20px;right:16px;z-index:999;width:62px;height:62px;border-radius:50%;background:#16a34a;color:#fff;font-size:30px;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.35);border:3px solid #fff;cursor:pointer}
-.btn-cadastro-flutuante:active{transform:scale(.92)}
-.btn-cadastro-flutuante small{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.btn-whatsapp-flutuante{position:fixed;bottom:20px;right:16px;z-index:999;width:62px;height:62px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.35);border:3px solid #fff;cursor:pointer;animation:flutuarWhats 2s ease-in-out infinite}
+.btn-whatsapp-flutuante:active{transform:scale(.92)}
+.btn-whatsapp-flutuante img{width:36px;height:36px;display:block}
+.btn-whatsapp-flutuante small{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap}
+@keyframes flutuarWhats{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 #modalCliente{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:flex-end;justify-content:center}
 #modalCliente.aberto{display:flex}
 .modal-cliente-box{background:#fff;width:100%;max-width:500px;border-radius:22px 22px 0 0;padding:20px;max-height:88vh;overflow-y:auto;text-align:center}
@@ -154,6 +156,8 @@ input,select,textarea{font-size:16px !important}
 @keyframes piscarCliente{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
 .nota-importante-box{background:#fff3cd;border:2px solid #f59e0b;border-radius:14px;padding:14px;margin:12px 0;white-space:pre-line;line-height:1.7;color:#333;font-size:15px}
 .nota-importante-box b{color:#92400e !important}
+.nota-menu{background:#fff3cd;border:2px solid #f59e0b;border-radius:14px;padding:14px;margin:12px 16px;white-space:pre-line;line-height:1.7;color:#333;font-size:14px}
+.nota-menu b{color:#92400e !important}
 </style>
 </head>
 <body>
@@ -193,7 +197,6 @@ input,select,textarea{font-size:16px !important}
   <div class="banner-dots" id="bannerDots"></div>
 </div>
 <div class="container">
-  <div id="caixaNotaImportante" class="nota-importante-box" style="display:none"><b>⚠️ NOTA IMPORTANTE - Leia Antes de Comprar</b><br><span id="textoNotaImportante"></span></div>
   <input id="busca" placeholder="🔍 Pesquisar produto..." oninput="filtrar()">
   <div class="categorias" id="categorias">
     <button class="chip ativo" onclick="filtrarCategoria('Todas',this)">Todas</button>
@@ -257,6 +260,8 @@ input,select,textarea{font-size:16px !important}
   <div class="menu-secao">Área Detalhes</div>
   <a class="menu-item" href="#" onclick="abrirSobre();return false"><span>🏪</span> Sobre a Nossa Loja</a>
   <a class="menu-item" href="carrinho.html"><span>💳</span> Formas de Pagamento</a>
+  <div class="menu-secao">⚠️ Nota Importante</div>
+  <div id="caixaNotaMenu" class="nota-menu"><b>⚠️ NOTA IMPORTANTE - Leia Antes de Comprar</b><br><span id="textoNotaMenu">A carregar...</span></div>
   <div class="menu-detalhe" id="menuDetalhe"><b>🔒 Segurança</b><br>A tua segurança é a nossa prioridade.<br><br><b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br><b>📞 Contacto</b><br>WhatsApp: +244 972 370 499</div>
   <div class="menu-secao">Ajuda</div>
   <a class="menu-item" href="#" onclick="falarWhatsApp();return false"><span>💬</span> Falar no WhatsApp</a>
@@ -484,23 +489,9 @@ function atualizarMenuConta(){
   let c = clienteLogado();
   if(c){
     let nome = c.nome || c.nome_cliente || 'Cliente';
-    let primeiro = nome.split(' ')[0];
     area.innerHTML = `<a class="menu-item" href="#" onclick="fecharMenu();abrirCliente();return false" style="background:#f0fdf4;border:2px solid #16a34a;border-radius:12px;margin:0 10px;padding:12px 14px"><span style="position:relative">👤</span><span><b>${nome}</b> <span class="ponto-online"></span><br><small style="color:#16a34a;font-weight:800">● Online - Clica para ver teus dados</small></span></a>`;
-    let btn = document.querySelector('.btn-cadastro-flutuante');
-    if(btn){
-      let sm = btn.querySelector('small');
-      if(sm) sm.textContent = primeiro;
-      if(!btn.querySelector('.ponto-flutuante')){ let p=document.createElement('span'); p.className='ponto-flutuante'; btn.appendChild(p); }
-    }
   } else {
     area.innerHTML = `<a class="menu-item" href="cadastro.html"><span>👤</span> Cadastrar / Entrar</a>`;
-    let btn = document.querySelector('.btn-cadastro-flutuante');
-    if(btn){
-      let sm = btn.querySelector('small');
-      if(sm) sm.textContent = 'Cadastrar';
-      let p = btn.querySelector('.ponto-flutuante');
-      if(p) p.remove();
-    }
   }
 }
 function exigirCadastro(){
@@ -649,14 +640,11 @@ function atualizarSobre(cfg){
   if(nota) html += `<div style="background:#fff3cd;border:2px solid #f59e0b;border-radius:12px;padding:14px;white-space:pre-line;line-height:1.7;color:#333"><b style="color:#92400e">⚠️ NOTA IMPORTANTE - Leia Antes de Comprar</b><br>${nota}</div><br>`;
   html += `<b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br><b>📞 Contacto</b><br>WhatsApp: +${whats}`;
   document.getElementById('sobreDetalhe').innerHTML = html;
-  // Caixa da Nota em cima da loja - cliente vê sem abrir Sobre
-  let caixa = document.getElementById('caixaNotaImportante');
-  let txt = document.getElementById('textoNotaImportante');
-  if(caixa && txt){
-    if(nota){ txt.textContent = nota; caixa.style.display = 'block'; }
-    else { caixa.style.display = 'none'; }
+  let txtMenu = document.getElementById('textoNotaMenu');
+  if(txtMenu){
+    txtMenu.textContent = nota || 'Lê a Nota Importante antes de comprar. Como funciona a tua compra na Casa Nova? 1. Escolhe o produto, 2. Preenche os teus dados, 3. Escolhe o pagamento, 4. Guarda bem o teu código!';
   }
-  document.getElementById('menuDetalhe').innerHTML = `<b>🔒 Segurança</b><br>${politica}<br><br>${nota ? `<b style="color:#92400e">⚠️ NOTA IMPORTANTE</b><br>${nota}<br><br>` : ''}<b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br><b>📞 Contacto</b><br>WhatsApp: +${whats}`;
+  document.getElementById('menuDetalhe').innerHTML = `<b>🔒 Segurança</b><br>${politica}<br><br><b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br><b>📞 Contacto</b><br>WhatsApp: +${whats}`;
 }
 let slideAtual = 0;
 let timerBannerVendidos = null;
@@ -852,6 +840,6 @@ document.addEventListener('click', function(){
 verificarStatusCliente();
 setInterval(verificarStatusCliente, 10000);
 </script>
-<a class="btn-cadastro-flutuante" onclick="abrirCliente()">👤<small>Cadastrar</small></a>
+<a class="btn-whatsapp-flutuante" onclick="falarWhatsApp()"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp"><small>WhatsApp</small></a>
 </body>
 </html>

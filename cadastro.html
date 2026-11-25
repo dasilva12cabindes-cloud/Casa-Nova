@@ -16,7 +16,6 @@ body{font-family:system-ui,Arial,sans-serif;background:#f5f6f8;color:#1d2330}
 .topo.tem-logo .logo-text{display:none}
 .topo .logo-text{font-size:1.3rem;font-weight:700}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
-/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
 @keyframes logoZoom{
   0%{transform:scale(0.7) translateY(0) rotate(0deg)}
   25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
@@ -39,11 +38,13 @@ body{font-family:system-ui,Arial,sans-serif;background:#f5f6f8;color:#1d2330}
 input{width:100%;padding:12px;border:1px solid #cfd5df;border-radius:10px;margin-bottom:10px;font-size:15px}
 .btn{background:#0b5ed7;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;cursor:pointer}
 .btn-verde{background:#16a34a}
+.btn-cinza{background:#eee;color:#111}
 .erro{background:#fee2e2;color:#dc2626;padding:10px;border-radius:10px;font-size:13px;margin-bottom:10px;display:none}
 .sucesso{background:#dcfce7;color:#15803d;padding:10px;border-radius:10px;font-size:13px;margin-bottom:10px;display:none}
 small{color:#666;font-size:13px}
 #toast{position:fixed;top:82px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:30px;font-size:14px;z-index:200;opacity:0;transition:.3s;pointer-events:none}
 #toast.mostrar{opacity:1}
+.link-recuperar{display:block;text-align:center;margin-top:10px;color:#0b5ed7;font-weight:700;font-size:14px;cursor:pointer;text-decoration:underline}
 </style>
 </head>
 <body>
@@ -85,7 +86,28 @@ small{color:#666;font-size:13px}
       <input id="emailEntrar" type="email" placeholder="Email">
       <input id="senhaEntrar" type="password" placeholder="Senha">
       <button class="btn" onclick="entrar()">Entrar →</button>
+      <a class="link-recuperar" onclick="abrirRecuperar()">🔑 Esqueci a senha?</a>
       <p style="text-align:center;margin-top:10px"><small>Não tens conta? <a href="#" onclick="trocarAba('criar');return false" style="color:#0b5ed7;font-weight:700">Cria aqui</a></small></p>
+    </div>
+
+    <!-- RECUPERAR SENHA - PASSO 1: CONFIRMAR EMAIL + TELEFONE -->
+    <div id="boxRecuperar" style="display:none">
+      <h3 style="text-align:center;margin-bottom:6px">🔑 Recuperar Senha</h3>
+      <p style="text-align:center;color:#666;font-size:13px;margin-bottom:12px">Mete o teu email e telefone para confirmarmos que és tu.</p>
+      <input id="emailRecuperar" type="email" placeholder="O teu Email">
+      <input id="telefoneRecuperar" placeholder="O teu Telefone / WhatsApp">
+      <button class="btn btn-verde" onclick="verificarRecuperar()">✅ Verificar - Sou Eu</button>
+      <button class="btn btn-cinza" style="margin-top:10px" onclick="fecharRecuperar()">← Voltar para Entrar</button>
+    </div>
+
+    <!-- RECUPERAR SENHA - PASSO 2: NOVA SENHA -->
+    <div id="boxNovaSenha" style="display:none">
+      <h3 style="text-align:center;margin-bottom:6px">✅ És tu mesmo!</h3>
+      <p style="text-align:center;color:#666;font-size:13px;margin-bottom:12px" id="textoNovaSenha">Cria a tua senha nova.</p>
+      <input id="novaSenhaRecuperar" type="password" placeholder="Nova senha *">
+      <input id="novaSenha2Recuperar" type="password" placeholder="Repete a nova senha *">
+      <button class="btn btn-verde" onclick="salvarNovaSenha()">💾 Guardar Nova Senha</button>
+      <button class="btn btn-cinza" style="margin-top:10px" onclick="fecharRecuperar()">Cancelar</button>
     </div>
 
     <hr style="margin:16px 0;border:0;border-top:1px solid #eee">
@@ -99,13 +121,116 @@ small{color:#666;font-size:13px}
 function toast(m){ let t=document.getElementById('toast'); t.textContent=m; t.classList.add('mostrar'); setTimeout(()=>t.classList.remove('mostrar'),2500); }
 function mostrarErro(m){ let e=document.getElementById('erroBox'); e.textContent=m; e.style.display='block'; document.getElementById('okBox').style.display='none'; }
 function mostrarOk(m){ let e=document.getElementById('okBox'); e.textContent=m; e.style.display='block'; document.getElementById('erroBox').style.display='none'; }
+function limparMsg(){ document.getElementById('erroBox').style.display='none'; document.getElementById('okBox').style.display='none'; }
 
 function trocarAba(aba){
+  limparMsg();
+  document.getElementById('boxRecuperar').style.display='none';
+  document.getElementById('boxNovaSenha').style.display='none';
   document.getElementById('abaCriar').classList.toggle('ativa', aba==='criar');
   document.getElementById('abaEntrar').classList.toggle('ativa', aba==='entrar');
   document.getElementById('boxCriar').style.display = aba==='criar' ? 'block' : 'none';
   document.getElementById('boxEntrar').style.display = aba==='entrar' ? 'block' : 'none';
 }
+function abrirRecuperar(){
+  limparMsg();
+  document.getElementById('boxCriar').style.display='none';
+  document.getElementById('boxEntrar').style.display='none';
+  document.getElementById('boxRecuperar').style.display='block';
+  document.getElementById('boxNovaSenha').style.display='none';
+  // Preenche o email se já tentou entrar
+  let e = document.getElementById('emailEntrar').value.trim();
+  if(e) document.getElementById('emailRecuperar').value = e;
+}
+function fecharRecuperar(){
+  limparMsg();
+  document.getElementById('boxRecuperar').style.display='none';
+  document.getElementById('boxNovaSenha').style.display='none';
+  trocarAba('entrar');
+}
+let emailRecuperarConfirmado = '';
+let clienteRecuperar = null;
+
+function limparTelefone(t){ return String(t||'').replace(/\D/g,'').slice(-9); }
+
+async function verificarRecuperar(){
+  let email = document.getElementById('emailRecuperar').value.trim().toLowerCase();
+  let telefone = document.getElementById('telefoneRecuperar').value.trim();
+  if(!email || !telefone){ mostrarErro('⚠️ Preenche email e telefone!'); return; }
+  let telLimpo = limparTelefone(telefone);
+  let achado = null;
+
+  // 1. Tenta no telefone (localStorage)
+  try{
+    let salvo = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null');
+    if(salvo && salvo.email && salvo.email.toLowerCase()===email && limparTelefone(salvo.telefone)===telLimpo){ achado = salvo; }
+  }catch(e){}
+
+  // 2. Tenta no Supabase
+  if(!achado && typeof db !== 'undefined'){
+    try{
+      let r = await db.from('clientes').select('*').eq('email', email).maybeSingle();
+      if(r.data && limparTelefone(r.data.telefone)===telLimpo){ achado = r.data; }
+      // Se não achou por email exato, tenta listar e comparar telefone
+      if(!achado){
+        let r2 = await db.from('clientes').select('*').order('id',{ascending:false}).limit(100);
+        if(r2.data){
+          achado = r2.data.find(c=> c.email && c.email.toLowerCase()===email && limparTelefone(c.telefone)===telLimpo) || null;
+        }
+      }
+    }catch(e){ console.log(e); }
+  }
+
+  if(!achado){
+    mostrarErro('⚠️ Email ou telefone não conferem! Verifica e tenta de novo. Se nunca criaste conta, cria uma.');
+    return;
+  }
+  clienteRecuperar = achado;
+  emailRecuperarConfirmado = email;
+  limparMsg();
+  document.getElementById('boxRecuperar').style.display='none';
+  document.getElementById('boxNovaSenha').style.display='block';
+  document.getElementById('textoNovaSenha').textContent = 'Olá ' + (achado.nome||'') + '! Cria a tua senha nova.';
+  mostrarOk('✅ Confirmado! Agora cria a senha nova.');
+}
+
+async function salvarNovaSenha(){
+  let s1 = document.getElementById('novaSenhaRecuperar').value;
+  let s2 = document.getElementById('novaSenha2Recuperar').value;
+  if(!s1 || s1.length < 4){ mostrarErro('⚠️ Senha muito curta, usa 4+ caracteres!'); return; }
+  if(s1 !== s2){ mostrarErro('⚠️ As senhas não são iguais!'); return; }
+  if(!clienteRecuperar){ mostrarErro('⚠️ Volta e verifica primeiro o email e telefone!'); return; }
+
+  let atualizado = {...clienteRecuperar, senha: s1};
+  // Atualiza no telefone
+  try{
+    let salvo = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null');
+    if(salvo && salvo.email && salvo.email.toLowerCase()===emailRecuperarConfirmado){
+      salvo.senha = s1;
+      localStorage.setItem('cliente_casa_nova', JSON.stringify(salvo));
+    } else {
+      localStorage.setItem('cliente_casa_nova', JSON.stringify(atualizado));
+    }
+  }catch(e){ localStorage.setItem('cliente_casa_nova', JSON.stringify(atualizado)); }
+
+  // Atualiza no Supabase
+  try{
+    if(typeof db !== 'undefined' && clienteRecuperar.id){
+      await db.from('clientes').update({senha: s1}).eq('id', clienteRecuperar.id);
+    } else if(typeof db !== 'undefined'){
+      await db.from('clientes').update({senha: s1}).eq('email', emailRecuperarConfirmado);
+    }
+  }catch(e){ console.log(e); }
+
+  mostrarOk('✅ Senha nova guardada! Agora entra com a senha nova.');
+  toast('✅ Senha trocada!');
+  document.getElementById('emailEntrar').value = emailRecuperarConfirmado;
+  document.getElementById('senhaEntrar').value = '';
+  document.getElementById('novaSenhaRecuperar').value = '';
+  document.getElementById('novaSenha2Recuperar').value = '';
+  setTimeout(()=>{ fecharRecuperar(); }, 800);
+}
+
 let params = new URLSearchParams(location.search);
 if(params.get('aba')==='entrar') trocarAba('entrar');
 
@@ -160,7 +285,7 @@ async function entrar(){
     }
   }catch(e){ console.log(e); }
 
-  mostrarErro('⚠️ Email ou senha errada! Se ainda não tens conta, cria uma.');
+  mostrarErro('⚠️ Email ou senha errada! Se esqueceste, clica em "Esqueci a senha?"');
 }
 
 function continuarSemConta(){

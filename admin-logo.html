@@ -69,6 +69,18 @@ input{width:100%;padding:11px;margin-bottom:8px;border:1px solid #cfd5df;border-
 </div>
 
 <script>
+// 🛑 EU SOU ADMIN - NÃO SOU VISITANTE / CLIENTE ONLINE
+localStorage.setItem('eu_sou_admin','1');
+localStorage.setItem('admin_casa_nova','1');
+// Tira-me logo da lista de quem está online se eu já lá estava como Visitante
+(async function limparAdminDoOnline(){
+  try{
+    let meuId = localStorage.getItem('meu_id_online');
+    if(meuId){
+      await db.from('presenca').delete().eq('cliente_id', meuId);
+    }
+  }catch(e){}
+})();
 let toastTimer;
 function aviso(msg, tipo){
   let t=document.getElementById('toast');

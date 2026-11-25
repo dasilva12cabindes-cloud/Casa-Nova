@@ -349,10 +349,10 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
 function linkLimpoLoja(){ return 'https://casa-nova-six.vercel.app/'; }
 function partilharLoja(){
   let link = linkLimpoLoja();
-  let msg = '🏠 Casa Nova - Eletrodomésticos em Cabinda! Vê as promoções aqui: ' + link;
+  let msg = 'Casa Nova Eletrodoméstico\n' + link;
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(msg).then(()=>{ mostrarToast('✅ Link copiado! Cola no WhatsApp - vem só 1 link'); }).catch(()=>{ prompt('Copia este link (só 1):', msg); });
-  } else { prompt('Copia este link (só 1):', msg); }
+    navigator.clipboard.writeText(msg).then(()=>{ mostrarToast('✅ Link copiado! Cola no WhatsApp'); }).catch(()=>{ prompt('Copia este link:', msg); });
+  } else { prompt('Copia este link:', msg); }
 }
 let estaProcessando = false;
 let timerProcesso = null;
@@ -378,10 +378,7 @@ function mostrarProcessando(){
 }
 window.addEventListener('load', ()=>{ mostrarProcessando(); });
 function verificarNovoUsuario(){
-  let c = null;
-  try{ c = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
-  if(c) return;
-  document.getElementById('telaBoasVindas').classList.add('aberto');
+  return;
 }
 let todosProdutos = [];
 let categoriaAtual = 'Todas';
@@ -632,7 +629,6 @@ function confirmarSair(){
   mostrarToast('👋 Saíste da tua conta. Até já!');
   atualizarMenuConta();
   atualizarCarrinho();
-  document.getElementById('telaBoasVindas').classList.add('aberto');
 }
 function atualizarSobre(cfg){
   let sobre = cfg.sobre || 'A Casa Nova é a tua loja de confiança em Cabinda.';

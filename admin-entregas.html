@@ -34,6 +34,18 @@ input,select{width:100%;padding:11px;border:1px solid #cfd5df;border-radius:8px;
 </div>
 <div class="caixa"><h3>Lista de Zonas</h3><div id="lista">A carregar...</div></div>
 <script>
+// 🛑 EU SOU ADMIN - NÃO SOU VISITANTE / CLIENTE ONLINE
+localStorage.setItem('eu_sou_admin','1');
+localStorage.setItem('admin_casa_nova','1');
+// Tira-me logo da lista de quem está online se eu já lá estava como Visitante
+(async function limparAdminDoOnline(){
+  try{
+    let meuId = localStorage.getItem('meu_id_online');
+    if(meuId){
+      await db.from('presenca').delete().eq('cliente_id', meuId);
+    }
+  }catch(e){}
+})();
 async function carregar(){
   let r=await db.from('entregas').select('*').order('tipo').order('nome');
   let lista=document.getElementById('lista');

@@ -14,7 +14,7 @@ body{background:#f1f3f6;padding:14px;padding-bottom:40px}
 .nav a{flex:1;text-align:center;padding:13px;border-radius:14px;font-weight:800;text-decoration:none}
 .nav1{background:#111827;color:#fff;border:2px solid #000}
 .nav2{background:#fff;color:#111827;border:2px solid #111827}
-.topo{background:linear-gradient(135deg,#111827,#1f2937,#374151);color:white;padding:20px 18px;border-radius:20px;border:2px solid #000;box-shadow:0 8px 20px rgba(0,0,0,.18);margin-bottom:14px;position:relative;overflow:hidden}
+.topo{background:linear-gradient(135deg,#111827,#1f2937,#374151);color:white;padding:20px 18px;border-radius:20px;border:2px solid #000;box-shadow:0 8px 20px rgba(0,0,0,.18);margin-bottom:14px}
 .topo h1{font-size:23px}
 .topo p{font-size:13px;opacity:.8;margin-top:4px}
 .stats{display:flex;gap:8px;margin-top:14px}
@@ -22,7 +22,9 @@ body{background:#f1f3f6;padding:14px;padding-bottom:40px}
 .stat b{font-size:22px;display:block}
 .stat span{font-size:11px}
 .btn-atualizar{width:100%;padding:14px;border:none;border-radius:14px;background:#2563eb;color:white;font-size:15px;font-weight:800;border:2px solid #1e40af;box-shadow:0 4px 0 #1e40af;cursor:pointer;margin-bottom:18px}
+.btn-atualizar:disabled{opacity:.6}
 .btn-limpar{width:100%;padding:13px;border:none;border-radius:14px;background:#ef4444;color:white;font-size:14px;font-weight:800;border:2px solid #b91c1c;box-shadow:0 4px 0 #b91c1c;cursor:pointer;margin:8px 0 4px}
+.btn-limpar:disabled{opacity:.6}
 h2{font-size:19px;margin:18px 2px 10px;display:flex;align-items:center;gap:8px}
 .dot{width:16px;height:16px;border-radius:50%;display:inline-block;border:2px solid #fff}
 .dot.green{background:#22c55e;box-shadow:0 0 10px #22c55e}
@@ -40,15 +42,15 @@ h2{font-size:19px;margin:18px 2px 10px;display:flex;align-items:center;gap:8px}
 .btn-sair{display:inline-block;margin-top:8px;margin-left:4px;background:#ef4444;color:white;border:2px solid #b91c1c;padding:8px 12px;border-radius:20px;font-weight:800;cursor:pointer}
 .btn-apagar{display:inline-block;margin-top:8px;margin-left:4px;background:#111827;color:white;border:2px solid #000;padding:8px 12px;border-radius:20px;font-weight:800;cursor:pointer}
 .vazio{background:white;border:2px dashed #cbd5e1;border-radius:16px;padding:16px;text-align:center;color:#64748b;font-size:14px}
+#msg{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:12px 18px;border-radius:30px;font-size:14px;font-weight:800;z-index:9999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.3)}
 </style>
 </head>
 <body>
-
+<div id="msg"></div>
 <div class="nav">
   <a class="nav1" href="admin.html">⬅️ Voltar p/ Admin</a>
   <a class="nav2" href="index.html">🏠 Ver Loja</a>
 </div>
-
 <div class="topo">
   <h1>👀 Quem Está na Loja</h1>
   <p>Casa Nova • Atualização em tempo real</p>
@@ -57,64 +59,80 @@ h2{font-size:19px;margin:18px 2px 10px;display:flex;align-items:center;gap:8px}
     <div class="stat"><b id="nSairam">0</b><span>🔴 Já Saíram</span></div>
   </div>
 </div>
-<button class="btn-atualizar" onclick="carregar()">🔄 Atualizar Agora</button>
+<button class="btn-atualizar" id="btnAtualizar" onclick="atualizarAgora()">🔄 Atualizar Agora</button>
 <h2><span class="dot green"></span> Online Agora</h2>
 <div id="online"></div>
 <h2><span class="dot red"></span> Saiu Recentemente</h2>
-<button class="btn-limpar" onclick="apagarTodosQueSairam()">🧹 Apagar Todos que Saíram</button>
+<button class="btn-limpar" id="btnLimpar" onclick="apagarTodosQueSairam()">🧹 Apagar Todos que Saíram</button>
 <div id="sairam"></div>
-
 <script>
+let listaSairamAtual = [];
+let estaCarregando = false;
+
+function mostrarMsg(t){
+  let m = document.getElementById('msg');
+  m.textContent = t; m.style.display='block';
+  setTimeout(()=> m.style.display='none', 3000);
+}
+
 async function expulsar(id){
   if(!confirm("Queres marcar esta pessoa como SAIU?")) return;
-  await db.from('presenca').update({online:false, saiu_em: new Date().toISOString()}).eq('cliente_id', id);
+  let r = await db.from('presenca').update({online:false, saiu_em: new Date().toISOString()}).eq('cliente_id', id);
+  if(r.error) alert("Erro: " + r.error.message);
+  else mostrarMsg("✅ Marcado como saiu");
   carregar();
 }
 
-// 🗑️ APAGAR QUEM JÁ SAIU - APAGA DA TELA E DA BASE DE DADOS
 async function apagarUm(id, nome, telefone){
-  if(!confirm("Apagar " + (nome||'Visitante') + "?\n\nVai apagar o registo de presença E, se estiver registado, também vai apagar da base de dados.")) return;
-  try{
-    // 1. Apaga da presenca (quem está online / saiu)
-    await db.from('presenca').delete().eq('cliente_id', id);
-
-    // 2. Se tiver telefone e estiver registado, apaga também da tabela de clientes
-    // Se a tua tabela de clientes tiver outro nome, tenta aqui - se não existir, não dá erro
-    if(telefone){
-      let telLimpo = String(telefone).replace(/\D/g,'').slice(-9);
-      try{ await db.from('clientes').delete().eq('telefone', telefone); }catch(e){}
-      try{ await db.from('clientes').delete().eq('telefone', telLimpo); }catch(e){}
-      try{ await db.from('clientes').delete().eq('whatsapp', telefone); }catch(e){}
-      try{ await db.from('cliente_casa_nova').delete().eq('telefone', telefone); }catch(e){}
-    }
-    alert("✅ Apagado com sucesso!");
-  }catch(e){
-    alert("Erro ao apagar: " + e.message);
+  if(!confirm("Apagar " + (nome||'Visitante') + "?\n\nVai apagar da presença e, se estiver registado, da base de dados.")) return;
+  let r = await db.from('presenca').delete().eq('cliente_id', id);
+  if(r.error){ alert("Erro ao apagar: " + r.error.message + "\n\nVai no Supabase > Authentication > Policies > presenca e ativa DELETE para todos."); return; }
+  if(telefone){
+    try{ await db.from('clientes').delete().eq('telefone', telefone); }catch(e){}
+    try{ await db.from('clientes').delete().eq('whatsapp', telefone); }catch(e){}
   }
+  mostrarMsg("✅ Apagado: " + (nome||'Visitante'));
   carregar();
 }
 
-// 🧹 APAGAR TODOS QUE JÁ SAÍRAM DE UMA VEZ
+// CORRIGIDO: agora apaga por ID, um por um, não por online=false
 async function apagarTodosQueSairam(){
-  if(!confirm("Apagar TODOS que já saíram?\n\nQuem está ONLINE AGORA não vai ser apagado.")) return;
-  try{
-    await db.from('presenca').delete().eq('online', false);
-    alert("✅ Todos que saíram foram apagados!");
-  }catch(e){
-    alert("Erro: " + e.message);
+  if(!listaSairamAtual.length){ alert("Já não há ninguém que saiu."); return; }
+  if(!confirm("Apagar TODOS os " + listaSairamAtual.length + " que já saíram?\n\nQuem está ONLINE AGORA não vai ser apagado.")) return;
+  let btn = document.getElementById('btnLimpar');
+  btn.disabled = true; btn.textContent = "⏳ A apagar...";
+  let apagados = 0; let erro = "";
+  for(let p of listaSairamAtual){
+    let r = await db.from('presenca').delete().eq('cliente_id', p.cliente_id);
+    if(r.error) erro = r.error.message; else apagados++;
   }
+  btn.disabled = false; btn.textContent = "🧹 Apagar Todos que Saíram";
+  if(erro) alert("Apagados: " + apagados + "\nErro: " + erro + "\n\nSe der erro, é a permissão DELETE no Supabase.");
+  else mostrarMsg("✅ Apagados " + apagados + " que saíram!");
   carregar();
+}
+
+async function atualizarAgora(){
+  let btn = document.getElementById('btnAtualizar');
+  btn.disabled = true; btn.textContent = "⏳ A atualizar...";
+  await carregar();
+  mostrarMsg("🔄 Atualizado agora: " + new Date().toLocaleTimeString('pt-PT'));
+  btn.disabled = false; btn.textContent = "🔄 Atualizar Agora";
 }
 
 async function carregar(){
+  if(estaCarregando) return;
+  estaCarregando = true;
   try{
-    const {data: pres} = await db.from('presenca').select('*').order('ultima_vez',{ascending:false}).limit(100);
+    const {data: pres, error} = await db.from('presenca').select('*').order('ultima_vez',{ascending:false}).limit(100);
+    if(error) throw error;
     const agora = new Date();
     let on=[], saiu=[];
     (pres||[]).forEach(p=>{
       const diff = p.ultima_vez ? (agora - new Date(p.ultima_vez))/1000 : 99999;
       if(p.online===true && diff < 60) on.push(p); else saiu.push(p);
     });
+    listaSairamAtual = saiu;
     document.getElementById('nOnline').textContent = on.length;
     document.getElementById('nSairam').textContent = saiu.length;
     const hb = (d)=> d ? new Date(d).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}) : '';
@@ -128,7 +146,8 @@ async function carregar(){
       const telSafe = String(p.telefone||'').replace(/'/g,"");
       return `<div class="card saiu"><div class="avatar">${nome.charAt(0).toUpperCase()}</div><div class="info"><b>${nome}</b><span>📱 ${p.telefone||'Sem telefone'}</span><span>📍 Estava em: ${p.pagina||'Loja Principal'}</span><span>🕐 Saiu: ${hb(p.saiu_em||p.ultima_vez)}</span><span class="badge red">SAIU</span><br><button class="btn-apagar" onclick="apagarUm('${p.cliente_id}','${nome.replace(/'/g,"")}','${telSafe}')">🗑️ Apagar</button></div></div>`;
     }).join('') : '<div class="vazio">Ninguém saiu ainda.</div>';
-  }catch(e){ document.getElementById('online').innerHTML = '<div class="vazio">Erro: '+e.message+'</div>'; }
+  }catch(e){ document.getElementById('online').innerHTML = '<div class="vazio">Erro: '+e.message+'</div>'; alert("Erro a carregar: " + e.message); }
+  estaCarregando = false;
 }
 carregar();
 setInterval(carregar, 10000);

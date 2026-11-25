@@ -51,8 +51,6 @@
 @keyframes piscarAlerta{0%,100%{background:#dc2626}50%{background:#991b1b}}
 #btnAtivarSom{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:9998;background:#16a34a;color:#fff;border:0;padding:12px 20px;border-radius:999px;font-weight:900;font-size:14px;display:none;box-shadow:0 4px 16px rgba(0,0,0,.3);cursor:pointer}
 #btnInstalarAdmin{display:none;background:#0b5ed7;color:#fff;border:2px solid #fff;padding:12px 18px;border-radius:999px;font-weight:900;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25);margin-top:8px}
-/* ESCONDER PUBLICIDADE NETLIFY - SUBSTITUIDO */
-a[href*="netlify"], [href*="netlify.com"], .netlify-badge, div[class*="netlify"], iframe[src*="netlify"]{ display:none !important; visibility:hidden !important; opacity:0 !important; }
 </style></head>
 <body>
 <audio id="somNovoPedido" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
@@ -351,29 +349,5 @@ verificarNovosPorPolling();
 setInterval(verificarNovosPorPolling, 10000);
 atualizarOnline();
 setInterval(atualizarOnline, 10000);
-</script>
-<script>
-// TIRAR POWERED BY NETLIFY - FORÇADO A CADA 0.5s
-function tirarNetlify(){
-  try{
-    document.querySelectorAll('a,div,span,iframe,footer').forEach(function(el){
-      if(el.href && String(el.href).includes('netlify')){ el.remove(); return; }
-      if(el.src && String(el.src).includes('netlify')){ el.remove(); return; }
-      if(el.textContent && el.textContent.trim() === 'Powered by Netlify'){
-        var pai = el.closest('a') || el.parentElement;
-        if(pai) pai.remove(); else el.remove();
-      }
-    });
-    // Também apaga qualquer elemento que tenha só esse texto dentro
-    document.querySelectorAll('*').forEach(function(el){
-      if(el.children.length===0 && el.textContent && el.textContent.includes('Powered by Netlify')){
-        var p = el.closest('a') || el.parentElement;
-        if(p) p.remove();
-      }
-    });
-  }catch(e){}
-}
-setInterval(tirarNetlify, 500);
-tirarNetlify();
 </script>
 </body></html>

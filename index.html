@@ -152,8 +152,6 @@ input,select,textarea{font-size:16px !important}
 .modal-instalar-box{background:#fff;width:100%;max-width:500px;border-radius:22px 22px 0 0;padding:20px;text-align:center}
 #alertaCliente{position:fixed;top:0;left:0;right:0;z-index:9999;background:#16a34a;color:#fff;padding:16px;text-align:center;font-weight:900;font-size:16px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:piscarCliente 1s infinite}
 @keyframes piscarCliente{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
-/* ESCONDER PUBLICIDADE NETLIFY - SUBSTITUIDO */
-a[href*="netlify"], [href*="netlify.com"], .netlify-badge, div[class*="netlify"], iframe[src*="netlify"]{ display:none !important; visibility:hidden !important; opacity:0 !important; }
 </style>
 </head>
 <body>
@@ -348,7 +346,7 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
     }
   }catch(e){}
 })();
-function linkLimpoLoja(){ return 'https://casa-nova-eletrodomestica.netlify.app/'; }
+function linkLimpoLoja(){ return 'https://casa-nova-six.vercel.app/'; }
 function partilharLoja(){
   let link = linkLimpoLoja();
   let msg = '🏠 Casa Nova - Eletrodomésticos em Cabinda! Vê as promoções aqui: ' + link;

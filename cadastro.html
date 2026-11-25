@@ -7,6 +7,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init("cfCWMol6ioOMco8TK");</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,Arial,sans-serif;background:#f5f6f8;color:#1d2330}
@@ -101,11 +103,11 @@ small{color:#666;font-size:13px}
     </div>
 
     <div id="boxCodigo" style="display:none">
-      <h3 style="text-align:center;margin-bottom:6px">📱 Mete o Código</h3>
-      <p style="text-align:center;color:#666;font-size:13px;margin-bottom:12px">Passo 2 de 3 - Vai chegar no TEU WhatsApp</p>
+      <h3 style="text-align:center;margin-bottom:6px">📧 Mete o Código</h3>
+      <p style="text-align:center;color:#666;font-size:13px;margin-bottom:12px">Passo 2 de 3 - Vai chegar no TEU EMAIL</p>
       <div class="info" id="infoCodigo">A enviar código...</div>
-      <button class="btn btn-whats" onclick="pedirCodigoWhatsApp()">💬 Enviar Código para o MEU WhatsApp</button>
-      <p style="text-align:center;margin:12px 0 8px"><small>Vai abrir o TEU WhatsApp.<br>Clica em enviar, o código vai aparecer no teu WhatsApp.<br>Depois volta aqui e mete o código:</small></p>
+      <button class="btn btn-whats" onclick="pedirCodigoWhatsApp()">📧 Reenviar Código para o MEU Email</button>
+      <p style="text-align:center;margin:12px 0 8px"><small>Vê na tua caixa de email e no SPAM.<br>Depois volta aqui e mete o código:</small></p>
       <input id="codigoDigitado" class="codigo" placeholder="• • • • • •" maxlength="6" inputmode="numeric">
       <button class="btn" onclick="confirmarCodigo()">✅ Confirmar Código</button>
       <button class="btn btn-cinza" style="margin-top:10px" onclick="voltarPasso1()">← Voltar</button>
@@ -196,26 +198,38 @@ async function verificarRecuperar(){
 
   limparMsg(); esconderTudo();
   document.getElementById('boxCodigo').style.display='block';
-  document.getElementById('infoCodigo').innerHTML = '✅ Conta encontrada!<br>Olá <b>'+(achado.nome||'')+'</b><br>Vamos enviar o código para o <b>TEU WhatsApp: '+telefone+'</b><br>Clica no botão verde em baixo.';
-  mostrarOk('✅ Conta encontrada! Agora pede o código no TEU WhatsApp.');
-  toast('✅ Agora pede o código no TEU WhatsApp');
+  document.getElementById('infoCodigo').innerHTML = '✅ Conta encontrada!<br>Olá <b>'+(achado.nome||'')+'</b><br>A enviar código para o <b>TEU EMAIL: '+email+'</b><br>Aguarda...';
+  mostrarOk('✅ Conta encontrada! A enviar código para o teu email...');
+  toast('✅ A enviar código para o teu email...');
+  enviarCodigoEmail();
 }
 
-function pedirCodigoWhatsApp(){
+async function enviarCodigoEmail(){
   if(!codigoGerado){ mostrarErro('⚠️ Volta e verifica primeiro email e telefone!'); return; }
-  // CORRIGIDO: usa o telefone DO CLIENTE, não da loja!
-  let numeroCliente = telefoneComCodigo(telefoneRecuperarConfirmado);
-  let msg = '🏠 Casa Nova - Código de recuperação\n\nOlá ' + (clienteRecuperar?.nome||'') + '!\n\nO teu código é: ' + codigoGerado + '\n\nVolta ao site e mete este código para criares a tua senha nova.\nVálido por 10 minutos.';
-  window.open('https://wa.me/'+numeroCliente+'?text='+encodeURIComponent(msg), '_blank');
-  document.getElementById('infoCodigo').innerHTML = '📱 Vai abrir o TEU WhatsApp!<br>Clica em <b>ENVIAR</b> no WhatsApp.<br>O código <b>'+codigoGerado+'</b> vai aparecer no teu WhatsApp.<br>Depois volta aqui e mete o código.';
-  toast('💬 Abriu o TEU WhatsApp! Clica enviar.');
+  try{
+    await emailjs.send("service_10xb3di", "template_uljt59j", {
+      to_email: emailRecuperarConfirmado,
+      to_name: clienteRecuperar?.nome || "",
+      name: clienteRecuperar?.nome || "",
+      email: emailRecuperarConfirmado,
+      message: "Olá " + (clienteRecuperar?.nome||"") + "! O teu código de recuperação da Casa Nova é: " + codigoGerado + ". Volta ao site e mete este código para criares a tua senha nova. Válido por 10 minutos.",
+      codigo: codigoGerado,
+      time: new Date().toLocaleString("pt-PT")
+    });
+    document.getElementById('infoCodigo').innerHTML = '📧 Código enviado para <b>'+emailRecuperarConfirmado+'</b>!<br>Vê o teu email e também o SPAM.<br>O código é: <b>'+codigoGerado+'</b>';
+    toast('📧 Código enviado para o teu email!');
+  }catch(e){
+    console.log(e);
+    document.getElementById('infoCodigo').innerHTML = '⚠️ Falha ao enviar email. O teu código é: <b>'+codigoGerado+'</b>';
+  }
 }
+function pedirCodigoWhatsApp(){ enviarCodigoEmail(); }
 
 function confirmarCodigo(){
   let digitado = document.getElementById('codigoDigitado').value.trim();
-  if(!digitado || digitado.length!==6){ mostrarErro('⚠️ Mete o código de 6 números que recebeste no TEU WhatsApp!'); return; }
+  if(!digitado || digitado.length!==6){ mostrarErro('⚠️ Mete o código de 6 números que recebeste no TEU EMAIL!'); return; }
   if(Date.now() > codigoExpira){ mostrarErro('⚠️ Código expirou! Volta e pede outro.'); return; }
-  if(digitado !== codigoGerado){ mostrarErro('❌ Código errado! Vê no TEU WhatsApp e tenta de novo.'); return; }
+  if(digitado !== codigoGerado){ mostrarErro('❌ Código errado! Vê no TEU EMAIL e tenta de novo.'); return; }
   limparMsg(); esconderTudo();
   document.getElementById('boxNovaSenha').style.display='block';
   document.getElementById('textoNovaSenha').textContent = 'Olá ' + (clienteRecuperar?.nome||'') + '! Código certo! Cria a senha nova.';

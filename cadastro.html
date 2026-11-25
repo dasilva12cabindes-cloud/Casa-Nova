@@ -36,11 +36,14 @@ body{font-family:system-ui,Arial,sans-serif;background:#f5f6f8;color:#1d2330}
 .aba{flex:1;padding:12px;border:0;border-radius:9px;background:transparent;font-weight:700;cursor:pointer}
 .aba.ativa{background:#0b5ed7;color:#fff}
 input{width:100%;padding:12px;border:1px solid #cfd5df;border-radius:10px;margin-bottom:10px;font-size:15px}
+input.codigo{font-size:22px !important;text-align:center;letter-spacing:8px;font-weight:900}
 .btn{background:#0b5ed7;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800;font-size:16px;cursor:pointer}
 .btn-verde{background:#16a34a}
 .btn-cinza{background:#eee;color:#111}
+.btn-whats{background:#25D366}
 .erro{background:#fee2e2;color:#dc2626;padding:10px;border-radius:10px;font-size:13px;margin-bottom:10px;display:none}
 .sucesso{background:#dcfce7;color:#15803d;padding:10px;border-radius:10px;font-size:13px;margin-bottom:10px;display:none}
+.info{background:#eff6ff;color:#0b5ed7;padding:12px;border-radius:10px;font-size:13px;margin-bottom:10px;text-align:center;line-height:1.6}
 small{color:#666;font-size:13px}
 #toast{position:fixed;top:82px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:30px;font-size:14px;z-index:200;opacity:0;transition:.3s;pointer-events:none}
 #toast.mostrar{opacity:1}
@@ -69,7 +72,6 @@ small{color:#666;font-size:13px}
     <div id="erroBox" class="erro"></div>
     <div id="okBox" class="sucesso"></div>
 
-    <!-- CRIAR CONTA -->
     <div id="boxCriar">
       <input id="nomeCriar" placeholder="Nome completo *">
       <input id="telefoneCriar" placeholder="Telefone / WhatsApp *">
@@ -81,7 +83,6 @@ small{color:#666;font-size:13px}
       <p style="text-align:center;margin-top:10px"><small>Já tens conta? <a href="#" onclick="trocarAba('entrar');return false" style="color:#0b5ed7;font-weight:700">Entra aqui</a></small></p>
     </div>
 
-    <!-- ENTRAR -->
     <div id="boxEntrar" style="display:none">
       <input id="emailEntrar" type="email" placeholder="Email">
       <input id="senhaEntrar" type="password" placeholder="Senha">
@@ -90,20 +91,30 @@ small{color:#666;font-size:13px}
       <p style="text-align:center;margin-top:10px"><small>Não tens conta? <a href="#" onclick="trocarAba('criar');return false" style="color:#0b5ed7;font-weight:700">Cria aqui</a></small></p>
     </div>
 
-    <!-- RECUPERAR SENHA - PASSO 1: CONFIRMAR EMAIL + TELEFONE -->
     <div id="boxRecuperar" style="display:none">
       <h3 style="text-align:center;margin-bottom:6px">🔑 Recuperar Senha</h3>
-      <p style="text-align:center;color:#666;font-size:13px;margin-bottom:12px">Mete o teu email e telefone para confirmarmos que és tu.</p>
+      <p style="text-align:center;color:#666;font-size:13px;margin-bottom:12px">Passo 1 de 3 - Confirma quem és tu.</p>
       <input id="emailRecuperar" type="email" placeholder="O teu Email">
       <input id="telefoneRecuperar" placeholder="O teu Telefone / WhatsApp">
       <button class="btn btn-verde" onclick="verificarRecuperar()">✅ Verificar - Sou Eu</button>
       <button class="btn btn-cinza" style="margin-top:10px" onclick="fecharRecuperar()">← Voltar para Entrar</button>
     </div>
 
-    <!-- RECUPERAR SENHA - PASSO 2: NOVA SENHA -->
+    <div id="boxCodigo" style="display:none">
+      <h3 style="text-align:center;margin-bottom:6px">📱 Mete o Código</h3>
+      <p style="text-align:center;color:#666;font-size:13px;margin-bottom:12px">Passo 2 de 3 - Vai chegar no TEU WhatsApp</p>
+      <div class="info" id="infoCodigo">A enviar código...</div>
+      <button class="btn btn-whats" onclick="pedirCodigoWhatsApp()">💬 Enviar Código para o MEU WhatsApp</button>
+      <p style="text-align:center;margin:12px 0 8px"><small>Vai abrir o TEU WhatsApp.<br>Clica em enviar, o código vai aparecer no teu WhatsApp.<br>Depois volta aqui e mete o código:</small></p>
+      <input id="codigoDigitado" class="codigo" placeholder="• • • • • •" maxlength="6" inputmode="numeric">
+      <button class="btn" onclick="confirmarCodigo()">✅ Confirmar Código</button>
+      <button class="btn btn-cinza" style="margin-top:10px" onclick="voltarPasso1()">← Voltar</button>
+      <p style="text-align:center;margin-top:10px"><small>Não recebeste? Clica de novo em Enviar Código.</small></p>
+    </div>
+
     <div id="boxNovaSenha" style="display:none">
-      <h3 style="text-align:center;margin-bottom:6px">✅ És tu mesmo!</h3>
-      <p style="text-align:center;color:#666;font-size:13px;margin-bottom:12px" id="textoNovaSenha">Cria a tua senha nova.</p>
+      <h3 style="text-align:center;margin-bottom:6px">✅ Código Certo!</h3>
+      <p style="text-align:center;color:#666;font-size:13px;margin-bottom:12px" id="textoNovaSenha">Passo 3 de 3 - Cria a tua senha nova.</p>
       <input id="novaSenhaRecuperar" type="password" placeholder="Nova senha *">
       <input id="novaSenha2Recuperar" type="password" placeholder="Repete a nova senha *">
       <button class="btn btn-verde" onclick="salvarNovaSenha()">💾 Guardar Nova Senha</button>
@@ -122,36 +133,37 @@ function toast(m){ let t=document.getElementById('toast'); t.textContent=m; t.cl
 function mostrarErro(m){ let e=document.getElementById('erroBox'); e.textContent=m; e.style.display='block'; document.getElementById('okBox').style.display='none'; }
 function mostrarOk(m){ let e=document.getElementById('okBox'); e.textContent=m; e.style.display='block'; document.getElementById('erroBox').style.display='none'; }
 function limparMsg(){ document.getElementById('erroBox').style.display='none'; document.getElementById('okBox').style.display='none'; }
+function esconderTudo(){ ['boxCriar','boxEntrar','boxRecuperar','boxCodigo','boxNovaSenha'].forEach(id=>{ document.getElementById(id).style.display='none'; }); }
 
 function trocarAba(aba){
-  limparMsg();
-  document.getElementById('boxRecuperar').style.display='none';
-  document.getElementById('boxNovaSenha').style.display='none';
+  limparMsg(); esconderTudo();
   document.getElementById('abaCriar').classList.toggle('ativa', aba==='criar');
   document.getElementById('abaEntrar').classList.toggle('ativa', aba==='entrar');
-  document.getElementById('boxCriar').style.display = aba==='criar' ? 'block' : 'none';
-  document.getElementById('boxEntrar').style.display = aba==='entrar' ? 'block' : 'none';
+  document.getElementById(aba==='criar'?'boxCriar':'boxEntrar').style.display='block';
 }
 function abrirRecuperar(){
-  limparMsg();
-  document.getElementById('boxCriar').style.display='none';
-  document.getElementById('boxEntrar').style.display='none';
+  limparMsg(); esconderTudo();
   document.getElementById('boxRecuperar').style.display='block';
-  document.getElementById('boxNovaSenha').style.display='none';
-  // Preenche o email se já tentou entrar
   let e = document.getElementById('emailEntrar').value.trim();
   if(e) document.getElementById('emailRecuperar').value = e;
 }
-function fecharRecuperar(){
-  limparMsg();
-  document.getElementById('boxRecuperar').style.display='none';
-  document.getElementById('boxNovaSenha').style.display='none';
-  trocarAba('entrar');
-}
+function fecharRecuperar(){ limparMsg(); esconderTudo(); trocarAba('entrar'); }
+function voltarPasso1(){ limparMsg(); esconderTudo(); document.getElementById('boxRecuperar').style.display='block'; }
+
 let emailRecuperarConfirmado = '';
+let telefoneRecuperarConfirmado = '';
 let clienteRecuperar = null;
+let codigoGerado = '';
+let codigoExpira = 0;
 
 function limparTelefone(t){ return String(t||'').replace(/\D/g,'').slice(-9); }
+function telefoneComCodigo(t){
+  let limpo = String(t||'').replace(/\D/g,'');
+  if(limpo.startsWith('244')) return limpo;
+  if(limpo.length===9) return '244'+limpo;
+  return limpo;
+}
+function gerarCodigo(){ return String(Math.floor(100000 + Math.random()*900000)); }
 
 async function verificarRecuperar(){
   let email = document.getElementById('emailRecuperar').value.trim().toLowerCase();
@@ -159,39 +171,55 @@ async function verificarRecuperar(){
   if(!email || !telefone){ mostrarErro('⚠️ Preenche email e telefone!'); return; }
   let telLimpo = limparTelefone(telefone);
   let achado = null;
-
-  // 1. Tenta no telefone (localStorage)
   try{
     let salvo = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null');
     if(salvo && salvo.email && salvo.email.toLowerCase()===email && limparTelefone(salvo.telefone)===telLimpo){ achado = salvo; }
   }catch(e){}
-
-  // 2. Tenta no Supabase
   if(!achado && typeof db !== 'undefined'){
     try{
       let r = await db.from('clientes').select('*').eq('email', email).maybeSingle();
       if(r.data && limparTelefone(r.data.telefone)===telLimpo){ achado = r.data; }
-      // Se não achou por email exato, tenta listar e comparar telefone
       if(!achado){
         let r2 = await db.from('clientes').select('*').order('id',{ascending:false}).limit(100);
-        if(r2.data){
-          achado = r2.data.find(c=> c.email && c.email.toLowerCase()===email && limparTelefone(c.telefone)===telLimpo) || null;
-        }
+        if(r2.data){ achado = r2.data.find(c=> c.email && c.email.toLowerCase()===email && limparTelefone(c.telefone)===telLimpo) || null; }
       }
     }catch(e){ console.log(e); }
   }
+  if(!achado){ mostrarErro('⚠️ Email ou telefone não conferem! Verifica e tenta de novo.'); return; }
 
-  if(!achado){
-    mostrarErro('⚠️ Email ou telefone não conferem! Verifica e tenta de novo. Se nunca criaste conta, cria uma.');
-    return;
-  }
   clienteRecuperar = achado;
   emailRecuperarConfirmado = email;
-  limparMsg();
-  document.getElementById('boxRecuperar').style.display='none';
+  telefoneRecuperarConfirmado = telefone;
+  codigoGerado = gerarCodigo();
+  codigoExpira = Date.now() + 10*60*1000;
+  try{ localStorage.setItem('codigo_recuperar', JSON.stringify({codigo:codigoGerado, email:email, expira:codigoExpira})); }catch(e){}
+
+  limparMsg(); esconderTudo();
+  document.getElementById('boxCodigo').style.display='block';
+  document.getElementById('infoCodigo').innerHTML = '✅ Conta encontrada!<br>Olá <b>'+(achado.nome||'')+'</b><br>Vamos enviar o código para o <b>TEU WhatsApp: '+telefone+'</b><br>Clica no botão verde em baixo.';
+  mostrarOk('✅ Conta encontrada! Agora pede o código no TEU WhatsApp.');
+  toast('✅ Agora pede o código no TEU WhatsApp');
+}
+
+function pedirCodigoWhatsApp(){
+  if(!codigoGerado){ mostrarErro('⚠️ Volta e verifica primeiro email e telefone!'); return; }
+  // CORRIGIDO: usa o telefone DO CLIENTE, não da loja!
+  let numeroCliente = telefoneComCodigo(telefoneRecuperarConfirmado);
+  let msg = '🏠 Casa Nova - Código de recuperação\n\nOlá ' + (clienteRecuperar?.nome||'') + '!\n\nO teu código é: ' + codigoGerado + '\n\nVolta ao site e mete este código para criares a tua senha nova.\nVálido por 10 minutos.';
+  window.open('https://wa.me/'+numeroCliente+'?text='+encodeURIComponent(msg), '_blank');
+  document.getElementById('infoCodigo').innerHTML = '📱 Vai abrir o TEU WhatsApp!<br>Clica em <b>ENVIAR</b> no WhatsApp.<br>O código <b>'+codigoGerado+'</b> vai aparecer no teu WhatsApp.<br>Depois volta aqui e mete o código.';
+  toast('💬 Abriu o TEU WhatsApp! Clica enviar.');
+}
+
+function confirmarCodigo(){
+  let digitado = document.getElementById('codigoDigitado').value.trim();
+  if(!digitado || digitado.length!==6){ mostrarErro('⚠️ Mete o código de 6 números que recebeste no TEU WhatsApp!'); return; }
+  if(Date.now() > codigoExpira){ mostrarErro('⚠️ Código expirou! Volta e pede outro.'); return; }
+  if(digitado !== codigoGerado){ mostrarErro('❌ Código errado! Vê no TEU WhatsApp e tenta de novo.'); return; }
+  limparMsg(); esconderTudo();
   document.getElementById('boxNovaSenha').style.display='block';
-  document.getElementById('textoNovaSenha').textContent = 'Olá ' + (achado.nome||'') + '! Cria a tua senha nova.';
-  mostrarOk('✅ Confirmado! Agora cria a senha nova.');
+  document.getElementById('textoNovaSenha').textContent = 'Olá ' + (clienteRecuperar?.nome||'') + '! Código certo! Cria a senha nova.';
+  mostrarOk('✅ Código certo! Agora cria a senha nova.');
 }
 
 async function salvarNovaSenha(){
@@ -199,35 +227,26 @@ async function salvarNovaSenha(){
   let s2 = document.getElementById('novaSenha2Recuperar').value;
   if(!s1 || s1.length < 4){ mostrarErro('⚠️ Senha muito curta, usa 4+ caracteres!'); return; }
   if(s1 !== s2){ mostrarErro('⚠️ As senhas não são iguais!'); return; }
-  if(!clienteRecuperar){ mostrarErro('⚠️ Volta e verifica primeiro o email e telefone!'); return; }
-
+  if(!clienteRecuperar){ mostrarErro('⚠️ Volta e verifica primeiro!'); return; }
   let atualizado = {...clienteRecuperar, senha: s1};
-  // Atualiza no telefone
   try{
     let salvo = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null');
-    if(salvo && salvo.email && salvo.email.toLowerCase()===emailRecuperarConfirmado){
-      salvo.senha = s1;
-      localStorage.setItem('cliente_casa_nova', JSON.stringify(salvo));
-    } else {
-      localStorage.setItem('cliente_casa_nova', JSON.stringify(atualizado));
-    }
+    if(salvo && salvo.email && salvo.email.toLowerCase()===emailRecuperarConfirmado){ salvo.senha=s1; localStorage.setItem('cliente_casa_nova', JSON.stringify(salvo)); }
+    else { localStorage.setItem('cliente_casa_nova', JSON.stringify(atualizado)); }
   }catch(e){ localStorage.setItem('cliente_casa_nova', JSON.stringify(atualizado)); }
-
-  // Atualiza no Supabase
   try{
-    if(typeof db !== 'undefined' && clienteRecuperar.id){
-      await db.from('clientes').update({senha: s1}).eq('id', clienteRecuperar.id);
-    } else if(typeof db !== 'undefined'){
-      await db.from('clientes').update({senha: s1}).eq('email', emailRecuperarConfirmado);
-    }
+    if(typeof db !== 'undefined' && clienteRecuperar.id){ await db.from('clientes').update({senha: s1}).eq('id', clienteRecuperar.id); }
+    else if(typeof db !== 'undefined'){ await db.from('clientes').update({senha: s1}).eq('email', emailRecuperarConfirmado); }
   }catch(e){ console.log(e); }
-
-  mostrarOk('✅ Senha nova guardada! Agora entra com a senha nova.');
+  try{ localStorage.removeItem('codigo_recuperar'); }catch(e){}
+  codigoGerado=''; codigoExpira=0;
+  mostrarOk('✅ Senha nova guardada! Entra com a senha nova.');
   toast('✅ Senha trocada!');
   document.getElementById('emailEntrar').value = emailRecuperarConfirmado;
   document.getElementById('senhaEntrar').value = '';
-  document.getElementById('novaSenhaRecuperar').value = '';
-  document.getElementById('novaSenha2Recuperar').value = '';
+  document.getElementById('novaSenhaRecuperar').value='';
+  document.getElementById('novaSenha2Recuperar').value='';
+  document.getElementById('codigoDigitado').value='';
   setTimeout(()=>{ fecharRecuperar(); }, 800);
 }
 
@@ -244,16 +263,9 @@ async function criarConta(){
   if(!nome || !telefone || !email || !senha){ mostrarErro('⚠️ Preenche nome, telefone, email e senha!'); return; }
   if(senha !== senha2){ mostrarErro('⚠️ As senhas não são iguais!'); return; }
   if(senha.length < 4){ mostrarErro('⚠️ Senha muito curta, usa 4+ caracteres!'); return; }
-
   let cliente = {nome, telefone, email, morada, senha};
   localStorage.setItem('cliente_casa_nova', JSON.stringify(cliente));
-
-  try{
-    if(typeof db !== 'undefined'){
-      await db.from('clientes').insert([{nome, telefone, email, morada, senha}]);
-    }
-  }catch(e){ console.log('Supabase clientes:', e.message); }
-
+  try{ if(typeof db !== 'undefined'){ await db.from('clientes').insert([{nome, telefone, email, morada, senha}]); } }catch(e){ console.log(e); }
   mostrarOk('✅ Conta criada! A entrar...');
   toast('✅ Conta criada!');
   setTimeout(()=>{ location.href = 'index.html'; }, 800);
@@ -263,44 +275,24 @@ async function entrar(){
   let email = document.getElementById('emailEntrar').value.trim().toLowerCase();
   let senha = document.getElementById('senhaEntrar').value;
   if(!email || !senha){ mostrarErro('⚠️ Preenche email e senha!'); return; }
-
   try{
     let salvo = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null');
-    if(salvo && salvo.email === email && salvo.senha === senha){
-      mostrarOk('✅ Bem-vindo de volta, ' + salvo.nome + '!');
-      setTimeout(()=>{ location.href = 'index.html'; }, 600);
-      return;
-    }
+    if(salvo && salvo.email === email && salvo.senha === senha){ mostrarOk('✅ Bem-vindo de volta, ' + salvo.nome + '!'); setTimeout(()=>{ location.href = 'index.html'; }, 600); return; }
   }catch(e){}
-
   try{
     if(typeof db !== 'undefined'){
       let {data} = await db.from('clientes').select('*').eq('email', email).eq('senha', senha).maybeSingle();
-      if(data){
-        localStorage.setItem('cliente_casa_nova', JSON.stringify(data));
-        mostrarOk('✅ Bem-vindo de volta, ' + (data.nome||'') + '!');
-        setTimeout(()=>{ location.href = 'index.html'; }, 600);
-        return;
-      }
+      if(data){ localStorage.setItem('cliente_casa_nova', JSON.stringify(data)); mostrarOk('✅ Bem-vindo de volta, ' + (data.nome||'') + '!'); setTimeout(()=>{ location.href = 'index.html'; }, 600); return; }
     }
   }catch(e){ console.log(e); }
-
   mostrarErro('⚠️ Email ou senha errada! Se esqueceste, clica em "Esqueci a senha?"');
 }
-
-function continuarSemConta(){
-  location.href = 'index.html';
-}
-
+function continuarSemConta(){ location.href = 'index.html'; }
 async function carregarLogoTopo(){
   try{
     if(typeof db === 'undefined') return;
     let r = await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();
-    if(r.data?.logo_url){
-      let img = document.getElementById('logoTopo');
-      img.src = r.data.logo_url; img.style.display='block';
-      document.getElementById('topoSite').classList.add('tem-logo');
-    }
+    if(r.data?.logo_url){ let img = document.getElementById('logoTopo'); img.src = r.data.logo_url; img.style.display='block'; document.getElementById('topoSite').classList.add('tem-logo'); }
   }catch(e){}
 }
 carregarLogoTopo();

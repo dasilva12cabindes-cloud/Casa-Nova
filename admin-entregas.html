@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zonas de Entrega - Admin - Casa Nova</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
+.topo{background:#0b5ed7;color:#fff;padding:12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
+.topo a{color:#fff;text-decoration:none;font-weight:700}
+.caixa{background:#fff;padding:14px;border-radius:12px;margin-top:12px}
+label{font-weight:700;font-size:13px;display:block;margin:10px 0 4px}
+input,select{width:100%;padding:11px;border:1px solid #cfd5df;border-radius:8px;font-size:15px}
+.btn{border:0;padding:12px;border-radius:8px;width:100%;font-weight:700;cursor:pointer;font-size:15px}
+.btn-verde{background:#16a34a;color:#fff}
+.btn-vermelho{background:#dc2626;color:#fff;padding:8px 12px;width:auto;border:0;border-radius:8px;cursor:pointer;font-weight:700}
+.item{border:1px solid #eee;border-radius:10px;padding:10px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.badge{font-size:12px;padding:4px 8px;border-radius:999px;font-weight:700}
+.b-local{background:#dbeafe;color:#1e40af}.b-prov{background:#fef3c7;color:#92400e}.b-pais{background:#dcfce7;color:#166534}
+</style></head>
+<body>
+<div class="topo"><b>🚚 Zonas de Entrega</b><a href="admin.html">← Voltar</a></div>
+
+<div class="caixa">
+<label>Tipo de Zona</label>
+<select id="tipo">
+<option value="local">📍 Zona Local - Luanda</option>
+<option value="provincial">🏙️ Zona Provincial - Província</option>
+<option value="pais">🌍 Zona País - País</option>
+</select>
+<label>Nome da Zona - Ex: Talatona, Benguela, Portugal</label>
+<input id="nome" placeholder="Ex: Talatona">
+<label>Preço da Entrega (Kz)</label>
+<input id="preco" type="number" placeholder="Ex: 2000">
+<button class="btn btn-verde" onclick="adicionar()" style="margin-top:12px">➕ Adicionar Zona</button>
+</div>
+
+<div class="caixa"><h3>Lista de Zonas</h3><div id="lista">A carregar...</div></div>
+
+<script>
+async function carregar(){
+  let r=await db.from('entregas').select('*').order('tipo').order('nome');
+  let lista=document.getElementById('lista');
+  if(r.error){lista.innerHTML='Erro: '+r.error.message;return;}
+  if(!r.data.length){lista.innerHTML='Ainda não há zonas. Adiciona em cima.';return;}
+  lista.innerHTML=r.data.map(e=>`
+    <div class="item">
+      <div><span class="badge ${e.tipo==='local'?'b-local':e.tipo==='provincial'?'b-prov':'b-pais'}">${e.tipo==='local'?'ZONA LOCAL':e.tipo==='provincial'?'ZONA PROVINCIAL':'ZONA PAÍS'}</span><br><b>${e.nome}</b><br>${Number(e.preco).toLocaleString('pt-AO')} Kz</div>
+      <button class="btn-vermelho" onclick="apagar(${e.id})">Apagar</button>
+    </div>`).join('');
+}
+async function adicionar(){
+  let tipo=document.getElementById('tipo').value;
+  let nome=document.getElementById('nome').value.trim();
+  let preco=Number(document.getElementById('preco').value);
+  if(!nome||!preco) return alert('Preenche nome da zona e preço');
+  let r=await db.from('entregas').insert({tipo,nome,preco});
+  if(r.error) return alert(r.error.message);
+  document.getElementById('nome').value='';document.getElementById('preco').value='';
+  carregar();
+}
+async function apagar(id){if(!confirm('Apagar esta zona?'))return;await db.from('entregas').delete().eq('id',id);carregar();}
+carregar();
+</script></body></html>

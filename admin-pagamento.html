@@ -142,6 +142,18 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #cfd5df;border-ra
 
 <div id="toast"></div>
 <script>
+// 🛑 EU SOU ADMIN - NÃO SOU VISITANTE / CLIENTE ONLINE
+localStorage.setItem('eu_sou_admin','1');
+localStorage.setItem('admin_casa_nova','1');
+// Tira-me logo da lista de quem está online se eu já lá estava como Visitante
+(async function limparAdminDoOnline(){
+  try{
+    let meuId = localStorage.getItem('meu_id_online');
+    if(meuId){
+      await db.from('presenca').delete().eq('cliente_id', meuId);
+    }
+  }catch(e){}
+})();
 function toast(m){ let t=document.getElementById('toast'); t.textContent=m; t.classList.add('mostrar'); setTimeout(()=>t.classList.remove('mostrar'),2500); }
 function getPagamentos(){ try{ return JSON.parse(localStorage.getItem('pagamentos_casa_nova')||'[]'); }catch(e){ return []; } }
 function setPagamentos(l){ localStorage.setItem('pagamentos_casa_nova', JSON.stringify(l)); }

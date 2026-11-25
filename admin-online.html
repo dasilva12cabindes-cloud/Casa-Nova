@@ -22,6 +22,7 @@ body{background:#f1f3f6;padding:14px;padding-bottom:40px}
 .stat b{font-size:22px;display:block}
 .stat span{font-size:11px}
 .btn-atualizar{width:100%;padding:14px;border:none;border-radius:14px;background:#2563eb;color:white;font-size:15px;font-weight:800;border:2px solid #1e40af;box-shadow:0 4px 0 #1e40af;cursor:pointer;margin-bottom:18px}
+.btn-limpar{width:100%;padding:13px;border:none;border-radius:14px;background:#ef4444;color:white;font-size:14px;font-weight:800;border:2px solid #b91c1c;box-shadow:0 4px 0 #b91c1c;cursor:pointer;margin:8px 0 4px}
 h2{font-size:19px;margin:18px 2px 10px;display:flex;align-items:center;gap:8px}
 .dot{width:16px;height:16px;border-radius:50%;display:inline-block;border:2px solid #fff}
 .dot.green{background:#22c55e;box-shadow:0 0 10px #22c55e}
@@ -37,6 +38,7 @@ h2{font-size:19px;margin:18px 2px 10px;display:flex;align-items:center;gap:8px}
 .badge.red{background:#fef2f2;color:#b91c1c;border-color:#fecaca}
 .btn-wa{display:inline-block;margin-top:8px;background:#25D366;color:white;text-decoration:none;font-size:12px;font-weight:800;padding:8px 12px;border-radius:20px;border:2px solid #16a34a}
 .btn-sair{display:inline-block;margin-top:8px;margin-left:4px;background:#ef4444;color:white;border:2px solid #b91c1c;padding:8px 12px;border-radius:20px;font-weight:800;cursor:pointer}
+.btn-apagar{display:inline-block;margin-top:8px;margin-left:4px;background:#111827;color:white;border:2px solid #000;padding:8px 12px;border-radius:20px;font-weight:800;cursor:pointer}
 .vazio{background:white;border:2px dashed #cbd5e1;border-radius:16px;padding:16px;text-align:center;color:#64748b;font-size:14px}
 </style>
 </head>
@@ -59,6 +61,7 @@ h2{font-size:19px;margin:18px 2px 10px;display:flex;align-items:center;gap:8px}
 <h2><span class="dot green"></span> Online Agora</h2>
 <div id="online"></div>
 <h2><span class="dot red"></span> Saiu Recentemente</h2>
+<button class="btn-limpar" onclick="apagarTodosQueSairam()">🧹 Apagar Todos que Saíram</button>
 <div id="sairam"></div>
 
 <script>
@@ -67,6 +70,42 @@ async function expulsar(id){
   await db.from('presenca').update({online:false, saiu_em: new Date().toISOString()}).eq('cliente_id', id);
   carregar();
 }
+
+// 🗑️ APAGAR QUEM JÁ SAIU - APAGA DA TELA E DA BASE DE DADOS
+async function apagarUm(id, nome, telefone){
+  if(!confirm("Apagar " + (nome||'Visitante') + "?\n\nVai apagar o registo de presença E, se estiver registado, também vai apagar da base de dados.")) return;
+  try{
+    // 1. Apaga da presenca (quem está online / saiu)
+    await db.from('presenca').delete().eq('cliente_id', id);
+
+    // 2. Se tiver telefone e estiver registado, apaga também da tabela de clientes
+    // Se a tua tabela de clientes tiver outro nome, tenta aqui - se não existir, não dá erro
+    if(telefone){
+      let telLimpo = String(telefone).replace(/\D/g,'').slice(-9);
+      try{ await db.from('clientes').delete().eq('telefone', telefone); }catch(e){}
+      try{ await db.from('clientes').delete().eq('telefone', telLimpo); }catch(e){}
+      try{ await db.from('clientes').delete().eq('whatsapp', telefone); }catch(e){}
+      try{ await db.from('cliente_casa_nova').delete().eq('telefone', telefone); }catch(e){}
+    }
+    alert("✅ Apagado com sucesso!");
+  }catch(e){
+    alert("Erro ao apagar: " + e.message);
+  }
+  carregar();
+}
+
+// 🧹 APAGAR TODOS QUE JÁ SAÍRAM DE UMA VEZ
+async function apagarTodosQueSairam(){
+  if(!confirm("Apagar TODOS que já saíram?\n\nQuem está ONLINE AGORA não vai ser apagado.")) return;
+  try{
+    await db.from('presenca').delete().eq('online', false);
+    alert("✅ Todos que saíram foram apagados!");
+  }catch(e){
+    alert("Erro: " + e.message);
+  }
+  carregar();
+}
+
 async function carregar(){
   try{
     const {data: pres} = await db.from('presenca').select('*').order('ultima_vez',{ascending:false}).limit(100);
@@ -84,9 +123,10 @@ async function carregar(){
       const tel = String(p.telefone||'').replace(/\D/g,'').slice(-9);
       return `<div class="card"><div class="avatar">${nome.charAt(0).toUpperCase()}</div><div class="info"><b>${nome}</b><span>📱 ${p.telefone||'Sem telefone'}</span><span>📍 Está em: ${p.pagina||'Loja Principal'}</span><span>🕐 ${hb(p.ultima_vez)}</span><span class="badge">● ONLINE AGORA</span><br>${tel?`<a class="btn-wa" href="https://wa.me/244${tel}" target="_blank">💬 WhatsApp</a>`:''}<button class="btn-sair" onclick="expulsar('${p.cliente_id}')">🚫 Marcar como Saiu</button></div></div>`;
     }).join('') : '<div class="vazio">Ninguém online agora.</div>';
-    document.getElementById('sairam').innerHTML = saiu.length ? saiu.slice(0,20).map(p=>{
+    document.getElementById('sairam').innerHTML = saiu.length ? saiu.slice(0,50).map(p=>{
       const nome = p.nome||'Visitante';
-      return `<div class="card saiu"><div class="avatar">${nome.charAt(0).toUpperCase()}</div><div class="info"><b>${nome}</b><span>📱 ${p.telefone||'Sem telefone'}</span><span>📍 Estava em: ${p.pagina||'Loja Principal'}</span><span>🕐 Saiu: ${hb(p.saiu_em||p.ultima_vez)}</span><span class="badge red">SAIU</span></div></div>`;
+      const telSafe = String(p.telefone||'').replace(/'/g,"");
+      return `<div class="card saiu"><div class="avatar">${nome.charAt(0).toUpperCase()}</div><div class="info"><b>${nome}</b><span>📱 ${p.telefone||'Sem telefone'}</span><span>📍 Estava em: ${p.pagina||'Loja Principal'}</span><span>🕐 Saiu: ${hb(p.saiu_em||p.ultima_vez)}</span><span class="badge red">SAIU</span><br><button class="btn-apagar" onclick="apagarUm('${p.cliente_id}','${nome.replace(/'/g,"")}','${telSafe}')">🗑️ Apagar</button></div></div>`;
     }).join('') : '<div class="vazio">Ninguém saiu ainda.</div>';
   }catch(e){ document.getElementById('online').innerHTML = '<div class="vazio">Erro: '+e.message+'</div>'; }
 }

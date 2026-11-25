@@ -19,7 +19,6 @@ input,select{width:100%;padding:11px;border:1px solid #cfd5df;border-radius:8px;
 </style></head>
 <body>
 <div class="topo"><b>🚚 Zonas de Entrega</b><a href="admin.html">← Voltar</a></div>
-
 <div class="caixa">
 <label>Tipo de Zona</label>
 <select id="tipo">
@@ -33,9 +32,7 @@ input,select{width:100%;padding:11px;border:1px solid #cfd5df;border-radius:8px;
 <input id="preco" type="number" placeholder="Ex: 2000">
 <button class="btn btn-verde" onclick="adicionar()" style="margin-top:12px">➕ Adicionar Zona</button>
 </div>
-
 <div class="caixa"><h3>Lista de Zonas</h3><div id="lista">A carregar...</div></div>
-
 <script>
 async function carregar(){
   let r=await db.from('entregas').select('*').order('tipo').order('nome');

@@ -95,10 +95,9 @@ small{color:#666;font-size:13px}
 
     <div id="boxRecuperar" style="display:none">
       <h3 style="text-align:center;margin-bottom:6px">🔑 Recuperar Senha</h3>
-      <p style="text-align:center;color:#666;font-size:13px;margin-bottom:12px">Passo 1 de 3 - Confirma quem és tu.</p>
+      <p style="text-align:center;color:#666;font-size:13px;margin-bottom:12px">Passo 1 de 3 - Escreve o teu email.</p>
       <input id="emailRecuperar" type="email" placeholder="O teu Email">
-      <input id="telefoneRecuperar" placeholder="O teu Telefone / WhatsApp">
-      <button class="btn btn-verde" onclick="verificarRecuperar()">✅ Verificar - Sou Eu</button>
+      <button class="btn btn-verde" onclick="verificarRecuperar()">✅ Enviar Código para o Meu Email</button>
       <button class="btn btn-cinza" style="margin-top:10px" onclick="fecharRecuperar()">← Voltar para Entrar</button>
     </div>
 
@@ -159,39 +158,32 @@ let codigoGerado = '';
 let codigoExpira = 0;
 
 function limparTelefone(t){ return String(t||'').replace(/\D/g,'').slice(-9); }
-function telefoneComCodigo(t){
-  let limpo = String(t||'').replace(/\D/g,'');
-  if(limpo.startsWith('244')) return limpo;
-  if(limpo.length===9) return '244'+limpo;
-  return limpo;
-}
 function gerarCodigo(){ return String(Math.floor(100000 + Math.random()*900000)); }
 
 async function verificarRecuperar(){
   let email = document.getElementById('emailRecuperar').value.trim().toLowerCase();
-  let telefone = document.getElementById('telefoneRecuperar').value.trim();
-  if(!email || !telefone){ mostrarErro('⚠️ Preenche email e telefone!'); return; }
-  let telLimpo = limparTelefone(telefone);
+  if(!email){ mostrarErro('⚠️ Escreve o teu email!'); return; }
+  if(!email.includes('@')){ mostrarErro('⚠️ Escreve um email válido!'); return; }
   let achado = null;
   try{
     let salvo = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null');
-    if(salvo && salvo.email && salvo.email.toLowerCase()===email && limparTelefone(salvo.telefone)===telLimpo){ achado = salvo; }
+    if(salvo && salvo.email && salvo.email.toLowerCase()===email){ achado = salvo; }
   }catch(e){}
   if(!achado && typeof db !== 'undefined'){
     try{
       let r = await db.from('clientes').select('*').eq('email', email).maybeSingle();
-      if(r.data && limparTelefone(r.data.telefone)===telLimpo){ achado = r.data; }
+      if(r.data){ achado = r.data; }
       if(!achado){
         let r2 = await db.from('clientes').select('*').order('id',{ascending:false}).limit(100);
-        if(r2.data){ achado = r2.data.find(c=> c.email && c.email.toLowerCase()===email && limparTelefone(c.telefone)===telLimpo) || null; }
+        if(r2.data){ achado = r2.data.find(c=> c.email && c.email.toLowerCase()===email) || null; }
       }
     }catch(e){ console.log(e); }
   }
-  if(!achado){ mostrarErro('⚠️ Email ou telefone não conferem! Verifica e tenta de novo.'); return; }
+  if(!achado){ mostrarErro('⚠️ Este email não tem conta na Casa Nova! Verifica o email ou cria conta.'); return; }
 
   clienteRecuperar = achado;
   emailRecuperarConfirmado = email;
-  telefoneRecuperarConfirmado = telefone;
+  telefoneRecuperarConfirmado = achado.telefone || '';
   codigoGerado = gerarCodigo();
   codigoExpira = Date.now() + 10*60*1000;
   try{ localStorage.setItem('codigo_recuperar', JSON.stringify({codigo:codigoGerado, email:email, expira:codigoExpira})); }catch(e){}
@@ -205,7 +197,7 @@ async function verificarRecuperar(){
 }
 
 async function enviarCodigoEmail(){
-  if(!codigoGerado){ mostrarErro('⚠️ Volta e verifica primeiro email e telefone!'); return; }
+  if(!codigoGerado){ mostrarErro('⚠️ Volta e verifica primeiro o teu email!'); return; }
   try{
     await emailjs.send("service_10xb3di", "template_uljt59j", {
       to_email: emailRecuperarConfirmado,

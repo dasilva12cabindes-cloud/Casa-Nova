@@ -66,6 +66,18 @@ h2{font-size:19px;margin:18px 2px 10px;display:flex;align-items:center;gap:8px}
 <button class="btn-limpar" id="btnLimpar" onclick="apagarTodosQueSairam()">🧹 Apagar Todos que Saíram</button>
 <div id="sairam"></div>
 <script>
+// 🛑 EU SOU ADMIN - NÃO SOU VISITANTE / CLIENTE ONLINE
+localStorage.setItem('eu_sou_admin','1');
+localStorage.setItem('admin_casa_nova','1');
+// Tira-me logo da lista de quem está online se eu já lá estava como Visitante
+(async function limparAdminDoOnline(){
+  try{
+    let meuId = localStorage.getItem('meu_id_online');
+    if(meuId){
+      await db.from('presenca').delete().eq('cliente_id', meuId);
+    }
+  }catch(e){}
+})();
 let listaSairamAtual = [];
 let estaCarregando = false;
 
@@ -73,6 +85,18 @@ function mostrarMsg(t){
   let m = document.getElementById('msg');
   m.textContent = t; m.style.display='block';
   setTimeout(()=> m.style.display='none', 3000);
+}
+
+// 🛑 FILTRO: Admin nunca aparece como cliente online
+function eAdmin(p){
+  let nome = (p.nome||'').toLowerCase();
+  let pagina = (p.pagina||'').toLowerCase();
+  let meuId = localStorage.getItem('meu_id_online');
+  if(p.cliente_id === meuId) return true; // Eu mesmo, sou Admin
+  if(nome.includes('admin')) return true;
+  if(pagina.includes('admin')) return true;
+  if(pagina.includes('painel')) return true;
+  return false;
 }
 
 async function expulsar(id){
@@ -128,7 +152,9 @@ async function carregar(){
     if(error) throw error;
     const agora = new Date();
     let on=[], saiu=[];
-    (pres||[]).forEach(p=>{
+    // 🛑 FILTRA ADMIN ANTES DE MOSTRAR
+    let soClientes = (pres||[]).filter(p => !eAdmin(p));
+    soClientes.forEach(p=>{
       const diff = p.ultima_vez ? (agora - new Date(p.ultima_vez))/1000 : 99999;
       if(p.online===true && diff < 60) on.push(p); else saiu.push(p);
     });

@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Casa Nova - Eletrodomésticos em Cabinda | Arca, Geleira, TV, Fogão</title>
-<meta name="description" content="Casa Nova - A tua loja de confiança em Cabinda. Arca, Geleira, TV, Fogão, Ar Condicionado, Máquina de Lavar e muito mais. Compra fácil e entrega rápida.">
-<meta name="keywords" content="Casa Nova, eletrodomésticos Cabinda, arca, geleira, TV, fogão, loja Cabinda Angola">
+<title>Casa Nova Eletrodomésticos</title>
+<meta name="description" content="Casa Nova Eletrodomésticos">
+<meta name="keywords" content="Casa Nova, eletrodomésticos Cabinda, Casa Nova Eletrodomésticos">
 <!-- Para o WhatsApp / Facebook / Google mostrar bonito -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="🏠 Casa Nova - Eletrodomésticos em Cabinda">
-<meta property="og:description" content="Arca, Geleira, TV, Fogão, Ar Condicionado e muito mais. Compra fácil, paga com Multicaixa Express. Entrega rápida em Cabinda!">
+<meta property="og:title" content="Casa Nova Eletrodomésticos">
+<meta property="og:description" content="Casa Nova Eletrodomésticos">
 <meta property="og:url" content="https://casa-nova-six.vercel.app/">
 <meta property="og:image" content="https://cdn-icons-png.flaticon.com/512/609/609803.png">
-<meta property="og:site_name" content="Casa Nova">
+<meta property="og:site_name" content="Casa Nova Eletrodomésticos">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="🏠 Casa Nova - Eletrodomésticos em Cabinda">
-<meta name="twitter:description" content="A tua loja de confiança em Cabinda. Compra fácil e entrega rápida.">
+<meta name="twitter:title" content="Casa Nova Eletrodomésticos">
+<meta name="twitter:description" content="Casa Nova Eletrodomésticos">
 <meta name="twitter:image" content="https://cdn-icons-png.flaticon.com/512/609/609803.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b5ed7">
@@ -381,7 +381,7 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
 function linkLimpoLoja(){ return 'https://casa-nova-six.vercel.app/'; }
 function partilharLoja(){
   let link = linkLimpoLoja();
-  let msg = '🏠 Casa Nova - Eletrodomésticos em Cabinda\n\nArca, Geleira, TV, Fogão e muito mais com entrega rápida!\n\n👉 Vê aqui: ' + link;
+  let msg = 'Casa Nova Eletrodomésticos\n' + link;
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(msg).then(()=>{ mostrarToast('✅ Link copiado! Cola no WhatsApp'); }).catch(()=>{ prompt('Copia este link:', msg); });
   } else { prompt('Copia este link:', msg); }

@@ -152,6 +152,8 @@ input,select,textarea{font-size:16px !important}
 .modal-instalar-box{background:#fff;width:100%;max-width:500px;border-radius:22px 22px 0 0;padding:20px;text-align:center}
 #alertaCliente{position:fixed;top:0;left:0;right:0;z-index:9999;background:#16a34a;color:#fff;padding:16px;text-align:center;font-weight:900;font-size:16px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:piscarCliente 1s infinite}
 @keyframes piscarCliente{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
+.nota-importante-box{background:#fff3cd;border:2px solid #f59e0b;border-radius:14px;padding:14px;margin:12px 0;white-space:pre-line;line-height:1.7;color:#333;font-size:15px}
+.nota-importante-box b{color:#92400e !important}
 </style>
 </head>
 <body>
@@ -191,6 +193,7 @@ input,select,textarea{font-size:16px !important}
   <div class="banner-dots" id="bannerDots"></div>
 </div>
 <div class="container">
+  <div id="caixaNotaImportante" class="nota-importante-box" style="display:none"><b>⚠️ NOTA IMPORTANTE - Leia Antes de Comprar</b><br><span id="textoNotaImportante"></span></div>
   <input id="busca" placeholder="🔍 Pesquisar produto..." oninput="filtrar()">
   <div class="categorias" id="categorias">
     <button class="chip ativo" onclick="filtrarCategoria('Todas',this)">Todas</button>
@@ -630,17 +633,30 @@ function confirmarSair(){
   atualizarMenuConta();
   atualizarCarrinho();
 }
+function pegarNota(cfg){
+  return cfg.nota_importante || cfg.nota || cfg.notaImportante || cfg.nota_importante_leia || cfg.aviso_importante || cfg.aviso || cfg.nota_antes_comprar || '';
+}
 function atualizarSobre(cfg){
   let sobre = cfg.sobre || 'A Casa Nova é a tua loja de confiança em Cabinda.';
   let visao = cfg.visao || 'Levar qualidade e preço justo a todas as casas de Cabinda e Angola, com entrega rápida e pagamento fácil.';
   let missao = cfg.missao || '';
   let politica = cfg.politica_seguranca || cfg.politica || cfg.seguranca || 'A tua segurança é a nossa prioridade. Os teus dados são protegidos e nunca são partilhados.';
+  let nota = pegarNota(cfg);
   let whats = cfg.whatsapp || localStorage.getItem('whatsapp_loja') || '244972370499';
   let html = `<b>🏪 Quem Somos</b><br>${sobre}<br><br><b>👁️ Nossa Visão</b><br>${visao}<br><br>`;
   if(missao) html += `<b>🎯 Nossa Missão</b><br>${missao}<br><br>`;
-  html += `<b>🔒 Política de Segurança da Nossa Loja</b><br>${politica}<br><br><b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br><b>📞 Contacto</b><br>WhatsApp: +${whats}`;
+  html += `<b>🔒 Política de Segurança da Nossa Loja</b><br>${politica}<br><br>`;
+  if(nota) html += `<div style="background:#fff3cd;border:2px solid #f59e0b;border-radius:12px;padding:14px;white-space:pre-line;line-height:1.7;color:#333"><b style="color:#92400e">⚠️ NOTA IMPORTANTE - Leia Antes de Comprar</b><br>${nota}</div><br>`;
+  html += `<b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br><b>📞 Contacto</b><br>WhatsApp: +${whats}`;
   document.getElementById('sobreDetalhe').innerHTML = html;
-  document.getElementById('menuDetalhe').innerHTML = `<b>🔒 Segurança</b><br>${politica}<br><br><b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br><b>📞 Contacto</b><br>WhatsApp: +${whats}`;
+  // Caixa da Nota em cima da loja - cliente vê sem abrir Sobre
+  let caixa = document.getElementById('caixaNotaImportante');
+  let txt = document.getElementById('textoNotaImportante');
+  if(caixa && txt){
+    if(nota){ txt.textContent = nota; caixa.style.display = 'block'; }
+    else { caixa.style.display = 'none'; }
+  }
+  document.getElementById('menuDetalhe').innerHTML = `<b>🔒 Segurança</b><br>${politica}<br><br>${nota ? `<b style="color:#92400e">⚠️ NOTA IMPORTANTE</b><br>${nota}<br><br>` : ''}<b>💳 Pagamento</b><br>📱 Multicaixa Express<br>💸 PayPay - Ref: 10116<br>🏦 IBAN<br><br><b>📞 Contacto</b><br>WhatsApp: +${whats}`;
 }
 let slideAtual = 0;
 let timerBannerVendidos = null;

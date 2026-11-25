@@ -3,7 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Casa Nova - Eletrodomésticos</title>
+<title>Casa Nova - Eletrodomésticos em Cabinda | Arca, Geleira, TV, Fogão</title>
+<meta name="description" content="Casa Nova - A tua loja de confiança em Cabinda. Arca, Geleira, TV, Fogão, Ar Condicionado, Máquina de Lavar e muito mais. Compra fácil e entrega rápida.">
+<meta name="keywords" content="Casa Nova, eletrodomésticos Cabinda, arca, geleira, TV, fogão, loja Cabinda Angola">
+<!-- Para o WhatsApp / Facebook / Google mostrar bonito -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="🏠 Casa Nova - Eletrodomésticos em Cabinda">
+<meta property="og:description" content="Arca, Geleira, TV, Fogão, Ar Condicionado e muito mais. Compra fácil, paga com Multicaixa Express. Entrega rápida em Cabinda!">
+<meta property="og:url" content="https://casa-nova-six.vercel.app/">
+<meta property="og:image" content="https://cdn-icons-png.flaticon.com/512/609/609803.png">
+<meta property="og:site_name" content="Casa Nova">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="🏠 Casa Nova - Eletrodomésticos em Cabinda">
+<meta name="twitter:description" content="A tua loja de confiança em Cabinda. Compra fácil e entrega rápida.">
+<meta name="twitter:image" content="https://cdn-icons-png.flaticon.com/512/609/609803.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b5ed7">
 <meta name="mobile-web-app-capable" content="yes">
@@ -310,10 +323,20 @@ input,select,textarea{font-size:16px !important}
 </div>
 <script>
 // 🟢 SISTEMA ONLINE - QUEM ESTÁ NA LOJA
+let souAdmin = localStorage.getItem('eu_sou_admin') === '1' || localStorage.getItem('admin_casa_nova') === '1' || localStorage.getItem('admin_logado') === 'sim';
+if(souAdmin){
+  (async function limparAdminDoOnlineIndex(){
+    try{
+      let meuIdAntigo = localStorage.getItem('meu_id_online');
+      if(meuIdAntigo){ await db.from('presenca').delete().eq('cliente_id', meuIdAntigo); }
+    }catch(e){}
+  })();
+}
 let meuIdOnline = localStorage.getItem('meu_id_online') || 'v_'+Math.random().toString(36).slice(2,10);
 localStorage.setItem('meu_id_online', meuIdOnline);
 let paginaAtualOnline = 'Loja Principal';
 async function marcarOnline(pagina){
+  if(localStorage.getItem('eu_sou_admin') === '1' || localStorage.getItem('admin_casa_nova') === '1' || localStorage.getItem('admin_logado') === 'sim') return;
   if(pagina) paginaAtualOnline = pagina;
   try{
     let c=null; try{ c=JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
@@ -323,9 +346,10 @@ async function marcarOnline(pagina){
   }catch(e){}
 }
 async function marcarSaiu(){
+  if(localStorage.getItem('eu_sou_admin') === '1' || localStorage.getItem('admin_casa_nova') === '1') return;
   try{ await db.from('presenca').update({online:false, saiu_em: new Date().toISOString()}).eq('cliente_id', meuIdOnline); }catch(e){}
 }
-marcarOnline('Loja Principal');
+if(!souAdmin){ marcarOnline('Loja Principal'); }
 setInterval(()=> marcarOnline(), 15000);
 window.addEventListener('beforeunload', ()=>{ marcarSaiu(); });
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden) marcarSaiu(); else marcarOnline(); });
@@ -357,7 +381,7 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
 function linkLimpoLoja(){ return 'https://casa-nova-six.vercel.app/'; }
 function partilharLoja(){
   let link = linkLimpoLoja();
-  let msg = 'Casa Nova Eletrodoméstico\n' + link;
+  let msg = '🏠 Casa Nova - Eletrodomésticos em Cabinda\n\nArca, Geleira, TV, Fogão e muito mais com entrega rápida!\n\n👉 Vê aqui: ' + link;
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(msg).then(()=>{ mostrarToast('✅ Link copiado! Cola no WhatsApp'); }).catch(()=>{ prompt('Copia este link:', msg); });
   } else { prompt('Copia este link:', msg); }
@@ -385,9 +409,7 @@ function mostrarProcessando(){
   setTimeout(()=>{ if(estaProcessando){ tela.classList.remove('aberto'); estaProcessando = false; clearInterval(timerProcesso); } }, 6000);
 }
 window.addEventListener('load', ()=>{ mostrarProcessando(); });
-function verificarNovoUsuario(){
-  return;
-}
+function verificarNovoUsuario(){ return; }
 let todosProdutos = [];
 let categoriaAtual = 'Todas';
 let lojaCfgGlobal = {};

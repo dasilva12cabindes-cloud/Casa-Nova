@@ -57,6 +57,18 @@ input{width:100%;padding:11px;border:1px solid #cfd5df;border-radius:8px;font-si
 </div></div>
 
 <script>
+// 🛑 EU SOU ADMIN - NÃO SOU VISITANTE / CLIENTE ONLINE
+localStorage.setItem('eu_sou_admin','1');
+localStorage.setItem('admin_casa_nova','1');
+// Tira-me logo da lista de quem está online se eu já lá estava como Visitante
+(async function limparAdminDoOnline(){
+  try{
+    let meuId = localStorage.getItem('meu_id_online');
+    if(meuId){
+      await db.from('presenca').delete().eq('cliente_id', meuId);
+    }
+  }catch(e){}
+})();
 let toastTimer, todos=[];
 function aviso(m,t){let x=document.getElementById('toast');x.textContent=m;x.className='mostrar '+(t||'sucesso');clearTimeout(toastTimer);toastTimer=setTimeout(()=>x.className='',3000);}
 async function carregarLogoTopo(){try{let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();let l=r.data?.logo_url;if(l){let i=document.getElementById('logoTopo');i.src=l;i.style.display='block';document.getElementById('topoSite').classList.add('tem-logo');}}catch(e){}}

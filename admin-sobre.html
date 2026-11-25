@@ -10,7 +10,6 @@
 .topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
 .topo.tem-logo .logo-text{display:none}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
-/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
 @keyframes logoZoom{
   0%{transform:scale(0.7) translateY(0) rotate(0deg)}
   25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
@@ -57,6 +56,9 @@ textarea{resize:vertical}
 <label>🔒 Política de Segurança da Nossa Loja</label>
 <textarea id="politica_seguranca" rows="5" placeholder="Ex: Na Casa Nova, a tua segurança é a nossa prioridade...&#10;&#10;- Os teus dados pessoais são protegidos e nunca são partilhados com terceiros.&#10;- Todos os pagamentos são verificados antes da entrega.&#10;- Só entregamos depois de confirmar o pagamento / comprovativo.&#10;- Se tiveres dúvidas, fala connosco no WhatsApp."></textarea>
 
+<label>⚠️ Nota Importante - Leia Antes de Comprar</label>
+<textarea id="nota_importante" rows="10" placeholder="Ex: Como funciona a compra, código do pedido, valor..."></textarea>
+
 <label>📍 Endereço</label>
 <input id="endereco" placeholder="Ex: Luanda, Angola">
 
@@ -82,6 +84,24 @@ function aviso(msg,tipo){let t=document.getElementById('toast');t.textContent=ms
 async function carregarLogoTopo(){
   try{let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();let logo=r.data?.logo_url;if(logo){let img=document.getElementById('logoTopo');img.src=logo;img.style.display='block';document.getElementById('topoSite').classList.add('tem-logo');}}catch(e){}
 }
+const NOTA_PADRAO = `Como funciona a tua compra na Casa Nova?
+
+1. Escolhe o produto que queres e clica em Comprar.
+2. Preenche os teus dados com atenção: nome, telefone e endereço de entrega.
+3. Escolhe o pagamento: Multicaixa Express, Transferência ou Pagamento na Entrega.
+4. Recebes o Código do Pedido logo depois de confirmares. Exemplo: CN-1234
+
+GUARDA BEM O TEU CÓDIGO!
+É com esse código que vais acompanhar o teu pedido e confirmar a tua entrega. Sem o código, não conseguimos identificar a tua compra.
+
+SOBRE O VALOR:
+O valor que vês no produto é o valor do produto. A entrega é calculada à parte, dependendo da tua zona em Luanda. Antes de confirmares, vais ver o VALOR TOTAL: produto + entrega. Não há taxas escondidas.
+
+5. Entrega: Vamos ligar para ti para confirmar a entrega. Mostra o teu código ao entregador.
+
+Se perderes o código, fala connosco no WhatsApp com o teu nome e telefone que nós ajudamos.
+
+Obrigado por comprares na Casa Nova!`;
 async function carregar(){
   let r=await db.from('loja_config').select('*').eq('id',1).maybeSingle();
   let c=r.data||{};
@@ -89,6 +109,7 @@ async function carregar(){
   document.getElementById('visao').value=c.visao||'';
   document.getElementById('missao').value=c.missao||'';
   document.getElementById('politica_seguranca').value=c.politica_seguranca||c.politica||c.seguranca||'';
+  document.getElementById('nota_importante').value=c.nota_importante||NOTA_PADRAO;
   document.getElementById('endereco').value=c.endereco||'';
   document.getElementById('telefone').value=c.telefone||'';
   document.getElementById('whatsapp').value=c.whatsapp||'';
@@ -101,6 +122,7 @@ async function salvar(){
     visao:document.getElementById('visao').value.trim(),
     missao:document.getElementById('missao').value.trim(),
     politica_seguranca:document.getElementById('politica_seguranca').value.trim(),
+    nota_importante:document.getElementById('nota_importante').value.trim(),
     endereco:document.getElementById('endereco').value.trim(),
     telefone:document.getElementById('telefone').value.trim(),
     whatsapp:document.getElementById('whatsapp').value.trim(),
@@ -108,7 +130,7 @@ async function salvar(){
     email_loja:document.getElementById('email').value.trim()
   };
   let r=await db.from('loja_config').update(dados).eq('id',1);
-  if(r.error) return aviso('❌ '+r.error.message+' - Vai ao Supabase > SQL e corre: ALTER TABLE loja_config ADD COLUMN politica_seguranca TEXT;','erro');
+  if(r.error) return aviso('❌ '+r.error.message+' - Vai ao Supabase > SQL e corre: ALTER TABLE loja_config ADD COLUMN nota_importante TEXT;','erro');
   aviso('✅ Sobre a Loja atualizado!');
 }
 carregarLogoTopo(); carregar();

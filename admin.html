@@ -105,6 +105,18 @@
 </div>
 <div id="toast"></div>
 <script>
+// 🛑 EU SOU ADMIN - NÃO SOU VISITANTE / CLIENTE ONLINE
+localStorage.setItem('eu_sou_admin','1');
+localStorage.setItem('admin_casa_nova','1');
+// Tira-me logo da lista de quem está online se eu já lá estava como Visitante
+(async function limparAdminDoOnline(){
+  try{
+    let meuId = localStorage.getItem('meu_id_online');
+    if(meuId){
+      await db.from('presenca').delete().eq('cliente_id', meuId);
+    }
+  }catch(e){}
+})();
 const EMAIL_PADRAO = 'admin@casanova.co.ao';
 const SENHA_PADRAO = '1234';
 function mostrarToast(txt){var t=document.getElementById('toast');t.textContent=txt;t.style.display='block';setTimeout(function(){t.style.display='none';},2500);}
@@ -125,6 +137,9 @@ function entrarAdmin(){
   if(email===conta.email.toLowerCase() && senha===conta.senha){
     localStorage.setItem('admin_logado','sim');
     localStorage.setItem('admin_email',email);
+    // 🛑 Confirma que sou Admin quando entro
+    localStorage.setItem('eu_sou_admin','1');
+    localStorage.setItem('admin_casa_nova','1');
     esconderLogin();
     ativarSomManual();
     pedirPermissaoNotificacao();
@@ -184,7 +199,12 @@ async function atualizarOnline(){
   try{
     let r = await db.from('presenca').select('*').eq('online', true).order('ultima_vez',{ascending:false}).limit(50);
     let agora = new Date();
+    // 🛑 FILTRO: Admin nunca conta como online
+    let meuId = localStorage.getItem('meu_id_online');
     let on = (r.data||[]).filter(p=>{
+      if(p.cliente_id === meuId) return false; // Eu mesmo
+      if((p.nome||'').toLowerCase().includes('admin')) return false;
+      if((p.pagina||'').toLowerCase().includes('admin')) return false;
       let diff = p.ultima_vez ? (agora - new Date(p.ultima_vez))/1000 : 9999;
       return diff < 60;
     });

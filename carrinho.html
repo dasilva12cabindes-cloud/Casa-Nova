@@ -111,6 +111,13 @@ h1{background:#fff;border:2px solid #0b5ed7;border-radius:999px;padding:14px 20p
     <datalist id="listaCidades"><option value="Luanda"><option value="Cabinda"><option value="Huíla"><option value="Benguela"><option value="Huambo"><option value="Lobito"><option value="Lubango"><option value="Malanje"><option value="Uíge"><option value="Viana"><option value="Cacuaco"></datalist>
     <label>📍 Referência da Zona de Entrega *</label>
     <textarea id="referenciaZona" rows="2" placeholder="Ex: 4 de Fevereiro, Cabinda - ao lado da farmácia, casa azul"></textarea>
+    <label>🚚 Escolhe a tua Zona de Entrega *</label>
+    <select id="zonaEntrega" onchange="atualizarTotais()">
+      <option value="0">A carregar zonas...</option>
+    </select>
+    <div id="linhaEntrega" style="background:#e0f2fe;padding:10px;border-radius:10px;margin:10px 0;font-size:14px;display:none">
+      🚚 Entrega (<b id="nomeZonaTxt">-</b>): <b id="valorEntregaTxt">0 Kz</b>
+    </div>
   </div>
   <div id="boxLoja" style="display:none">
     <div class="box-loja" id="infoLoja"><b>🏪 Localização da Nossa Loja</b><br>🌍 País: <b id="lojaPaisTxt">Angola</b><br>🏙️ Cidade: <b id="lojaCidadeTxt">Luanda</b><br>📍 Bairro / Referência: <b id="lojaBairroTxt">Viana</b></div>
@@ -152,6 +159,9 @@ let comprovativoTipo = '';
 let comprovativoFicheiro = null;
 let pedidoJaConfirmado = false;
 let codigoJaGerado = '';
+let zonasEntrega = [];
+let entregaAtual = 0;
+let nomeZonaAtual = '';
 function gerarCodigo(){
   if(codigoJaGerado) { codigoRef = codigoJaGerado; return codigoRef; }
   codigoRef = 'CN-' + Math.floor(100000 + Math.random()*900000);
@@ -182,17 +192,53 @@ function trocarModo(modo){
   document.getElementById('btnFinalizar').textContent = modo==='entrega' ? '✅ Confirmar Pedido e Receber Código' : '✅ Confirmar Levantamento e Receber Código';
   atualizarTotais(); mostrarInfoPagamento();
 }
+async function carregarZonas(){
+  try{
+    let r = await db.from('entregas').select('*').order('nome');
+    if(!r.error) zonasEntrega = r.data || [];
+  }catch(e){}
+  let sel = document.getElementById('zonaEntrega');
+  if(!sel) return;
+  if(!zonasEntrega.length){
+    sel.innerHTML = '<option value="0">Nenhuma zona criada pelo Admin</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="0">-- Escolhe a tua zona --</option>' + zonasEntrega.map(z=>`<option value="${z.id}">${z.nome} - ${Number(z.preco).toLocaleString()} Kz</option>`).join('');
+}
+function getSubtotal(){
+  return getCarrinho().reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
+}
+function getTotalComEntrega(){
+  let sub = getSubtotal();
+  if(modoEntrega==='loja') return sub;
+  return sub + entregaAtual;
+}
 function atualizarTotais(){
-  let carrinho = getCarrinho();
-  let total = carrinho.reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
+  let subtotal = getSubtotal();
+  entregaAtual = 0; nomeZonaAtual = '';
+  let sel = document.getElementById('zonaEntrega');
+  if(modoEntrega==='entrega' && sel){
+    let z = zonasEntrega.find(x=>String(x.id)===String(sel.value));
+    if(z){ entregaAtual = Number(z.preco||0); nomeZonaAtual = z.nome; }
+  }
+  let total = getTotalComEntrega();
   document.getElementById('total').textContent = 'Total: ' + total.toLocaleString() + ' Kz';
+  let linha = document.getElementById('linhaEntrega');
+  if(linha){
+    if(modoEntrega==='entrega'){
+      linha.style.display='block';
+      document.getElementById('nomeZonaTxt').textContent = nomeZonaAtual || 'Nenhuma zona escolhida';
+      document.getElementById('valorEntregaTxt').textContent = entregaAtual.toLocaleString() + ' Kz';
+    } else linha.style.display='none';
+  }
   let box50 = document.getElementById('box50');
   let t50 = document.getElementById('total50');
   if(modoEntrega==='entrega'){
     let metade = Math.round(total/2);
-    box50.innerHTML = `💰 <b>Entrega a Domicílio - Paga 50% agora</b><br>Total: <b>${total.toLocaleString()} Kz</b><br>✅ Pagas agora: <b>${metade.toLocaleString()} Kz (50%)</b><br>📦 Pagas na entrega: <b>${(total-metade).toLocaleString()} Kz (50%)</b>`;
+    box50.innerHTML = `💰 <b>Entrega a Domicílio - Paga 50% agora</b><br>Compra: <b>${subtotal.toLocaleString()} Kz</b><br>🚚 Entrega: <b>${entregaAtual.toLocaleString()} Kz</b><br>Total: <b>${total.toLocaleString()} Kz</b><br>✅ Pagas agora: <b>${metade.toLocaleString()} Kz (50%)</b><br>📦 Pagas na entrega: <b>${(total-metade).toLocaleString()} Kz (50%)</b>`;
     t50.textContent = '💰 Pagas agora: ' + metade.toLocaleString() + ' Kz (50%)';
   } else { box50.innerHTML = ``; t50.textContent = '💰 Pagas agora na loja: ' + total.toLocaleString() + ' Kz (100%)'; }
+  mostrarInfoPagamento();
 }
 function atualizarPassos(){
   let temComp = !!comprovativoData;
@@ -234,9 +280,10 @@ function carregarPagamentosCarrinho(){
 function mostrarInfoPagamento(){
   let select = document.getElementById('pagamento');
   let div = document.getElementById('infoPagamento');
+  if(!select || !div) return;
   let p = _pagAtivos.find(x=>x.tipo===select.value);
   if(!p){ div.style.display='none'; return; }
-  let total = getCarrinho().reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
+  let total = getTotalComEntrega();
   let aPagar = modoEntrega==='entrega' ? Math.round(total/2) : total;
   let txt='';
   if(p.tipo==='Multicaixa Express') txt=`<b>📱 Multicaixa Express</b><br>📞 Telefone: <b>${p.telefone||'---'}</b><br>👤 Nome: <b>${p.nome||'---'}</b>`;
@@ -315,14 +362,14 @@ function finalizar(){
     let cidade = document.getElementById('cidade').value.trim();
     let ref = document.getElementById('referenciaZona').value.trim();
     if(!pais || !cidade || !ref){ erro.textContent='⚠️ Preenche País, Cidade e Referência da Zona!'; erro.style.display='block'; return; }
+    if(!nomeZonaAtual || entregaAtual<=0){ erro.textContent='⚠️ Escolhe a tua Zona de Entrega!'; erro.style.display='block'; return; }
   }
   if(!comprovativoData){ erro.textContent='⚠️ 2º - Sobe o comprovativo! PDF, PNG ou foto.'; erro.style.display='block'; return; }
   if(!document.getElementById('checkPago').checked){ erro.textContent='⚠️ 3º - Marca "Confirmo que já fiz o pagamento"!'; erro.style.display='block'; return; }
   if(!cliente){ let novoCliente = {nome, telefone, morada: document.getElementById('referenciaZona').value.trim(), email: email, senha:''}; localStorage.setItem('cliente_casa_nova', JSON.stringify(novoCliente)); cliente = novoCliente; }
   else { cliente.email = email; localStorage.setItem('cliente_casa_nova', JSON.stringify(cliente)); }
-  let total = carrinho.reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
+  let total = getTotalComEntrega();
   let aPagar = modoEntrega==='entrega' ? Math.round(total/2) : total;
-  // SEM WHATSAPP - vai direto para o sistema
   document.getElementById('textoFinalizar').textContent = `Pagaste ${aPagar.toLocaleString()} Kz • Vais receber o teu código ÚNICO e ir para Meus Códigos. O código fica visível 5 minutos.`;
   document.getElementById('modalFinalizar').classList.add('aberto');
 }
@@ -337,10 +384,11 @@ async function confirmarFinalizar(){
   let email = document.getElementById('email').value.trim();
   let telefone = document.getElementById('telefone').value.trim();
   let pagamento = document.getElementById('pagamento').value;
-  let total = carrinho.reduce((s,i)=>s + Number(i.preco||0)*(i.qtd||1), 0);
+  let total = getTotalComEntrega();
+  let subtotal = getSubtotal();
   let pago = modoEntrega==='entrega' ? Math.round(total/2) : total;
   let falta = total - pago;
-  let moradaTxt = modoEntrega==='entrega' ? `${document.getElementById('pais').value.trim()}, ${document.getElementById('cidade').value.trim()}, ${document.getElementById('referenciaZona').value.trim()}` : `${_lojaInfo.pais}, ${_lojaInfo.cidade}, ${_lojaInfo.bairro} (Receber na Loja)`;
+  let moradaTxt = modoEntrega==='entrega' ? `${document.getElementById('pais').value.trim()}, ${document.getElementById('cidade').value.trim()}, ${document.getElementById('referenciaZona').value.trim()} - Zona: ${nomeZonaAtual} (${entregaAtual.toLocaleString()} Kz)` : `${_lojaInfo.pais}, ${_lojaInfo.cidade}, ${_lojaInfo.bairro} (Receber na Loja)`;
   try{
     let meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]');
     meus.push({ codigo: codigoRef, nome: nome, email: email, telefone: telefone, itens: carrinho.map(i=>i.nome+' x'+i.qtd).join(', '), total: total, pago: pago, falta: falta, tipo: modoEntrega, criado_em: Date.now() });
@@ -363,7 +411,7 @@ async function confirmarFinalizar(){
   let erroSupabase = '';
   try{
     if(typeof db !== 'undefined'){
-      let payload = { nome_cliente: nome, email: email, telefone: telefone, morada: moradaTxt, itens: JSON.stringify(carrinho), total: total, valor_pago: pago, falta_pagar: falta, codigo: codigoRef, status: 'Novo', comprovativo_url: comprovativoURL, tipo_entrega: modoEntrega, pagamento: pagamento };
+      let payload = { nome_cliente: nome, email: email, telefone: telefone, morada: moradaTxt, itens: JSON.stringify(carrinho), total: total, valor_pago: pago, falta_pagar: falta, codigo: codigoRef, status: 'Novo', comprovativo_url: comprovativoURL, tipo_entrega: modoEntrega, pagamento: pagamento, zona_entrega: nomeZonaAtual, taxa_entrega: entregaAtual, subtotal: subtotal };
       let r = await db.from('pedidos').insert([payload]);
       if(!r.error){ gravouNoSupabase = true; }
       else {
@@ -382,7 +430,6 @@ async function confirmarFinalizar(){
     localStorage.setItem('minhas_referencias', JSON.stringify(refs));
     localStorage.setItem('ultimo_comprovativo', comprovativoData||'');
   }catch(e){}
-  // ✅ SEM WHATSAPP - NÃO abre mais o WhatsApp. Vai direto para Meus Códigos onde o código fica 5 min
   mostrarToast('✅ Código gerado: ' + codigoRef + ' - Aponta! Fica 5 minutos.');
   setCarrinho([]);
   setTimeout(()=>{ location.href='meus-pedidos.html'; }, 1200);
@@ -407,6 +454,7 @@ async function carregarLogoTopo(){
 }
 carregarLogoTopo();
 carregarPagamentosCarrinho();
+carregarZonas();
 renderizar();
 </script>
 </body>

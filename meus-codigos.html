@@ -36,7 +36,6 @@ body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px;padding-bottom:1
 .badge-prep{background:#fef3c7;color:#92400e}
 .badge-recebido{background:#e0e7ff;color:#3730a3}
 .badge-entregue{background:#dcfce7;color:#166534}
-/* ENVELOPE - SÓ CLIENTE - CANTO ESQUERDO A FLUTUAR */
 #btnEnvelope{position:fixed;left:14px;bottom:20px;z-index:9999;width:66px;height:66px;border-radius:50%;background:#0b5ed7;color:#fff;border:3px solid #fff;box-shadow:0 4px 16px rgba(0,0,0,.4);font-size:30px;cursor:pointer;display:none;align-items:center;justify-content:center;animation:flutuarEnv 2s ease-in-out infinite}
 @keyframes flutuarEnv{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 #badgeEnvelope{position:absolute;top:-4px;right:-4px;background:#dc2626;color:#fff;min-width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;border:2px solid #fff}
@@ -52,6 +51,15 @@ body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px;padding-bottom:1
 <div class="caixa">
   <h3>Os teus códigos ficam aqui 5 minutos</h3>
   <p style="color:#666;font-size:13px;text-align:center">Depois de 5 minutos o código some sozinho.<br>Aponta o código antes.</p>
+
+  <!-- PROCURAR CÓDIGO - FUNCIONA EM QUALQUER TELEFONE -->
+  <div style="background:#fff3cd;border:2px solid #f59e0b;padding:12px;border-radius:12px;margin-bottom:12px;text-align:center">
+    <b>🔍 Não estás a ver o teu pedido?</b><br>
+    <small>Escreve o teu código aqui, funciona em qualquer telefone:</small><br><br>
+    <input id="inputBuscarCodigo" placeholder="Ex: CN-436625" style="padding:12px;width:70%;border:2px solid #0b5ed7;border-radius:10px;font-size:16px;text-align:center;text-transform:uppercase">
+    <button onclick="buscarCodigoDigitado()" style="background:#0b5ed7;color:#fff;border:0;padding:12px 16px;border-radius:10px;font-weight:800;margin-top:8px;width:100%">🔍 VER O MEU PEDIDO</button>
+  </div>
+
   <div id="areaMensagemPreparacao"></div>
   <div id="listaCodigos"></div>
 </div>
@@ -75,8 +83,9 @@ function sairCliente(){
   location.href = 'index.html';
 }
 let statusPorCodigo = {};
+let canaisAbertos = {};
 
-// ===== ENVELOPE - LÓGICA CERTA =====
+// ===== ENVELOPE =====
 let notificacoes = [];
 try{ notificacoes = JSON.parse(localStorage.getItem('notificacoes_casa_nova')||'[]'); }catch(e){ notificacoes=[]; }
 let timerReaparecer = null;
@@ -100,13 +109,11 @@ function abrirEnvelope(){
   if(!notificacoes.length) box.innerHTML = '<p style="text-align:center;color:#666;padding:20px">Sem mensagens.</p>';
   else box.innerHTML = notificacoes.slice().reverse().map(n=>`<div class="env-msg"><b>📦 Pedido ${n.codigo} - ${n.status}</b><br><span style="font-size:14px">${n.mensagem}</span><br><small style="color:#888">${new Date(n.quando).toLocaleString('pt-PT')}</small></div>`).join('');
   document.getElementById('modalEnvelope').classList.add('aberto');
-  // NÃO marca como lida aqui. Só some quando carregar no X.
 }
 function fecharEnvelope(){
   document.getElementById('modalEnvelope').classList.remove('aberto');
   notificacoes = notificacoes.map(n=>({...n, lida:true}));
   salvarNotif(); atualizarEnvelope();
-  // SÓ QUANDO FECHA COM X, volta em 2 minutos
   clearTimeout(timerReaparecer);
   timerReaparecer = setTimeout(()=>{
     if(notificacoes.length){
@@ -121,6 +128,28 @@ function criarNotificacao(status, codigo, nome){
   if(ja) return;
   notificacoes.push({codigo:codigo, status:status, mensagem:textoEnvelope(status, codigo, nome), quando:new Date().toISOString(), lida:false});
   salvarNotif(); atualizarEnvelope();
+}
+
+// ===== PROCURAR CÓDIGO EM QUALQUER TELEFONE =====
+async function buscarCodigoDigitado(){
+  let codigo = document.getElementById('inputBuscarCodigo').value.trim().toUpperCase();
+  if(!codigo){ alert('Escreve o código primeiro. Ex: CN-436625'); return; }
+  let r = await db.from('pedidos').select('*').eq('codigo', codigo).maybeSingle();
+  if(!r.data){ alert('Código não encontrado: '+codigo+'\nVerifica se escreveste bem.'); return; }
+  let p = r.data;
+  let st = p.status || p.estado || 'Novo';
+  statusPorCodigo[codigo] = st;
+  let meus = [];
+  try{ meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]'); }catch(e){}
+  if(!meus.find(m=>m.codigo===codigo)){
+    meus.push({codigo:codigo, nome:p.nome_cliente||p.nome||'', itens:p.itens||'', total:p.total||0, pago:p.pago||0, falta:p.falta||0, tipo:p.tipo_entrega||'loja', criado_em:Date.now(), buscado:true});
+    localStorage.setItem('meus_codigos', JSON.stringify(meus));
+  }
+  renderizar();
+  mostrarMensagem(st, codigo);
+  criarNotificacao(st, codigo, p.nome_cliente||p.nome||'');
+  ligarTempoReal();
+  alert('✅ Pedido encontrado: '+codigo+' - '+st);
 }
 
 function badgeStatus(status){
@@ -150,7 +179,6 @@ function mostrarMensagem(status, codigo){
   } else {
     return;
   }
-  // A mensagem da caixa NÃO some em 5 min. Só o código some.
   area.innerHTML = `<div class="${classe}">${texto}</div>`;
   if("Notification" in window && Notification.permission === "granted"){
     try{ new Notification('✅ Casa Nova', {body: tituloBarra}); }catch(e){}
@@ -160,22 +188,23 @@ function renderizar(){
   let meus = [];
   try{ meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]'); }catch(e){}
   let agora = Date.now();
-  meus = meus.filter(m => (agora - (m.criado_em||0)) < 5*60*1000);
+  // Códigos buscados manualmente NÃO somem em 5 min, ficam 24h
+  meus = meus.filter(m => m.buscado ? (agora - (m.criado_em||0)) < 24*60*60*1000 : (agora - (m.criado_em||0)) < 5*60*1000);
   localStorage.setItem('meus_codigos', JSON.stringify(meus));
   let div = document.getElementById('listaCodigos');
   if(!meus.length){
-    div.innerHTML = `<p style="color:#666;text-align:center">Nenhum código.<br>Os códigos somem depois de 5 minutos.<br><a href="index.html" style="color:#0b5ed7;font-weight:700">Fazer um pedido →</a></p>`;
+    div.innerHTML = `<p style="color:#666;text-align:center">Nenhum código.<br>Escreve o teu código em cima na caixa amarela.<br><a href="index.html" style="color:#0b5ed7;font-weight:700">Fazer um pedido →</a></p>`;
     return;
   }
   div.innerHTML = meus.map(m => {
-    let falta = 5*60*1000 - (agora - (m.criado_em||0));
+    let falta = m.buscado ? 0 : 5*60*1000 - (agora - (m.criado_em||0));
     let mm = Math.floor(falta/60000);
     let ss = Math.floor((falta%60000)/1000);
-    let tempo = '0'+mm+':'+(ss<10?'0'+ss:ss);
+    let tempo = m.buscado ? 'Guardado neste telefone' : '0'+mm+':'+(ss<10?'0'+ss:ss);
     let st = statusPorCodigo[m.codigo] || 'Novo';
     return `
     <div class="card">
-      <div style="text-align:center;background:#111;color:#fff;padding:12px;border-radius:10px"><small>TEU CÓDIGO</small><br><b style="font-size:24px;letter-spacing:2px">${m.codigo}</b><br><small style="color:#fbbf24">⏰ Some em ${tempo} - Escreve / faz print!</small></div>
+      <div style="text-align:center;background:#111;color:#fff;padding:12px;border-radius:10px"><small>TEU CÓDIGO</small><br><b style="font-size:24px;letter-spacing:2px">${m.codigo}</b><br><small style="color:#fbbf24">⏰ ${tempo}</small></div>
       <div style="text-align:center;margin-top:8px">${badgeStatus(st)}</div>
       <div style="margin-top:10px">👤 ${m.nome||''}<br>📦 ${m.itens||''}<br>💰 Total: ${Number(m.total||0).toLocaleString()} Kz<br>✅ Pago: ${Number(m.pago||0).toLocaleString()} Kz<br>❗ Falta: ${Number(m.falta||0).toLocaleString()} Kz<br>🚚 ${m.tipo==='loja' ? 'Receber na Loja' : 'Entrega a Domicílio'}</div>
     </div>
@@ -189,6 +218,8 @@ function ligarTempoReal(){
       Notification.requestPermission();
     }
     meus.forEach(m=>{
+      if(canaisAbertos[m.codigo]) return;
+      canaisAbertos[m.codigo]=true;
       db.channel('meu-pedido-'+m.codigo)
       .on('postgres_changes',{event:'UPDATE',schema:'public',table:'pedidos',filter:'codigo=eq.'+m.codigo}, payload=>{
         let novo = payload.new.status || payload.new.estado || '';

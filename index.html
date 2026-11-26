@@ -1028,41 +1028,23 @@ setTimeout(function(){
   });
 }, 1000);
 </script>
-<script>
-// BLOCO FINAL - manda em tudo
-(function(){
-  // 1) ESCONDE a secção Notificações lá em baixo depois dos produtos
   function esconderNotificacoesDeFora(){
-    document.querySelectorAll('h2,h3,h4,div,section').forEach(function(el){
-      // só o título que NÃO está dentro da janelinha
-      if(el.textContent.trim() === 'Notificações' && !el.closest('#modalNovaEnvelope')){
-        // esconde o bloco todo que contém esse título
-        var bloco = el.closest('section') || el.parentElement;
-        if(bloco) bloco.style.display = 'none';
+    // esconde TUDO que tem mensagem de pedido e NÃO está dentro do envelope
+    document.querySelectorAll('div,p,li,section').forEach(function(el){
+      if(el.closest('#modalNovaEnvelope')) return;
+      if(el.closest('#btnEnvelopeLoja')) return;
+      var t = (el.textContent||'');
+      // esconde as 2 mensagens de baixo
+      if(t.includes('teu pedido foi recebido') && el.children.length === 0){
+        el.style.display = 'none';
+        if(el.parentElement) el.parentElement.style.display = 'none';
+      }
+      // esconde o título Notificações de baixo
+      if(t.includes('Notificações') && el.children.length <= 2 && el.textContent.trim().length < 30){
+        el.style.display = 'none';
+        if(el.parentElement) el.parentElement.style.display = 'none';
       }
     });
   }
-  esconderNotificacoesDeFora();
-  setInterval(esconderNotificacoesDeFora, 2000);
-
-  // 2) MATA o código velho que faz voltar logo na hora
-  window.mostrarEnvelopeLoja = function(){
-    var btn = document.getElementById('btnEnvelopeLoja');
-    if(!btn) return;
-    var lidoEm = 0;
-    try{ lidoEm = parseInt(localStorage.getItem('envelope_lido_em')||'0'); }catch(e){}
-    // se acabou de ler, fica escondido 2 min
-    if(lidoEm && (Date.now() - lidoEm) < 2*60*1000){
-      btn.style.display = 'none';
-      var b = document.getElementById('badgeEnvelopeLoja');
-      if(b) b.style.display = 'none';
-      return;
-    }
-    btn.style.display = 'flex';
-    var badge = document.getElementById('badgeEnvelopeLoja');
-    if(badge) badge.style.display = 'flex';
-  };
-})();
-</script>
 </body>
 </html>

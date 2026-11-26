@@ -33,7 +33,7 @@
 <div id="contadorNovos" style="background:#fef3c7;border:2px solid #f59e0b;border-radius:12px;padding:12px;text-align:center;font-weight:800;margin:10px 0;display:none">🆕 Pedidos Novos: <span id="numNovos">0</span></div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
 <button class="btn btn-verde" onclick="location.href='admin-vendas.html'">💰 Ver Vendas do Dia →</button>
-<button class="btn btn-azul" onclick="carregar()">🔄 Atualizar</button>
+<button class="btn btn-azul" onclick="atualizarAdmin()">🔄 Atualizar</button>
 </div>
 </div>
 <div id="lista"><p style="text-align:center;color:#888">A carregar pedidos...</p></div>
@@ -54,33 +54,37 @@ let toastTimer; let pedidoParaFinalizar = null; let listaAtual = [];
 function aviso(msg,tipo){let t=document.getElementById('toast');t.textContent=msg;t.className='mostrar '+(tipo||'sucesso');clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='';},3000);}
 function badge(status){ let s=(status||'Novo').toLowerCase(); if(s.includes('entregue')) return '<span class="badge badge-entregue">✅ Entregue</span>'; if(s.includes('recebido')) return '<span class="badge badge-recebido">💙 Recebido - Pagamento Recebido</span>'; if(s.includes('aceite')||s.includes('prepar')) return '<span class="badge badge-aceite">🔥 '+status+'</span>'; if(s.includes('cancel')) return '<span class="badge badge-cancelado">❌ Cancelado</span>'; return '<span class="badge badge-novo">🆕 Novo</span>'; }
 function atualizarContador(){ let novos = listaAtual.filter(p=> (p.status||p.estado||'Novo') === 'Novo').length; let c = document.getElementById('contadorNovos'); let n = document.getElementById('numNovos'); if(n) n.textContent = novos; if(c) c.style.display = novos > 0 ? 'block' : 'none'; }
+async function atualizarAdmin(){ aviso('🔄 A atualizar...'); await carregar(); aviso('✅ Atualizado! Lista atualizada.'); }
 async function carregar(){
-  let r=await db.from('pedidos').select('*').order('created_at',{ascending:false});
-  let lista=r.data||[];
-  listaAtual = lista; atualizarContador();
-  if(!lista.length){ document.getElementById('lista').innerHTML='<div class="caixa" style="text-align:center">Nenhum pedido ainda.</div>'; return; }
-  document.getElementById('lista').innerHTML=lista.map(p=>{
-    let nome=p.nome_cliente||p.cliente_nome||p.nome||'Cliente'; let tel=p.telefone||p.whatsapp||''; let morada=p.morada||p.endereco||p.localizacao||'';
-    let total=Number(p.total||0); let pago=Number(p.valor_pago||p.pago||0); if(!pago){ pago = (p.tipo_entrega==='loja') ? total : Math.round(total/2); }
-    let falta = total - pago; let pagouTudo = pago >= total; let status=p.status||p.estado||'Novo'; let codigo=p.codigo||'';
-    let data=(p.created_at||'').slice(0,10).split('-').reverse().join('/')+' '+(p.created_at||'').slice(11,16);
-    let itens=''; try{ let it=p.itens||p.produtos||p.items||p.detalhes; if(typeof it==='string') it=JSON.parse(it); if(Array.isArray(it)) itens=it.map(i=>`• ${i.nome||i.produto||'Produto'} x${i.qtd||i.quantidade||1}`).join('<br>'); }catch(e){}
-    let isNovo = status === 'Novo'; let isRecebidoOuPrep = ['Recebido','Em Preparação','Aceite'].includes(status); let isEntregue = status === 'Entregue';
-    let waMsg=encodeURIComponent('Olá '+nome+', recebemos o teu pedido na Casa Nova de '+total.toLocaleString()+' Kz. Obrigado!');
-    let botoesAcao = '';
-    if(isNovo){
-      if(pagouTudo){ botoesAcao = `<button class="btn" style="background:#4338ca;color:#fff" onclick="marcarRecebido(${p.id})">💙 Recebido - Pagamento Recebido</button><p style="font-size:12px;color:#666;text-align:center">Pagou 100% (${total.toLocaleString()} Kz).</p>`; }
-      else { botoesAcao = `<button class="btn btn-laranja" onclick="marcarPreparacao(${p.id})">🔥 Em Preparação / Aceite</button><p style="font-size:12px;color:#666;text-align:center">Pagou 50% (${pago.toLocaleString()} Kz). Falta: ${falta.toLocaleString()} Kz.</p>`; }
-    } else if(isRecebidoOuPrep){
-      botoesAcao = `<div style="background:#dcfce7;border:1px solid #16a34a;border-radius:8px;padding:10px;text-align:center;font-size:13px">✅ Status: <b>${status}</b><br>✉️ O cliente vai receber o envelope.</div>`;
-      if(pagouTudo && status==='Em Preparação'){ botoesAcao += `<button class="btn" style="background:#fff7ed;color:#92400e;margin-top:8px;border:1px solid #f59e0b" onclick="marcarRecebido(${p.id})">🔄 Corrigir para Recebido (Pagou 100%)</button>`; }
-      if(!pagouTudo && status==='Recebido'){ botoesAcao += `<button class="btn btn-laranja" style="margin-top:8px" onclick="marcarPreparacao(${p.id})">🔄 Corrigir para Em Preparação (Pagou 50%)</button>`; }
-    }
-    let botaoFinalizar = '';
-    if(!isEntregue && (isRecebidoOuPrep || isNovo)){ botaoFinalizar = `<button class="btn btn-verde" style="margin-top:8px" onclick="abrirModalCodigo(${p.id},'${codigo}')">📦 Finalizar Entrega com Código</button>`; }
-    if(isEntregue){ botaoFinalizar = `<div style="background:#dcfce7;border-radius:8px;padding:10px;text-align:center;font-weight:800;margin-top:8px">✅ Entregue - REGISTO GUARDADO</div>`; }
-    return `<div class="card-pedido"><div style="display:flex;justify-content:space-between"><b>${nome}</b>${badge(status)}</div><div style="color:#666;font-size:13px;margin:4px 0">${data} • ${tel}<br>${morada}</div>${codigo ? `<div style="background:#fef3c7;border:1px dashed #f59e0b;border-radius:8px;padding:8px;text-align:center;margin:6px 0">🔖 <b>Código: ${codigo}</b><br><small style="color:#166534">No Admin o código NUNCA some</small></div>` : ''}<div style="font-size:14px;margin-top:6px">${itens}</div><div style="font-weight:800;color:#0b5ed7;margin:8px 0">Total: ${total.toLocaleString()} Kz<br><span style="color:#16a34a;font-size:13px">Pago: ${pago.toLocaleString()} Kz</span> <span style="color:#dc2626;font-size:13px">• Falta: ${falta.toLocaleString()} Kz</span><br><span style="font-size:12px;color:#666">${pagouTudo ? '💙 Pagou 100% - Levantamento na Loja' : '🚚 Pagou 50% - Entrega a Domicílio'}</span></div>${botoesAcao}${botaoFinalizar}<button class="btn" style="background:#e0e7ff;color:#3730a3;margin-top:8px" onclick="abrirFatura(${p.id})">🧾 Ver Fatura - Confirmar se está em Preparação ou Recebido</button><button class="btn btn-vermelho" style="margin-top:8px;background:#fee2e2;color:#991b1b" onclick="cancelarPedido(${p.id})">❌ Cancelar Pedido</button><button class="btn btn-verde" style="margin-top:8px" onclick="window.open('https://wa.me/${String(tel||'').replace(/[^0-9]/g,'')}?text=${waMsg}','_blank')">💬 Falar no WhatsApp</button></div>`;
-  }).join('');
+  try{
+    let r=await db.from('pedidos').select('*').order('created_at',{ascending:false});
+    if(r.error){ document.getElementById('lista').innerHTML='<div class="caixa" style="text-align:center">Erro: '+r.error.message+'</div>'; return; }
+    let lista=r.data||[];
+    listaAtual = lista; atualizarContador();
+    if(!lista.length){ document.getElementById('lista').innerHTML='<div class="caixa" style="text-align:center">Nenhum pedido ainda.</div>'; return; }
+    document.getElementById('lista').innerHTML=lista.map(p=>{
+      let nome=p.nome_cliente||p.cliente_nome||p.nome||'Cliente'; let tel=p.telefone||p.whatsapp||''; let morada=p.morada||p.endereco||p.localizacao||'';
+      let total=Number(p.total||0); let pago=Number(p.valor_pago||p.pago||0); if(!pago){ pago = (p.tipo_entrega==='loja') ? total : Math.round(total/2); }
+      let falta = total - pago; let pagouTudo = pago >= total; let status=p.status||p.estado||'Novo'; let codigo=p.codigo||'';
+      let data=(p.created_at||'').slice(0,10).split('-').reverse().join('/')+' '+(p.created_at||'').slice(11,16);
+      let itens=''; try{ let it=p.itens||p.produtos||p.items||p.detalhes; if(typeof it==='string') it=JSON.parse(it); if(Array.isArray(it)) itens=it.map(i=>`• ${i.nome||i.produto||'Produto'} x${i.qtd||i.quantidade||1}`).join('<br>'); }catch(e){}
+      let isNovo = status === 'Novo'; let isRecebidoOuPrep = ['Recebido','Em Preparação','Aceite'].includes(status); let isEntregue = status === 'Entregue';
+      let waMsg=encodeURIComponent('Olá '+nome+', recebemos o teu pedido na Casa Nova de '+total.toLocaleString()+' Kz. Obrigado!');
+      let botoesAcao = '';
+      if(isNovo){
+        if(pagouTudo){ botoesAcao = `<button class="btn" style="background:#4338ca;color:#fff" onclick="marcarRecebido(${p.id})">💙 Recebido - Pagamento Recebido</button><p style="font-size:12px;color:#666;text-align:center">Pagou 100% (${total.toLocaleString()} Kz).</p>`; }
+        else { botoesAcao = `<button class="btn btn-laranja" onclick="marcarPreparacao(${p.id})">🔥 Em Preparação / Aceite</button><p style="font-size:12px;color:#666;text-align:center">Pagou 50% (${pago.toLocaleString()} Kz). Falta: ${falta.toLocaleString()} Kz.</p>`; }
+      } else if(isRecebidoOuPrep){
+        botoesAcao = `<div style="background:#dcfce7;border:1px solid #16a34a;border-radius:8px;padding:10px;text-align:center;font-size:13px">✅ Status: <b>${status}</b><br>✉️ O cliente vai receber o envelope.</div>`;
+        if(pagouTudo && status==='Em Preparação'){ botoesAcao += `<button class="btn" style="background:#fff7ed;color:#92400e;margin-top:8px;border:1px solid #f59e0b" onclick="marcarRecebido(${p.id})">🔄 Corrigir para Recebido (Pagou 100%)</button>`; }
+        if(!pagouTudo && status==='Recebido'){ botoesAcao += `<button class="btn btn-laranja" style="margin-top:8px" onclick="marcarPreparacao(${p.id})">🔄 Corrigir para Em Preparação (Pagou 50%)</button>`; }
+      }
+      let botaoFinalizar = '';
+      if(!isEntregue && (isRecebidoOuPrep || isNovo)){ botaoFinalizar = `<button class="btn btn-verde" style="margin-top:8px" onclick="abrirModalCodigo(${p.id},'${codigo}')">📦 Finalizar Entrega com Código</button>`; }
+      if(isEntregue){ botaoFinalizar = `<div style="background:#dcfce7;border-radius:8px;padding:10px;text-align:center;font-weight:800;margin-top:8px">✅ Entregue - REGISTO GUARDADO</div>`; }
+      return `<div class="card-pedido"><div style="display:flex;justify-content:space-between"><b>${nome}</b>${badge(status)}</div><div style="color:#666;font-size:13px;margin:4px 0">${data} • ${tel}<br>${morada}</div>${codigo ? `<div style="background:#fef3c7;border:1px dashed #f59e0b;border-radius:8px;padding:8px;text-align:center;margin:6px 0">🔖 <b>Código: ${codigo}</b><br><small style="color:#166534">No Admin o código NUNCA some</small></div>` : ''}<div style="font-size:14px;margin-top:6px">${itens}</div><div style="font-weight:800;color:#0b5ed7;margin:8px 0">Total: ${total.toLocaleString()} Kz<br><span style="color:#16a34a;font-size:13px">Pago: ${pago.toLocaleString()} Kz</span> <span style="color:#dc2626;font-size:13px">• Falta: ${falta.toLocaleString()} Kz</span><br><span style="font-size:12px;color:#666">${pagouTudo ? '💙 Pagou 100% - Levantamento na Loja' : '🚚 Pagou 50% - Entrega a Domicílio'}</span></div>${botoesAcao}${botaoFinalizar}<button class="btn" style="background:#e0e7ff;color:#3730a3;margin-top:8px" onclick="abrirFatura(${p.id})">🧾 Ver Fatura - Confirmar se está em Preparação ou Recebido</button><button class="btn btn-vermelho" style="margin-top:8px;background:#fee2e2;color:#991b1b" onclick="cancelarPedido(${p.id})">❌ Cancelar Pedido</button><button class="btn btn-verde" style="margin-top:8px" onclick="window.open('https://wa.me/${String(tel||'').replace(/[^0-9]/g,'')}?text=${waMsg}','_blank')">💬 Falar no WhatsApp</button></div>`;
+    }).join('');
+  }catch(e){ document.getElementById('lista').innerHTML='<div class="caixa" style="text-align:center">Erro ao carregar: '+e.message+'</div>'; }
 }
 function abrirFatura(id){ let p = listaAtual.find(x=>x.id==id); if(!p) return; let nome=p.nome_cliente||p.nome||'Cliente'; let tel=p.telefone||''; let morada=p.morada||''; let total=Number(p.total||0); let pago=Number(p.valor_pago||0); if(!pago) pago = (p.tipo_entrega==='loja') ? total : Math.round(total/2); let falta=total-pago; let pagouTudo=pago>=total; let status=p.status||'Novo'; let codigo=p.codigo||''; let data=(p.created_at||'').slice(0,10).split('-').reverse().join('/')+' '+(p.created_at||'').slice(11,16); let linhas=''; try{ let it=p.itens||p.produtos; if(typeof it==='string') it=JSON.parse(it); if(Array.isArray(it)) linhas=it.map(i=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee"><span>${i.nome||'Produto'} x${i.qtd||1}</span><b>${Number(i.preco||0).toLocaleString()} Kz</b></div>`).join(''); }catch(e){} document.getElementById('conteudoFatura').innerHTML=`<div style="background:#111;color:#fff;padding:16px;text-align:center"><div style="font-size:28px;font-weight:900">CASA<span style="color:#f97316">NOVA</span></div></div><div style="padding:16px;font-size:14px;line-height:1.7"><div style="text-align:center;font-weight:900">Fatura Nº ${codigo}</div><div style="text-align:center;color:#666;font-size:12px">${data}</div><hr><b>Cliente:</b> ${nome}<br><b>Telefone:</b> ${tel}<br><b>Morada:</b> ${morada}<br><b>Status:</b> ${status}<hr>${linhas}<div style="border:1px solid #0b5ed7;border-radius:10px;padding:12px;margin-top:10px"><div style="display:flex;justify-content:space-between"><span>Total:</span><b>${total.toLocaleString()} Kz</b></div><div style="display:flex;justify-content:space-between"><span>Pago:</span><b style="color:#16a34a">${pago.toLocaleString()} Kz</b></div><div style="display:flex;justify-content:space-between"><span>Falta:</span><b style="color:#dc2626">${falta.toLocaleString()} Kz</b></div></div><div style="text-align:center;margin-top:10px;font-weight:800">${pagouTudo ? '✅ PAGO TOTAL' : '💰 PAGO 50% - FALTA '+falta.toLocaleString()+' Kz'}</div></div>`; document.getElementById('modalFatura').classList.add('aberto'); }
 function fecharFatura(){ document.getElementById('modalFatura').classList.remove('aberto'); }

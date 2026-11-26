@@ -935,5 +935,34 @@ setTimeout(mostrarEnvelopeLoja, 500);
 setTimeout(mostrarEnvelopeLoja, 1500);
 </script>
 <!-- FIM ENVELOPE -->
+<script>
+setTimeout(function(){
+  var btn = document.getElementById('btnEnvelopeLoja');
+  if(!btn) return;
+  btn.style.pointerEvents = 'auto';
+  btn.addEventListener('click', function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    var modal = document.getElementById('modalEnvelopeLoja');
+    var lista = document.getElementById('listaEnvelopeLoja');
+    if(lista){
+      var cliente = null;
+      try{ cliente = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(err){}
+      var codigos = [];
+      try{ codigos = JSON.parse(localStorage.getItem('meus_pedidos')||'[]'); }catch(err){}
+      if(codigos.length > 0){
+        lista.innerHTML = codigos.map(function(c){ return '<div style="background:#f0f7ff;padding:12px;border-radius:10px;margin-bottom:10px">Olá '+(cliente?cliente.nome||'':'')+', o teu pedido <b>'+c+'</b> está a ser preparado.</div>'; }).join('');
+      } else if(cliente){
+        lista.innerHTML = '<div style="background:#f0f7ff;padding:12px;border-radius:10px">Olá '+(cliente.nome||'')+', ainda não tens pedido. Faz uma compra e guarda teu código.</div>';
+      } else {
+        lista.innerHTML = '<div>Sem notificações. Vai a Meus Códigos e escreve teu código.</div>';
+      }
+    }
+    if(modal) modal.style.display = 'flex';
+    var badge = document.getElementById('badgeEnvelopeLoja');
+    if(badge) badge.style.display = 'none';
+  });
+}, 1000);
+</script>
 </body>
 </html>

@@ -5,7 +5,7 @@
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
 <style>
-body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
+body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px;padding-bottom:100px}
 .topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}
 .topo .logo{display:flex;align-items:center;gap:8px}
 .topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
@@ -36,6 +36,15 @@ body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
 .badge-prep{background:#fef3c7;color:#92400e}
 .badge-recebido{background:#e0e7ff;color:#3730a3}
 .badge-entregue{background:#dcfce7;color:#166534}
+/* ENVELOPE - SÓ CLIENTE - CANTO ESQUERDO A FLUTUAR */
+#btnEnvelope{position:fixed;left:14px;bottom:20px;z-index:9999;width:66px;height:66px;border-radius:50%;background:#0b5ed7;color:#fff;border:3px solid #fff;box-shadow:0 4px 16px rgba(0,0,0,.4);font-size:30px;cursor:pointer;display:none;align-items:center;justify-content:center;animation:flutuarEnv 2s ease-in-out infinite}
+@keyframes flutuarEnv{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+#badgeEnvelope{position:absolute;top:-4px;right:-4px;background:#dc2626;color:#fff;min-width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;border:2px solid #fff}
+#modalEnvelope{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:none;align-items:center;justify-content:center;padding:20px}
+#modalEnvelope.aberto{display:flex}
+.modal-env{background:#fff;width:100%;max-width:380px;border-radius:20px;overflow:hidden;max-height:90vh;overflow-y:auto}
+.env-topo{background:#0b5ed7;color:#fff;padding:16px;text-align:center}
+.env-msg{padding:14px;border-bottom:1px solid #eee}
 </style></head>
 <body>
 <div class="topo" id="topoSite"><div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>🔖 Meus Códigos</b></span></div><div style="display:flex;gap:8px"><a href="index.html">Loja →</a><button class="btn-sair" onclick="sairCliente()">🚪 Sair</button></div></div>
@@ -46,6 +55,14 @@ body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
   <div id="areaMensagemPreparacao"></div>
   <div id="listaCodigos"></div>
 </div>
+
+<!-- ENVELOPE -->
+<button id="btnEnvelope" onclick="abrirEnvelope()">✉️<span id="badgeEnvelope">0</span></button>
+<div id="modalEnvelope" onclick="if(event.target.id==='modalEnvelope') fecharEnvelope()"><div class="modal-env">
+<div class="env-topo"><div style="font-size:36px">✉️</div><h3 style="margin:4px 0">Mensagens da Loja</h3></div>
+<div id="listaMensagens"></div>
+<div style="padding:14px"><button onclick="fecharEnvelope()" style="background:#dc2626;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800">❌ Fechar (X)</button><p style="font-size:12px;color:#666;text-align:center">Se fechares, o envelope volta em 2 minutos.</p></div>
+</div></div>
 
 <script>
 if(performance.getEntriesByType('navigation')[0]?.type === 'reload'){
@@ -58,6 +75,54 @@ function sairCliente(){
   location.href = 'index.html';
 }
 let statusPorCodigo = {};
+
+// ===== ENVELOPE - LÓGICA CERTA =====
+let notificacoes = [];
+try{ notificacoes = JSON.parse(localStorage.getItem('notificacoes_casa_nova')||'[]'); }catch(e){ notificacoes=[]; }
+let timerReaparecer = null;
+function salvarNotif(){ localStorage.setItem('notificacoes_casa_nova', JSON.stringify(notificacoes)); }
+function textoEnvelope(status, codigo, nome){
+  nome = nome || 'Cliente';
+  if(status === 'Recebido') return `Olá ${nome}, nós recebemos o teu pagamento e agradecemos por você na nossa loja. Obrigado! ❤️`;
+  if(status === 'Em Preparação' || status === 'Aceite') return `Olá ${nome}, o teu pedido foi recebido e está a ser preparado.`;
+  if(status === 'Entregue') return `Olá ${nome}, o teu pedido foi finalizado. Já pagaste 100%. Obrigado por comprar na Casa Nova! 🎉`;
+  return `Olá ${nome}, recebemos o teu pedido ${codigo}.`;
+}
+function atualizarEnvelope(){
+  let naoLidas = notificacoes.filter(n=>!n.lida);
+  let btn = document.getElementById('btnEnvelope');
+  if(!naoLidas.length){ btn.style.display='none'; return; }
+  btn.style.display='flex';
+  document.getElementById('badgeEnvelope').textContent = naoLidas.length;
+}
+function abrirEnvelope(){
+  let box = document.getElementById('listaMensagens');
+  if(!notificacoes.length) box.innerHTML = '<p style="text-align:center;color:#666;padding:20px">Sem mensagens.</p>';
+  else box.innerHTML = notificacoes.slice().reverse().map(n=>`<div class="env-msg"><b>📦 Pedido ${n.codigo} - ${n.status}</b><br><span style="font-size:14px">${n.mensagem}</span><br><small style="color:#888">${new Date(n.quando).toLocaleString('pt-PT')}</small></div>`).join('');
+  document.getElementById('modalEnvelope').classList.add('aberto');
+  // NÃO marca como lida aqui. Só some quando carregar no X.
+}
+function fecharEnvelope(){
+  document.getElementById('modalEnvelope').classList.remove('aberto');
+  notificacoes = notificacoes.map(n=>({...n, lida:true}));
+  salvarNotif(); atualizarEnvelope();
+  // SÓ QUANDO FECHA COM X, volta em 2 minutos
+  clearTimeout(timerReaparecer);
+  timerReaparecer = setTimeout(()=>{
+    if(notificacoes.length){
+      notificacoes = notificacoes.map(n=>({...n, lida:false}));
+      salvarNotif(); atualizarEnvelope();
+    }
+  }, 120000);
+}
+function criarNotificacao(status, codigo, nome){
+  if(!['Recebido','Em Preparação','Aceite','Entregue'].includes(status)) return;
+  let ja = notificacoes.find(n=>n.codigo===codigo && n.status===status);
+  if(ja) return;
+  notificacoes.push({codigo:codigo, status:status, mensagem:textoEnvelope(status, codigo, nome), quando:new Date().toISOString(), lida:false});
+  salvarNotif(); atualizarEnvelope();
+}
+
 function badgeStatus(status){
   let s=(status||'Novo').toLowerCase();
   if(s.includes('entregue')) return '<span class="badge badge-entregue">✅ Entregue - Fatura recebida</span>';
@@ -76,7 +141,7 @@ function mostrarMensagem(status, codigo){
     tituloBarra = 'Recebemos o teu pagamento - Pedido '+codigo;
   } else if(status === 'Em Preparação' || status === 'Aceite'){
     classe = 'msg-prep';
-    texto = `🔥 Teu pedido ${codigo} está em Preparação / Aceite!<br><small style="font-weight:400">A loja já está a preparar. Esta mensagem some em 5 minutos depois de abrires.</small>`;
+    texto = `🔥 Teu pedido ${codigo} está em Preparação / Aceite!<br><small style="font-weight:400">A loja já está a preparar.</small>`;
     tituloBarra = 'Teu pedido '+codigo+' está em Preparação / Aceite!';
   } else if(status === 'Entregue'){
     classe = 'msg-entregue';
@@ -85,19 +150,11 @@ function mostrarMensagem(status, codigo){
   } else {
     return;
   }
-  area.innerHTML = `<div class="${classe}">${texto}<br><small id="contagemMsg">Some em 05:00</small></div>`;
+  // A mensagem da caixa NÃO some em 5 min. Só o código some.
+  area.innerHTML = `<div class="${classe}">${texto}</div>`;
   if("Notification" in window && Notification.permission === "granted"){
     try{ new Notification('✅ Casa Nova', {body: tituloBarra}); }catch(e){}
   }
-  let fim = Date.now() + 5*60*1000;
-  let timer = setInterval(()=>{
-    let falta = fim - Date.now();
-    if(falta <= 0){ clearInterval(timer); area.innerHTML=''; return; }
-    let m = Math.floor(falta/60000);
-    let s = Math.floor((falta%60000)/1000);
-    let el = document.getElementById('contagemMsg');
-    if(el) el.textContent = 'Some em 0'+m+':'+(s<10?'0'+s:s);
-  },1000);
 }
 function renderizar(){
   let meus = [];
@@ -139,6 +196,7 @@ function ligarTempoReal(){
         renderizar();
         if(novo === 'Recebido' || novo === 'Em Preparação' || novo === 'Aceite' || novo === 'Entregue'){
           mostrarMensagem(novo, m.codigo);
+          criarNotificacao(novo, m.codigo, m.nome);
         }
       }).subscribe();
     });
@@ -151,6 +209,7 @@ function ligarTempoReal(){
           renderizar();
           if(st === 'Recebido' || st === 'Em Preparação' || st === 'Aceite' || st === 'Entregue'){
             mostrarMensagem(st, m.codigo);
+            criarNotificacao(st, m.codigo, m.nome);
           }
         }
       }catch(e){}
@@ -164,4 +223,5 @@ carregarLogoTopo();
 renderizar();
 ligarTempoReal();
 setInterval(renderizar, 1000);
+atualizarEnvelope();
 </script></body></html>

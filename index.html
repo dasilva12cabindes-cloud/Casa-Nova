@@ -941,6 +941,7 @@ setTimeout(function(){
   if(!btn) return;
   btn.style.pointerEvents = 'auto';
   btn.addEventListener('click', function(e){
+    alert('CLICOU NO ENVELOPE');
     e.preventDefault();
     e.stopPropagation();
     var modal = document.getElementById('modalEnvelopeLoja');

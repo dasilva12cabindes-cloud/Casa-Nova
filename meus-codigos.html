@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meus Códigos - Casa Nova</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<style>
+body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px;padding-bottom:100px}
+.topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}
+.topo .logo{display:flex;align-items:center;gap:8px}
+.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
+.topo.tem-logo .logo-text{display:none}
+.topo a{color:#fff;text-decoration:none;font-weight:700}
+@keyframes logoZoom{
+  0%{transform:scale(0.7) translateY(0) rotate(0deg)}
+  25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
+  40%{transform:scale(1.45) translateY(0) rotate(0deg)}
+  48%{transform:scale(1.45) translateY(0) rotate(-6deg)}
+  56%{transform:scale(1.45) translateY(0) rotate(6deg)}
+  64%{transform:scale(1.45) translateY(0) rotate(-5deg)}
+  72%{transform:scale(1.45) translateY(0) rotate(4deg)}
+  80%{transform:scale(1.25) translateY(4px) rotate(0deg)}
+  88%{transform:scale(1.08) translateY(-3px) rotate(0deg)}
+  94%{transform:scale(0.96) translateY(2px) rotate(0deg)}
+  100%{transform:scale(1) translateY(0) rotate(0deg)}
+}
+.caixa{background:#fff;padding:16px;border-radius:12px;margin-top:12px}
+.caixa h3{background:#eff6ff;border:2px solid #0b5ed7;border-radius:999px;padding:10px 14px;text-align:center;margin:0 0 8px}
+.btn-sair{background:#dc2626;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer}
+.card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-top:10px;line-height:1.7;font-size:14px}
+.msg-prep{background:#dcfce7;border:2px solid #16a34a;padding:14px;border-radius:12px;text-align:center;margin-top:12px;font-weight:800}
+.msg-recebido{background:#e0e7ff;border:2px solid #4338ca;padding:14px;border-radius:12px;text-align:center;margin-top:12px;font-weight:800}
+.msg-entregue{background:#dcfce7;border:2px solid #16a34a;padding:14px;border-radius:12px;text-align:center;margin-top:12px;font-weight:800}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700}
+.badge-novo{background:#dbeafe;color:#1e40af}
+.badge-prep{background:#fef3c7;color:#92400e}
+.badge-recebido{background:#e0e7ff;color:#3730a3}
+.badge-entregue{background:#dcfce7;color:#166534}
+/* ENVELOPE - SÓ CLIENTE - CANTO ESQUERDO A FLUTUAR */
+#btnEnvelope{position:fixed;left:14px;bottom:20px;z-index:9999;width:66px;height:66px;border-radius:50%;background:#0b5ed7;color:#fff;border:3px solid #fff;box-shadow:0 4px 16px rgba(0,0,0,.4);font-size:30px;cursor:pointer;display:none;align-items:center;justify-content:center;animation:flutuarEnv 2s ease-in-out infinite}
+@keyframes flutuarEnv{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+#badgeEnvelope{position:absolute;top:-4px;right:-4px;background:#dc2626;color:#fff;min-width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;border:2px solid #fff}
+#modalEnvelope{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:none;align-items:center;justify-content:center;padding:20px}
+#modalEnvelope.aberto{display:flex}
+.modal-env{background:#fff;width:100%;max-width:380px;border-radius:20px;overflow:hidden;max-height:90vh;overflow-y:auto}
+.env-topo{background:#0b5ed7;color:#fff;padding:16px;text-align:center}
+.env-msg{padding:14px;border-bottom:1px solid #eee}
+</style></head>
+<body>
+<div class="topo" id="topoSite"><div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>🔖 Meus Códigos</b></span></div><div style="display:flex;gap:8px"><a href="index.html">Loja →</a><button class="btn-sair" onclick="sairCliente()">🚪 Sair</button></div></div>
+
+<div class="caixa">
+  <h3>Os teus códigos ficam aqui 5 minutos</h3>
+  <p style="color:#666;font-size:13px;text-align:center">Depois de 5 minutos o código some sozinho.<br>Aponta o código antes.</p>
+  <div id="areaMensagemPreparacao"></div>
+  <div id="listaCodigos"></div>
+</div>
+
+<!-- ENVELOPE -->
+<button id="btnEnvelope" onclick="abrirEnvelope()">✉️<span id="badgeEnvelope">0</span></button>
+<div id="modalEnvelope" onclick="if(event.target.id==='modalEnvelope') fecharEnvelope()"><div class="modal-env">
+<div class="env-topo"><div style="font-size:36px">✉️</div><h3 style="margin:4px 0">Mensagens da Loja</h3></div>
+<div id="listaMensagens"></div>
+<div style="padding:14px"><button onclick="fecharEnvelope()" style="background:#dc2626;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800">❌ Fechar (X)</button><p style="font-size:12px;color:#666;text-align:center">Se fechares, o envelope volta em 2 minutos.</p></div>
+</div></div>
+
+<script>
+if(performance.getEntriesByType('navigation')[0]?.type === 'reload'){
+  localStorage.removeItem('cliente_casa_nova');
+}
+function sairCliente(){
+  if(!confirm('Queres mesmo sair?')) return;
+  localStorage.removeItem('cliente_casa_nova');
+  localStorage.removeItem('meus_codigos');
+  location.href = 'index.html';
+}
+let statusPorCodigo = {};
+
+// ===== ENVELOPE - LÓGICA CERTA =====
+let notificacoes = [];
+try{ notificacoes = JSON.parse(localStorage.getItem('notificacoes_casa_nova')||'[]'); }catch(e){ notificacoes=[]; }
+let timerReaparecer = null;
+function salvarNotif(){ localStorage.setItem('notificacoes_casa_nova', JSON.stringify(notificacoes)); }
+function textoEnvelope(status, codigo, nome){
+  nome = nome || 'Cliente';
+  if(status === 'Recebido') return `Olá ${nome}, nós recebemos o teu pagamento e agradecemos por você na nossa loja. Obrigado! ❤️`;
+  if(status === 'Em Preparação' || status === 'Aceite') return `Olá ${nome}, o teu pedido foi recebido e está a ser preparado.`;
+  if(status === 'Entregue') return `Olá ${nome}, o teu pedido foi finalizado. Já pagaste 100%. Obrigado por comprar na Casa Nova! 🎉`;
+  return `Olá ${nome}, recebemos o teu pedido ${codigo}.`;
+}
+function atualizarEnvelope(){
+  let naoLidas = notificacoes.filter(n=>!n.lida);
+  let btn = document.getElementById('btnEnvelope');
+  if(!naoLidas.length){ btn.style.display='none'; return; }
+  btn.style.display='flex';
+  document.getElementById('badgeEnvelope').textContent = naoLidas.length;
+}
+function abrirEnvelope(){
+  let box = document.getElementById('listaMensagens');
+  if(!notificacoes.length) box.innerHTML = '<p style="text-align:center;color:#666;padding:20px">Sem mensagens.</p>';
+  else box.innerHTML = notificacoes.slice().reverse().map(n=>`<div class="env-msg"><b>📦 Pedido ${n.codigo} - ${n.status}</b><br><span style="font-size:14px">${n.mensagem}</span><br><small style="color:#888">${new Date(n.quando).toLocaleString('pt-PT')}</small></div>`).join('');
+  document.getElementById('modalEnvelope').classList.add('aberto');
+  // NÃO marca como lida aqui. Só some quando carregar no X.
+}
+function fecharEnvelope(){
+  document.getElementById('modalEnvelope').classList.remove('aberto');
+  notificacoes = notificacoes.map(n=>({...n, lida:true}));
+  salvarNotif(); atualizarEnvelope();
+  // SÓ QUANDO FECHA COM X, volta em 2 minutos
+  clearTimeout(timerReaparecer);
+  timerReaparecer = setTimeout(()=>{
+    if(notificacoes.length){
+      notificacoes = notificacoes.map(n=>({...n, lida:false}));
+      salvarNotif(); atualizarEnvelope();
+    }
+  }, 120000);
+}
+function criarNotificacao(status, codigo, nome){
+  if(!['Recebido','Em Preparação','Aceite','Entregue'].includes(status)) return;
+  let ja = notificacoes.find(n=>n.codigo===codigo && n.status===status);
+  if(ja) return;
+  notificacoes.push({codigo:codigo, status:status, mensagem:textoEnvelope(status, codigo, nome), quando:new Date().toISOString(), lida:false});
+  salvarNotif(); atualizarEnvelope();
+}
+
+function badgeStatus(status){
+  let s=(status||'Novo').toLowerCase();
+  if(s.includes('entregue')) return '<span class="badge badge-entregue">✅ Entregue - Fatura recebida</span>';
+  if(s.includes('recebido')) return '<span class="badge badge-recebido">💙 Recebido - Pagamento Recebido</span>';
+  if(s.includes('prepar')||s.includes('aceite')) return '<span class="badge badge-prep">🔥 Em Preparação / Aceite</span>';
+  return '<span class="badge badge-novo">🆕 Novo - Aguarda resposta</span>';
+}
+function mostrarMensagem(status, codigo){
+  let area = document.getElementById('areaMensagemPreparacao');
+  let texto = '';
+  let classe = 'msg-prep';
+  let tituloBarra = '';
+  if(status === 'Recebido'){
+    classe = 'msg-recebido';
+    texto = `💙 Recebemos o teu pagamento - Pedido ${codigo}<br><small style="font-weight:400">Pagaste 100%. Só falta vires com o código para levantares e levares a fatura.</small>`;
+    tituloBarra = 'Recebemos o teu pagamento - Pedido '+codigo;
+  } else if(status === 'Em Preparação' || status === 'Aceite'){
+    classe = 'msg-prep';
+    texto = `🔥 Teu pedido ${codigo} está em Preparação / Aceite!<br><small style="font-weight:400">A loja já está a preparar.</small>`;
+    tituloBarra = 'Teu pedido '+codigo+' está em Preparação / Aceite!';
+  } else if(status === 'Entregue'){
+    classe = 'msg-entregue';
+    texto = `✅ Teu pedido ${codigo} foi Entregue!<br><small style="font-weight:400">Obrigado! Recebeste a tua fatura.</small>`;
+    tituloBarra = 'Teu pedido '+codigo+' foi Entregue!';
+  } else {
+    return;
+  }
+  // A mensagem da caixa NÃO some em 5 min. Só o código some.
+  area.innerHTML = `<div class="${classe}">${texto}</div>`;
+  if("Notification" in window && Notification.permission === "granted"){
+    try{ new Notification('✅ Casa Nova', {body: tituloBarra}); }catch(e){}
+  }
+}
+function renderizar(){
+  let meus = [];
+  try{ meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]'); }catch(e){}
+  let agora = Date.now();
+  meus = meus.filter(m => (agora - (m.criado_em||0)) < 5*60*1000);
+  localStorage.setItem('meus_codigos', JSON.stringify(meus));
+  let div = document.getElementById('listaCodigos');
+  if(!meus.length){
+    div.innerHTML = `<p style="color:#666;text-align:center">Nenhum código.<br>Os códigos somem depois de 5 minutos.<br><a href="index.html" style="color:#0b5ed7;font-weight:700">Fazer um pedido →</a></p>`;
+    return;
+  }
+  div.innerHTML = meus.map(m => {
+    let falta = 5*60*1000 - (agora - (m.criado_em||0));
+    let mm = Math.floor(falta/60000);
+    let ss = Math.floor((falta%60000)/1000);
+    let tempo = '0'+mm+':'+(ss<10?'0'+ss:ss);
+    let st = statusPorCodigo[m.codigo] || 'Novo';
+    return `
+    <div class="card">
+      <div style="text-align:center;background:#111;color:#fff;padding:12px;border-radius:10px"><small>TEU CÓDIGO</small><br><b style="font-size:24px;letter-spacing:2px">${m.codigo}</b><br><small style="color:#fbbf24">⏰ Some em ${tempo} - Escreve / faz print!</small></div>
+      <div style="text-align:center;margin-top:8px">${badgeStatus(st)}</div>
+      <div style="margin-top:10px">👤 ${m.nome||''}<br>📦 ${m.itens||''}<br>💰 Total: ${Number(m.total||0).toLocaleString()} Kz<br>✅ Pago: ${Number(m.pago||0).toLocaleString()} Kz<br>❗ Falta: ${Number(m.falta||0).toLocaleString()} Kz<br>🚚 ${m.tipo==='loja' ? 'Receber na Loja' : 'Entrega a Domicílio'}</div>
+    </div>
+  `}).join('');
+}
+function ligarTempoReal(){
+  try{
+    let meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]');
+    if(!meus.length) return;
+    if("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied"){
+      Notification.requestPermission();
+    }
+    meus.forEach(m=>{
+      db.channel('meu-pedido-'+m.codigo)
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'pedidos',filter:'codigo=eq.'+m.codigo}, payload=>{
+        let novo = payload.new.status || payload.new.estado || '';
+        statusPorCodigo[m.codigo] = novo;
+        renderizar();
+        if(novo === 'Recebido' || novo === 'Em Preparação' || novo === 'Aceite' || novo === 'Entregue'){
+          mostrarMensagem(novo, m.codigo);
+          criarNotificacao(novo, m.codigo, m.nome);
+        }
+      }).subscribe();
+    });
+    meus.forEach(async m=>{
+      try{
+        let r = await db.from('pedidos').select('status,estado').eq('codigo', m.codigo).maybeSingle();
+        if(r.data){
+          let st = r.data.status || r.data.estado || 'Novo';
+          statusPorCodigo[m.codigo] = st;
+          renderizar();
+          if(st === 'Recebido' || st === 'Em Preparação' || st === 'Aceite' || st === 'Entregue'){
+            mostrarMensagem(st, m.codigo);
+            criarNotificacao(st, m.codigo, m.nome);
+          }
+        }
+      }catch(e){}
+    });
+  }catch(e){ console.log(e); }
+}
+async function carregarLogoTopo(){
+  try{ let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle(); let logo=r.data?.logo_url; if(logo){ let img=document.getElementById('logoTopo'); img.src=logo; img.style.display='block'; document.getElementById('topoSite').classList.add('tem-logo'); } }catch(e){}
+}
+carregarLogoTopo();
+renderizar();
+ligarTempoReal();
+setInterval(renderizar, 1000);
+atualizarEnvelope();
+</script></body></html>

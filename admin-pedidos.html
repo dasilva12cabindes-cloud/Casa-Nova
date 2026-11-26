@@ -36,8 +36,6 @@ let notificacoes = [];
 try{ notificacoes = JSON.parse(localStorage.getItem('notificacoes_casa_nova')||'[]'); }catch(e){ notificacoes=[]; }
 let ultimoStatus = {};
 try{ ultimoStatus = JSON.parse(localStorage.getItem('casanova_status_pedidos')||'{}'); }catch(e){ ultimoStatus={}; }
-let primeiraVez = false;
-try{ primeiraVez = !localStorage.getItem('casanova_status_pedidos'); }catch(e){ primeiraVez=true; }
 let timerReaparecer = null;
 function salvarNotif(){ localStorage.setItem('notificacoes_casa_nova', JSON.stringify(notificacoes)); }
 function getMeusCodigos(){
@@ -76,19 +74,16 @@ function abrirEnvelope(){
 }
 function fecharEnvelope(){
   document.getElementById('modalEnvelope').classList.remove('aberto');
-  // Marca como lida quando abre e fecha com X
   notificacoes = notificacoes.map(n=>({...n, lida:true}));
   salvarNotif();
   atualizarEnvelope();
-  // Volta em 2 minutos mesmo que tenha fechado
   clearTimeout(timerReaparecer);
   timerReaparecer = setTimeout(()=>{
-    // Reaparece só se ainda houver notificações (para lembrar)
     if(notificacoes.length){
       notificacoes = notificacoes.map(n=>({...n, lida:false}));
       salvarNotif(); atualizarEnvelope();
     }
-  }, 120000); // 2 minutos = 120000ms
+  }, 120000);
 }
 async function carregar(){
   let codigos = getMeusCodigos().map(c=>c.codigo||c);
@@ -105,30 +100,21 @@ async function carregar(){
     return false;
   });
   meusPedidos = meus;
-  // Detecta mudança de status e cria notificação
-  if(!primeiraVez){
-    meus.forEach(p=>{
-      let antigo = ultimoStatus[p.codigo];
-      if(antigo && antigo !== p.status){
-        // Só cria se for Recebido / Preparação / Entregue
-        let s = (p.status||'').toLowerCase();
-        if(s.includes('recebido') || s.includes('prepar') || s.includes('aceite') || s.includes('entregue')){
-          let ja = notificacoes.find(n=>n.codigo===p.codigo && n.status===p.status);
-          if(!ja){
-            notificacoes.push({codigo:p.codigo, status:p.status, mensagem:textoMensagem(p), quando:new Date().toISOString(), lida:false});
-            salvarNotif();
-          }
-        }
+  // CORRIGIDO: cria envelope mesmo na primeira vez, se já está Recebido / Em Preparação
+  meus.forEach(p=>{
+    let antigo = ultimoStatus[p.codigo];
+    let s = (p.status||'').toLowerCase();
+    let mereceAviso = s.includes('recebido') || s.includes('prepar') || s.includes('aceite') || s.includes('entregue');
+    if(mereceAviso && antigo !== p.status){
+      let ja = notificacoes.find(n=>n.codigo===p.codigo && n.status===p.status);
+      if(!ja){
+        notificacoes.push({codigo:p.codigo, status:p.status, mensagem:textoMensagem(p), quando:new Date().toISOString(), lida:false});
+        salvarNotif();
       }
-      ultimoStatus[p.codigo]=p.status;
-    });
-    localStorage.setItem('casanova_status_pedidos', JSON.stringify(ultimoStatus));
-  } else {
-    // Primeira vez: guarda sem avisar, para não avisar de pedidos antigos
-    meus.forEach(p=>{ ultimoStatus[p.codigo]=p.status; });
-    localStorage.setItem('casanova_status_pedidos', JSON.stringify(ultimoStatus));
-    primeiraVez=false;
-  }
+    }
+    ultimoStatus[p.codigo]=p.status;
+  });
+  localStorage.setItem('casanova_status_pedidos', JSON.stringify(ultimoStatus));
   atualizarEnvelope();
   if(!meus.length){ document.getElementById('lista').innerHTML='<div class="caixa" style="text-align:center">Ainda não tens pedidos.<br><a href="index.html" style="color:#0b5ed7;font-weight:800">Voltar à Loja</a></div>'; return; }
   document.getElementById('lista').innerHTML = meus.map(p=>{

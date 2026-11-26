@@ -953,11 +953,20 @@ setTimeout(function(){
     try{ cliente = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(err){}
     var codigos = [];
     try{ codigos = JSON.parse(localStorage.getItem('meus_pedidos')||'[]'); }catch(err){}
-    var texto = 'Sem notificações. Vai a Meus Códigos e escreve teu código.';
-    if(codigos.length > 0){
-      texto = 'Olá ' + (cliente?cliente.nome||'':'') + ', o teu pedido <b>' + codigos.join(', ') + '</b> está a ser preparado.';
+        var texto = '';
+    var achadas = [];
+    document.querySelectorAll('div,p,li').forEach(function(d){
+      var t = d.textContent.trim();
+      if(t.includes('teu pedido foi recebido') && t.length < 250 && !achadas.includes(t)){
+        achadas.push(t);
+      }
+    });
+    if(achadas.length > 0){
+      texto = achadas.map(function(t){ return '📩 ' + t; }).join('<br><br>');
     } else if(cliente){
       texto = 'Olá ' + (cliente.nome||'') + ', ainda não tens pedido.';
+    } else {
+      texto = 'Sem notificações. Vai a Meus Códigos e escreve teu código.';
     }
     div.innerHTML = '<div style="background:#fff;width:100%;max-width:400px;border-radius:16px;padding:20px"><div style="display:flex;justify-content:space-between;align-items:center"><b>📩 Notificações</b><button onclick="document.getElementById(\'modalNovaEnvelope\').remove()" style="border:none;background:#eee;border-radius:50%;width:32px;height:32px;font-size:18px">✖</button></div><div style="margin-top:15px;background:#f0f7ff;padding:12px;border-radius:10px">' + texto + '</div><button onclick="document.getElementById(\'modalNovaEnvelope\').remove()" style="margin-top:15px;width:100%;padding:12px;border:none;background:#2563eb;color:#fff;border-radius:10px;font-weight:700">Fechar</button></div>';
     div.addEventListener('click', function(ev){ if(ev.target===div) div.remove(); });

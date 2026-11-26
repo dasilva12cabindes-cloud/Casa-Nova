@@ -889,5 +889,20 @@ setInterval(verificarStatusCliente, 10000);
 }
 </style>
 <a id="btnEnvelopeLoja" href="envelope.html">✉️<small>Mensagens</small></a>
+<script>
+// Badge de número no envelope
+(function(){
+  try{
+    var n = JSON.parse(localStorage.getItem('notificacoes_casa_nova')||'[]').length;
+    var btn = document.getElementById('btnEnvelopeLoja');
+    if(btn && n>0){
+      var b=document.createElement('span');
+      b.textContent=n;
+      b.style.cssText='position:absolute;top:-5px;right:-5px;background:red;color:#fff;font-size:12px;font-weight:bold;min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff';
+      btn.style.position='fixed'; btn.appendChild(b);
+    }
+  }catch(e){}
+})();
+</script>
 </body>
 </html>

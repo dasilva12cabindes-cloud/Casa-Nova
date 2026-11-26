@@ -939,40 +939,93 @@ setTimeout(mostrarEnvelopeLoja, 1500);
 setTimeout(function(){
   var btn = document.getElementById('btnEnvelopeLoja');
   if(!btn) return;
+
+  function temConfirmacao(){
+    // se já tem mensagem de pagamento confirmado, não volta a mostrar
+    var tudo = document.body.innerText || '';
+    return tudo.toLowerCase().includes('pagamento confirmado') || tudo.toLowerCase().includes('pedido confirmado') || tudo.toLowerCase().includes('pagamento aceite');
+  }
+
+  function temNotificacao(){
+    var achadas = [];
+    document.querySelectorAll('div,p,li,span').forEach(function(d){
+      var t = d.textContent.trim();
+      if(t.includes('teu pedido foi recebido') && t.length < 130){
+        var limpo = t.replace(/📩|✉️|🔔|📬|📨/g,'').replace(/Notificações/g,'').replace(/Fechar/g,'').replace(/\s+/g,' ').trim();
+        if(limpo && !achadas.includes(limpo)) achadas.push(limpo);
+      }
+    });
+    return achadas;
+  }
+
+  function mostrarEnvelope(){
+    btn.style.display = 'flex';
+    var badge = document.getElementById('badgeEnvelopeLoja');
+    if(badge) badge.style.display = 'flex';
+  }
+  function esconderEnvelope(){
+    btn.style.display = 'none';
+    var badge = document.getElementById('badgeEnvelopeLoja');
+    if(badge) badge.style.display = 'none';
+  }
+
+  function fecharEsumir(){
+    var m = document.getElementById('modalNovaEnvelope');
+    if(m) m.remove();
+    // marcou como lida agora, envelope some
+    try{ localStorage.setItem('envelope_lido_em', Date.now().toString()); }catch(e){}
+    esconderEnvelope();
+  }
+
+  // se nunca abriu, envelope fica sempre. Se já abriu, só volta depois de 2 min
+  function verificarVolta(){
+    var lidoEm = 0;
+    try{ lidoEm = parseInt(localStorage.getItem('envelope_lido_em')||'0'); }catch(e){}
+    var notificacoes = temNotificacao();
+    if(notificacoes.length === 0) return;
+    if(temConfirmacao()){ esconderEnvelope(); return; }
+    if(!lidoEm){
+      // nunca abriu -> não some nunca
+      mostrarEnvelope();
+      return;
+    }
+    var passou = Date.now() - lidoEm;
+    if(passou > 2*60*1000){
+      // passaram 2 min e admin ainda não confirmou -> volta
+      mostrarEnvelope();
+    }
+  }
+
+  // verifica a cada 10 segundos se já passaram 2 min
+  setInterval(verificarVolta, 10000);
+  verificarVolta();
+
   btn.addEventListener('click', function(e){
     e.preventDefault();
     e.stopPropagation();
-    // apaga janelinha antiga se existir
     var velha = document.getElementById('modalNovaEnvelope');
     if(velha) velha.remove();
-    // cria janelinha nova à força
     var div = document.createElement('div');
     div.id = 'modalNovaEnvelope';
     div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999999999;display:flex;align-items:center;justify-content:center;padding:20px;';
     var cliente = null;
     try{ cliente = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(err){}
-    var codigos = [];
-    try{ codigos = JSON.parse(localStorage.getItem('meus_pedidos')||'[]'); }catch(err){}
-        var texto = '';
-    var achadas = [];
-    document.querySelectorAll('div,p,li').forEach(function(d){
-      var t = d.textContent.trim();
-      if(t.includes('teu pedido foi recebido') && t.length < 250 && !achadas.includes(t)){
-        achadas.push(t);
-      }
-    });
+    var achadas = temNotificacao();
+    var texto = '';
     if(achadas.length > 0){
-      texto = achadas.map(function(t){ return '📩 ' + t; }).join('<br><br>');
+      texto = achadas.map(function(t){
+        return '<div style="background:#f0f7ff;padding:12px;border-radius:10px;margin-bottom:10px;line-height:1.4">' + t + '</div>';
+      }).join('');
     } else if(cliente){
       texto = 'Olá ' + (cliente.nome||'') + ', ainda não tens pedido.';
     } else {
       texto = 'Sem notificações. Vai a Meus Códigos e escreve teu código.';
     }
-    div.innerHTML = '<div style="background:#fff;width:100%;max-width:400px;border-radius:16px;padding:20px"><div style="display:flex;justify-content:space-between;align-items:center"><b>📩 Notificações</b><button onclick="document.getElementById(\'modalNovaEnvelope\').remove()" style="border:none;background:#eee;border-radius:50%;width:32px;height:32px;font-size:18px">✖</button></div><div style="margin-top:15px;background:#f0f7ff;padding:12px;border-radius:10px">' + texto + '</div><button onclick="document.getElementById(\'modalNovaEnvelope\').remove()" style="margin-top:15px;width:100%;padding:12px;border:none;background:#2563eb;color:#fff;border-radius:10px;font-weight:700">Fechar</button></div>';
-    div.addEventListener('click', function(ev){ if(ev.target===div) div.remove(); });
+    div.innerHTML = '<div style="background:#fff;width:100%;max-width:400px;border-radius:16px;padding:20px"><div style="display:flex;justify-content:space-between;align-items:center"><b>Notificações</b><button id="btnFecharX" style="border:none;background:#eee;border-radius:50%;width:32px;height:32px;font-size:18px">✖</button></div><div style="margin-top:15px">' + texto + '</div><button id="btnFecharBaixo" style="margin-top:15px;width:100%;padding:12px;border:none;background:#2563eb;color:#fff;border-radius:10px;font-weight:700">Fechar</button></div>';
+    div.addEventListener('click', function(ev){ if(ev.target===div) fecharEsumir(); });
     document.body.appendChild(div);
-    var badge = document.getElementById('badgeEnvelopeLoja');
-    if(badge) badge.style.display='none';
+    document.getElementById('btnFecharX').addEventListener('click', fecharEsumir);
+    document.getElementById('btnFecharBaixo').addEventListener('click', fecharEsumir);
   });
 }, 1000);
 </script>

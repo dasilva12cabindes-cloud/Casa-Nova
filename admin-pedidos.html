@@ -1,311 +1,154 @@
 <!DOCTYPE html>
 <html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pedidos - Casa Nova</title>
+<title>Meus Pedidos - Casa Nova</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
-<style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
-.topo{background:#0b5ed7;color:#fff;padding:8px 12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;height:72px}
-.topo .logo{display:flex;align-items:center;gap:8px}
-.topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
-.topo.tem-logo .logo-text{display:none}
+<style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px;padding-bottom:100px}
+.topo{background:#0b5ed7;color:#fff;padding:12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
-@keyframes logoZoom{
-  0%{transform:scale(0.7) translateY(0) rotate(0deg)}
-  25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
-  40%{transform:scale(1.45) translateY(0) rotate(0deg)}
-  48%{transform:scale(1.45) translateY(0) rotate(-6deg)}
-  56%{transform:scale(1.45) translateY(0) rotate(6deg)}
-  64%{transform:scale(1.45) translateY(0) rotate(-5deg)}
-  72%{transform:scale(1.45) translateY(0) rotate(4deg)}
-  80%{transform:scale(1.25) translateY(4px) rotate(0deg)}
-  88%{transform:scale(1.08) translateY(-3px) rotate(0deg)}
-  94%{transform:scale(0.96) translateY(2px) rotate(0deg)}
-  100%{transform:scale(1) translateY(0) rotate(0deg)}
-}
 .caixa{background:#fff;padding:14px;border-radius:12px;margin-top:12px}
-.caixa h3{background:#eff6ff;border:2px solid #0b5ed7;border-radius:999px;padding:10px 14px;text-align:center;margin:0 0 8px}
-.btn{border:0;padding:12px;border-radius:8px;width:100%;font-weight:700;cursor:pointer;font-size:14px}
-.btn-azul{background:#0b5ed7;color:#fff}
-.btn-verde{background:#16a34a;color:#fff}
-.btn-laranja{background:#f59e0b;color:#111}
-.btn-cinza{background:#e5e7eb;color:#111}
-.btn-vermelho{background:#dc2626;color:#fff}
 .card-pedido{background:#fff;padding:14px;border-radius:12px;margin-top:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700}
-.badge-novo{background:#dbeafe;color:#1e40af}
-.badge-recebido{background:#e0e7ff;color:#3730a3}
-.badge-aceite{background:#fef3c7;color:#92400e}
-.badge-entregue{background:#dcfce7;color:#166534}
-.badge-cancelado{background:#fee2e2;color:#991b1b}
-#toast{position:fixed;top:12px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:14px 18px;border-radius:14px;z-index:9999;font-weight:700;max-width:92%;text-align:center;transition:.35s;opacity:0;pointer-events:none}
-#toast.mostrar{transform:translateX(-50%) translateY(0);opacity:1}
-#toast.sucesso{background:#16a34a}
-#toast.erro{background:#dc2626}
-.modal-fundo{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:5000;display:none;align-items:center;justify-content:center;padding:20px}
-.modal-fundo.aberto{display:flex}
-.modal-box{background:#fff;width:100%;max-width:380px;border-radius:20px;padding:22px;text-align:center;max-height:90vh;overflow-y:auto}
-.modal-box input{width:100%;padding:14px;border:2px solid #0b5ed7;border-radius:10px;margin:12px 0;font-size:18px;text-align:center;font-weight:800;letter-spacing:2px;text-transform:uppercase;box-sizing:border-box}
-.modal-fatura{padding:10px}
-.modal-fatura .modal-box{max-width:420px;padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:92vh}
-.fatura-topo{position:sticky;top:0;z-index:10;background:#111;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
-.fatura-topo button{background:#fff;color:#111;border:0;width:36px;height:36px;border-radius:50%;font-size:18px;font-weight:900;cursor:pointer;flex-shrink:0}
-.fatura-conteudo{overflow-y:auto;flex:1}
-.fatura-rodape{position:sticky;bottom:0;background:#fff;padding:12px;display:flex;gap:8px;border-top:1px solid #eee;flex-shrink:0}
+.badge-novo{background:#dbeafe;color:#1e40af}.badge-prep{background:#fef3c7;color:#92400e}.badge-rec{background:#e0e7ff;color:#3730a3}.badge-ent{background:#dcfce7;color:#166534}.badge-canc{background:#fee2e2;color:#991b1b}
+#btnEnvelope{position:fixed;left:14px;bottom:20px;z-index:9999;width:66px;height:66px;border-radius:50%;background:#0b5ed7;color:#fff;border:3px solid #fff;box-shadow:0 4px 16px rgba(0,0,0,.4);font-size:30px;cursor:pointer;display:none;align-items:center;justify-content:center;animation:flutuarEnv 2s ease-in-out infinite}
+@keyframes flutuarEnv{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+#badgeEnvelope{position:absolute;top:-4px;right:-4px;background:#dc2626;color:#fff;min-width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;border:2px solid #fff}
+#modalEnvelope{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:none;align-items:center;justify-content:center;padding:20px}
+#modalEnvelope.aberto{display:flex}
+.modal-env{background:#fff;width:100%;max-width:380px;border-radius:20px;overflow:hidden;max-height:90vh;overflow-y:auto}
+.env-topo{background:#0b5ed7;color:#fff;padding:16px;text-align:center}
+.env-msg{padding:14px;border-bottom:1px solid #eee}
 </style></head>
 <body>
-<div id="toast"></div>
-<div class="topo" id="topoSite"><div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>Casa Nova</b></span></div><a href="admin.html">← Voltar</a></div>
-
-<div class="caixa">
-<h3>📦 Pedidos Recebidos</h3>
-<p style="color:#666;font-size:13px;text-align:center">Aqui aparecem todos os pedidos que os clientes fazem no carrinho.<br>Para confirmar se está em <b>Preparação</b> ou <b>Recebido</b>, clica em <b>🧾 Ver Fatura</b> em cada pedido.</p>
-<div id="contadorNovos" style="background:#fef3c7;border:2px solid #f59e0b;border-radius:12px;padding:12px;text-align:center;font-weight:800;margin:10px 0;display:none">🆕 Pedidos Novos: <span id="numNovos">0</span> - Aguarda tua confirmação</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-<button class="btn btn-verde" onclick="location.href='admin-vendas.html'">💰 Ver Vendas do Dia →</button>
-<button class="btn btn-azul" onclick="carregar()">🔄 Atualizar</button>
-</div>
-</div>
-
-<div id="lista"><p style="text-align:center;color:#888">A carregar pedidos...</p></div>
-
-<!-- MODAL FINALIZAR COM CÓDIGO -->
-<div id="modalCodigo" class="modal-fundo" onclick="if(event.target.id==='modalCodigo') fecharModalCodigo()"><div class="modal-box">
-<div style="font-size:40px">🔖</div>
-<h3 style="margin:8px 0">Finalizar Entrega com Código</h3>
-<p style="color:#666;font-size:13px;margin:0">Pedido: <b id="codigoPedidoModal">-</b><br>Cliente apresentou o código? Escreve aqui.<br>Se estiver certo, fica <b>Entregue automático</b> e ele leva fatura.</p>
-<input id="inputCodigoConfirmar" placeholder="CN-XXXXXX">
-<p id="erroCodigo" style="color:#dc2626;font-size:13px;display:none"></p>
-<button class="btn btn-verde" onclick="confirmarComCodigo()">✅ Confirmar Código - Entregar Automático</button>
-<button class="btn btn-cinza" style="margin-top:8px" onclick="fecharModalCodigo()">Cancelar</button>
+<div class="topo"><b>🏠 Casa Nova</b><a href="index.html">← Voltar à Loja</a></div>
+<div class="caixa"><h3 style="text-align:center;margin:0">🔖 Meus Códigos / Pedidos</h3><p style="text-align:center;color:#666;font-size:13px">O teu código fica visível só 5 minutos. Aponta num caderno!</p></div>
+<div id="lista"><p style="text-align:center;color:#888">A carregar...</p></div>
+<button id="btnEnvelope" onclick="abrirEnvelope()">✉️<span id="badgeEnvelope">0</span></button>
+<div id="modalEnvelope" onclick="if(event.target.id==='modalEnvelope') fecharEnvelope()"><div class="modal-env">
+<div class="env-topo"><div style="font-size:36px">✉️</div><h3 style="margin:4px 0">Mensagens da Loja</h3></div>
+<div id="listaMensagens"></div>
+<div style="padding:14px"><button onclick="fecharEnvelope()" style="background:#dc2626;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800">❌ Fechar (X)</button><p style="font-size:12px;color:#666;text-align:center">Se fechares, o envelope volta em 2 minutos para te lembrar.</p></div>
 </div></div>
-
-<!-- MODAL FATURA - COM X EM CIMA PARA SAIR NO TELEMÓVEL -->
-<div id="modalFatura" class="modal-fundo modal-fatura" onclick="if(event.target.id==='modalFatura') fecharFatura()"><div class="modal-box">
-<div class="fatura-topo"><b>🧾 Fatura - Casa Nova</b><button onclick="fecharFatura()">❌</button></div>
-<div class="fatura-conteudo"><div id="conteudoFatura" style="background:#fff"></div></div>
-<div class="fatura-rodape">
-<button class="btn btn-azul" onclick="window.print()">🖨️ Imprimir</button>
-<button class="btn btn-cinza" onclick="fecharFatura()">❌ Fechar</button>
-</div>
-</div></div>
-
 <script>
-// 🛑 EU SOU ADMIN - NÃO SOU VISITANTE / CLIENTE ONLINE
-localStorage.setItem('eu_sou_admin','1');
-localStorage.setItem('admin_casa_nova','1');
-// Tira-me logo da lista de quem está online se eu já lá estava como Visitante
-(async function limparAdminDoOnline(){
-  try{
-    let meuId = localStorage.getItem('meu_id_online');
-    if(meuId){
-      await db.from('presenca').delete().eq('cliente_id', meuId);
+let meusPedidos = [];
+let notificacoes = [];
+try{ notificacoes = JSON.parse(localStorage.getItem('notificacoes_casa_nova')||'[]'); }catch(e){ notificacoes=[]; }
+let ultimoStatus = {};
+try{ ultimoStatus = JSON.parse(localStorage.getItem('casanova_status_pedidos')||'{}'); }catch(e){ ultimoStatus={}; }
+let primeiraVez = false;
+try{ primeiraVez = !localStorage.getItem('casanova_status_pedidos'); }catch(e){ primeiraVez=true; }
+let timerReaparecer = null;
+function salvarNotif(){ localStorage.setItem('notificacoes_casa_nova', JSON.stringify(notificacoes)); }
+function getMeusCodigos(){
+  let arr = [];
+  try{ arr = JSON.parse(localStorage.getItem('meus_codigos')||'[]'); }catch(e){}
+  try{ let v = JSON.parse(localStorage.getItem('meus_pedidos')||'[]'); arr = [...arr, ...v]; }catch(e){}
+  let ult = localStorage.getItem('ultimo_pedido_codigo'); if(ult) arr.push({codigo:ult});
+  return arr;
+}
+function textoMensagem(p){
+  let nome = p.nome_cliente||p.nome||'Cliente';
+  let tipo = (p.tipo_entrega||'').toLowerCase();
+  let status = (p.status||'').toLowerCase();
+  if(status.includes('recebido')) return `Olá ${nome}, nós recebemos o teu pagamento e agradecemos por você na nossa loja. Obrigado! ❤️`;
+  if(status.includes('prepar') || status.includes('aceite')){
+    if(tipo==='loja') return `Olá ${nome}, nós recebemos o teu pagamento e agradecemos por você na nossa loja. O teu pedido está a ser preparado para levantamento.`;
+    return `Olá ${nome}, o teu pedido foi recebido e está a ser preparado. Vamos avisar quando sair para entrega. 🛵`;
+  }
+  if(status.includes('entregue')) return `Olá ${nome}, o teu pedido foi entregue. Obrigado por comprar na Casa Nova! Já pagaste 100%. 🎉`;
+  if(status.includes('cancel')) return `Olá ${nome}, o teu pedido foi cancelado. Fala connosco no WhatsApp.`;
+  return `Olá ${nome}, recebemos o teu pedido ${p.codigo||''}. Estamos a verificar.`;
+}
+function atualizarEnvelope(){
+  let naoLidas = notificacoes.filter(n=>!n.lida);
+  let btn = document.getElementById('btnEnvelope');
+  let badge = document.getElementById('badgeEnvelope');
+  if(!naoLidas.length){ btn.style.display='none'; return; }
+  btn.style.display='flex';
+  badge.textContent = naoLidas.length;
+}
+function abrirEnvelope(){
+  let box = document.getElementById('listaMensagens');
+  if(!notificacoes.length) box.innerHTML = '<p style="text-align:center;color:#666;padding:20px">Sem mensagens.</p>';
+  else box.innerHTML = notificacoes.slice().reverse().map(n=>`<div class="env-msg"><b>📦 Pedido ${n.codigo} - ${n.status}</b><br><span style="font-size:14px">${n.mensagem}</span><br><small style="color:#888">${new Date(n.quando).toLocaleString('pt-PT')}</small></div>`).join('');
+  document.getElementById('modalEnvelope').classList.add('aberto');
+}
+function fecharEnvelope(){
+  document.getElementById('modalEnvelope').classList.remove('aberto');
+  // Marca como lida quando abre e fecha com X
+  notificacoes = notificacoes.map(n=>({...n, lida:true}));
+  salvarNotif();
+  atualizarEnvelope();
+  // Volta em 2 minutos mesmo que tenha fechado
+  clearTimeout(timerReaparecer);
+  timerReaparecer = setTimeout(()=>{
+    // Reaparece só se ainda houver notificações (para lembrar)
+    if(notificacoes.length){
+      notificacoes = notificacoes.map(n=>({...n, lida:false}));
+      salvarNotif(); atualizarEnvelope();
     }
-  }catch(e){}
-})();
-let toastTimer;
-let pedidoParaFinalizar = null;
-let listaAtual = [];
-function aviso(msg,tipo){let t=document.getElementById('toast');t.textContent=msg;t.className='mostrar '+(tipo||'sucesso');clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='';},3000);}
-async function carregarLogoTopo(){
-  try{let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();let logo=r.data?.logo_url;if(logo){let img=document.getElementById('logoTopo');img.src=logo;img.style.display='block';document.getElementById('topoSite').classList.add('tem-logo');}}catch(e){}
-}
-function badge(status){
-  let s=(status||'Novo').toLowerCase();
-  if(s.includes('entregue')) return '<span class="badge badge-entregue">✅ Entregue</span>';
-  if(s.includes('recebido')) return '<span class="badge badge-recebido">💙 Recebido - Pagamento Recebido</span>';
-  if(s.includes('aceite')||s.includes('prepar')) return '<span class="badge badge-aceite">🔥 '+status+'</span>';
-  if(s.includes('cancel')) return '<span class="badge badge-cancelado">❌ Cancelado</span>';
-  return '<span class="badge badge-novo">🆕 Novo</span>';
-}
-function atualizarContador(){
-  let novos = listaAtual.filter(p=> (p.status||p.estado||'Novo') === 'Novo').length;
-  let c = document.getElementById('contadorNovos');
-  let n = document.getElementById('numNovos');
-  if(n) n.textContent = novos;
-  if(c) c.style.display = novos > 0 ? 'block' : 'none';
+  }, 120000); // 2 minutos = 120000ms
 }
 async function carregar(){
-  let lista=[]; let tabela='pedidos';
-  let r=await db.from('pedidos').select('*').order('created_at',{ascending:false});
-  if(r.error){
-    let r2=await db.from('encomendas').select('*').order('created_at',{ascending:false});
-    if(!r2.error){ lista=r2.data||[]; tabela='encomendas'; }
-    else { document.getElementById('lista').innerHTML='<div class="caixa" style="text-align:center">Ainda não tens pedidos.<br><small style="color:#888">Quando um cliente fizer pedido no carrinho, aparece aqui.</small></div>'; return; }
-  } else lista=r.data||[];
-  listaAtual = lista;
-  atualizarContador();
-  if(!lista.length){ document.getElementById('lista').innerHTML='<div class="caixa" style="text-align:center">Nenhum pedido ainda.</div>'; return; }
-  document.getElementById('lista').innerHTML=lista.map(p=>{
-    let nome=p.nome_cliente||p.cliente_nome||p.nome||'Cliente';
-    let tel=p.telefone||p.whatsapp||'';
-    let morada=p.morada||p.endereco||p.localizacao||'';
-    let total=Number(p.total||p.valor_total||p.preco_total||0);
-    let pago=Number(p.valor_pago||p.pago||0);
-    if(!pago){ let tipo = p.tipo_entrega||''; pago = (tipo==='loja') ? total : Math.round(total/2); }
-    let falta = total - pago;
-    let pagouTudo = pago >= total;
-    let status=p.status||p.estado||'Novo';
-    let codigo=p.codigo||'';
-    let data=(p.created_at||'').slice(0,10).split('-').reverse().join('/')+' '+(p.created_at||'').slice(11,16);
-    let itens='';
-    try{
-      let it=p.itens||p.produtos||p.items||p.detalhes;
-      if(typeof it==='string') it=JSON.parse(it);
-      if(Array.isArray(it)) itens=it.map(i=>`• ${i.nome||i.produto||'Produto'} x${i.qtd||i.quantidade||1}`).join('<br>');
-      else if(it) itens=it;
-    }catch(e){}
-    let isNovo = status === 'Novo';
-    let isRecebidoOuPrep = ['Recebido','Em Preparação','Aceite'].includes(status);
-    let isEntregue = status === 'Entregue';
-    let waMsg=encodeURIComponent('Olá '+nome+', recebemos o teu pedido na Casa Nova de '+total.toLocaleString()+' Kz. Obrigado!');
-    let botoesAcao = '';
-    if(isNovo){
-      if(pagouTudo){
-        botoesAcao = `<button class="btn" style="background:#4338ca;color:#fff" onclick="marcarRecebido(${p.id})">💙 Recebido - Pagamento Recebido</button>
-        <p style="font-size:12px;color:#666;text-align:center;margin:6px 0">Pagou 100% (${total.toLocaleString()} Kz). Quando ele vier com o código, finalizas em baixo.</p>`;
-      } else {
-        botoesAcao = `<button class="btn btn-laranja" onclick="marcarPreparacao(${p.id})">🔥 Em Preparação / Aceite</button>
-        <p style="font-size:12px;color:#666;text-align:center;margin:6px 0">Pagou 50% (${pago.toLocaleString()} Kz). Falta: ${falta.toLocaleString()} Kz. Estamos a preparar.</p>`;
-      }
-    } else if(isRecebidoOuPrep){
-      botoesAcao = `<div style="background:#dcfce7;border:1px solid #16a34a;border-radius:8px;padding:10px;text-align:center;font-size:13px">✅ Cliente já foi avisado: <b>${status}</b><br>Agora espera ele vir com o código para finalizar.</div>`;
-      if(pagouTudo && status==='Em Preparação'){
-        botoesAcao += `<button class="btn" style="background:#fff7ed;color:#92400e;margin-top:8px;border:1px solid #f59e0b" onclick="marcarRecebido(${p.id})">🔄 Corrigir para Recebido (Pagou 100%)</button>`;
-      }
-      if(!pagouTudo && status==='Recebido'){
-        botoesAcao += `<button class="btn btn-laranja" style="margin-top:8px" onclick="marcarPreparacao(${p.id})">🔄 Corrigir para Em Preparação (Pagou 50%)</button>`;
-      }
+  let codigos = getMeusCodigos().map(c=>c.codigo||c);
+  let cliente = null; try{ cliente = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
+  let meuTel = cliente ? String(cliente.telefone||'').replace(/\D/g,'').slice(-9) : '';
+  let r = await db.from('pedidos').select('*').order('created_at',{ascending:false}).limit(20);
+  let lista = r.data||[];
+  let meus = lista.filter(p=>{
+    if(codigos.includes(p.codigo)) return true;
+    if(meuTel){
+      let tp = String(p.telefone||'').replace(/\D/g,'').slice(-9);
+      if(tp && tp===meuTel) return true;
     }
-    let botaoFinalizar = '';
-    if(!isEntregue && (isRecebidoOuPrep || isNovo)){
-      botaoFinalizar = `<button class="btn btn-verde" style="margin-top:8px" onclick="abrirModalCodigo(${p.id},'${codigo}')">📦 Finalizar Entrega com Código - Fica Entregue Automático</button>`;
-    }
-    if(isEntregue){
-      botaoFinalizar = `<div style="background:#dcfce7;border-radius:8px;padding:10px;text-align:center;font-weight:800;margin-top:8px">✅ Entregue - Fatura entregue ao cliente</div>`;
-    }
+    return false;
+  });
+  meusPedidos = meus;
+  // Detecta mudança de status e cria notificação
+  if(!primeiraVez){
+    meus.forEach(p=>{
+      let antigo = ultimoStatus[p.codigo];
+      if(antigo && antigo !== p.status){
+        // Só cria se for Recebido / Preparação / Entregue
+        let s = (p.status||'').toLowerCase();
+        if(s.includes('recebido') || s.includes('prepar') || s.includes('aceite') || s.includes('entregue')){
+          let ja = notificacoes.find(n=>n.codigo===p.codigo && n.status===p.status);
+          if(!ja){
+            notificacoes.push({codigo:p.codigo, status:p.status, mensagem:textoMensagem(p), quando:new Date().toISOString(), lida:false});
+            salvarNotif();
+          }
+        }
+      }
+      ultimoStatus[p.codigo]=p.status;
+    });
+    localStorage.setItem('casanova_status_pedidos', JSON.stringify(ultimoStatus));
+  } else {
+    // Primeira vez: guarda sem avisar, para não avisar de pedidos antigos
+    meus.forEach(p=>{ ultimoStatus[p.codigo]=p.status; });
+    localStorage.setItem('casanova_status_pedidos', JSON.stringify(ultimoStatus));
+    primeiraVez=false;
+  }
+  atualizarEnvelope();
+  if(!meus.length){ document.getElementById('lista').innerHTML='<div class="caixa" style="text-align:center">Ainda não tens pedidos.<br><a href="index.html" style="color:#0b5ed7;font-weight:800">Voltar à Loja</a></div>'; return; }
+  document.getElementById('lista').innerHTML = meus.map(p=>{
+    let total=Number(p.total||0); let pago=Number(p.valor_pago||0);
+    if(!pago) pago = (p.tipo_entrega==='loja') ? total : Math.round(total/2);
+    let falta = total-pago; let pagouTudo = pago>=total;
+    let s=(p.status||'Novo').toLowerCase();
+    let badgeCls = s.includes('entregue')?'badge-ent':s.includes('recebido')?'badge-rec':s.includes('prepar')||s.includes('aceite')?'badge-prep':s.includes('cancel')?'badge-canc':'badge-novo';
+    let agora = Date.now();
+    let criado = new Date(p.created_at||Date.now()).getTime();
+    let mostraCodigo = (agora-criado) < 5*60*1000;
     return `<div class="card-pedido">
-      <div style="display:flex;justify-content:space-between"><b>${nome}</b>${badge(status)}</div>
-      <div style="color:#666;font-size:13px;margin:4px 0">${data} • ${tel}<br>${morada}</div>
-      ${codigo ? `<div style="background:#fef3c7;border:1px dashed #f59e0b;border-radius:8px;padding:8px;text-align:center;margin:6px 0">🔖 <b>Código: ${codigo}</b></div>` : ''}
-      ${isNovo ? `<div style="background:#fff7ed;border:1px solid #f97316;border-radius:8px;padding:8px;font-size:13px;text-align:center">📰 <b>NOVO PEDIDO - Aguarda tua confirmação</b></div>` : ''}
-      <div style="font-size:14px;margin-top:6px">${itens}</div>
-      <div style="font-weight:800;color:#0b5ed7;margin:8px 0">Total: ${total.toLocaleString()} Kz<br><span style="color:#16a34a;font-size:13px">Pago: ${pago.toLocaleString()} Kz</span> <span style="color:#dc2626;font-size:13px">• Falta: ${falta.toLocaleString()} Kz</span><br><span style="font-size:12px;color:#666">${pagouTudo ? '💙 Pagou 100% - Levantamento na Loja' : '🚚 Pagou 50% - Entrega a Domicílio'}</span></div>
-      ${botoesAcao}
-      ${botaoFinalizar}
-      <button class="btn" style="background:#e0e7ff;color:#3730a3;margin-top:8px" onclick="abrirFatura(${p.id})">🧾 Ver Fatura - Confirmar se está em Preparação ou Recebido</button>
-      <button class="btn btn-vermelho" style="margin-top:8px;background:#fee2e2;color:#991b1b" onclick="cancelarPedido(${p.id})">❌ Cancelar Pedido</button>
-      <button class="btn btn-verde" style="margin-top:8px" onclick="window.open('https://wa.me/${String(tel||'').replace(/[^0-9]/g,'')}?text=${waMsg}','_blank')">💬 Falar no WhatsApp</button>
+      <div style="display:flex;justify-content:space-between"><b>${p.nome_cliente||'Cliente'}</b><span class="badge ${badgeCls}">${p.status}</span></div>
+      ${mostraCodigo ? `<div style="background:#fef3c7;border:1px dashed #f59e0b;border-radius:8px;padding:10px;text-align:center;margin:8px 0">🔖 <b>Código: ${p.codigo}</b><br><small>Aponta! Some em 5 minutos</small></div>` : `<div style="background:#eee;border-radius:8px;padding:8px;text-align:center;font-size:13px;color:#666">🔖 Código escondido após 5 min - Já apontaste?</div>`}
+      <div style="font-size:14px">Total: <b>${total.toLocaleString()} Kz</b><br>Pago: <b style="color:#16a34a">${pago.toLocaleString()} Kz</b> • Falta: <b style="color:#dc2626">${falta.toLocaleString()} Kz</b><br>${pagouTudo ? '✅ <b>PAGO 100% - PAGO POR COMPLETO</b>' : '💰 Pagou 50% - Falta pagar na entrega'}</div>
+      <div style="font-size:13px;color:#666;margin-top:6px">${p.morada||''}</div>
     </div>`;
   }).join('');
 }
-function abrirFatura(id){
-  let p = listaAtual.find(x=>x.id==id);
-  if(!p) return;
-  let nome=p.nome_cliente||p.cliente_nome||p.nome||'Cliente';
-  let tel=p.telefone||p.whatsapp||'';
-  let email=p.email||'';
-  let morada=p.morada||p.endereco||p.localizacao||'';
-  let total=Number(p.total||0);
-  let pago=Number(p.valor_pago||p.pago||0);
-  if(!pago){ let tipo=p.tipo_entrega||''; pago = (tipo==='loja') ? total : Math.round(total/2); }
-  let falta = total - pago;
-  let pagouTudo = pago >= total;
-  let status=p.status||p.estado||'Novo';
-  let codigo=p.codigo||'';
-  let tipo = p.tipo_entrega || (pagouTudo ? 'loja' : 'entrega');
-  let pagamento = p.pagamento || 'PayPay';
-  let data=(p.created_at||'').slice(0,10).split('-').reverse().join('/')+' '+(p.created_at||'').slice(11,16);
-  let linhas='';
-  try{
-    let it=p.itens||p.produtos||p.items||p.detalhes;
-    if(typeof it==='string') it=JSON.parse(it);
-    if(Array.isArray(it)) linhas=it.map(i=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee"><span>${i.nome||i.produto||'Produto'} x${i.qtd||i.quantidade||1}</span><b>${Number(i.preco||0).toLocaleString()} Kz</b></div>`).join('');
-    else if(it) linhas=it;
-  }catch(e){}
-  let seloStatus = '';
-  if(status==='Entregue') seloStatus = '<div style="background:#dcfce7;border:2px solid #16a34a;color:#166534;padding:10px;border-radius:10px;text-align:center;font-weight:800;margin-top:10px">✅ ENTREGUE - FATURA ENTREGUE AO CLIENTE</div>';
-  else if(status==='Recebido') seloStatus = '<div style="background:#e0e7ff;border:2px solid #4338ca;color:#3730a3;padding:10px;border-radius:10px;text-align:center;font-weight:800;margin-top:10px">💙 RECEBIDO - Pagamento Recebido, aguarda código</div>';
-  else if(status==='Em Preparação' || status==='Aceite') seloStatus = '<div style="background:#fef3c7;border:2px solid #f59e0b;color:#92400e;padding:10px;border-radius:10px;text-align:center;font-weight:800;margin-top:10px">🔥 EM PREPARAÇÃO / ACEITE - Aguarda código</div>';
-  else seloStatus = '<div style="background:#fef3c7;border:2px solid #f59e0b;padding:10px;border-radius:10px;text-align:center;font-weight:800;margin-top:10px">🆕 NOVO - Aguarda confirmação</div>';
-  let seloPago = pagouTudo
-    ? '<div style="border:3px solid #16a34a;color:#16a34a;border-radius:10px;padding:8px;text-align:center;font-weight:900;transform:rotate(-3deg);margin:12px 40px">✅ PAGO TOTAL</div>'
-    : '<div style="border:3px solid #f59e0b;color:#92400e;border-radius:10px;padding:8px;text-align:center;font-weight:900;transform:rotate(-3deg);margin:12px 40px">💰 PAGO 50% - FALTA '+falta.toLocaleString()+' Kz</div>';
-  document.getElementById('conteudoFatura').innerHTML = `
-    <div style="background:#111;color:#fff;padding:16px;text-align:center">
-      <div style="font-size:28px;font-weight:900">CASA<span style="color:#f97316">NOVA</span></div>
-      <div style="font-size:11px;letter-spacing:2px">ELETRODOMÉSTICOS</div>
-    </div>
-    <div style="padding:16px;text-align:left;font-size:14px;line-height:1.7">
-      <div style="text-align:center;color:#666">Fatura / Recibo de Pagamento</div>
-      <div style="text-align:center;font-size:18px;font-weight:900">Fatura Nº ${codigo}</div>
-      <div style="text-align:center;color:#666;font-size:12px">${data}</div>
-      <hr style="border:1px solid #0b5ed7">
-      <b>Cliente:</b> ${nome}<br>
-      <b>Telefone:</b> ${tel}<br>
-      ${email ? `<b>E-mail:</b> ${email}<br>` : ''}
-      <b>Morada / Entrega:</b> ${morada}<br>
-      <b>Tipo:</b> ${tipo} • <b>Pagamento:</b> ${pagamento}<br>
-      <b>Status:</b> ${status}
-      <hr style="border:1px solid #0b5ed7">
-      ${linhas}
-      <div style="border:1px solid #0b5ed7;border-radius:10px;padding:12px;margin-top:10px">
-        <div style="display:flex;justify-content:space-between"><span>Total:</span><b>${total.toLocaleString()} Kz</b></div>
-        <div style="display:flex;justify-content:space-between;margin-top:6px"><span>Já pago:</span><b style="color:#16a34a">${pago.toLocaleString()} Kz</b></div>
-        <div style="display:flex;justify-content:space-between;margin-top:6px"><span>Falta pagar:</span><b style="color:#dc2626">${falta.toLocaleString()} Kz</b></div>
-      </div>
-      ${seloPago}
-      ${seloStatus}
-      <p style="text-align:center;color:#666;font-size:12px;margin:10px 0 0">Obrigado pela preferência! 🏠 Casa Nova<br>Esta fatura serve como comprovativo de pagamento e entrega.</p>
-    </div>
-  `;
-  document.getElementById('modalFatura').classList.add('aberto');
-}
-function fecharFatura(){ document.getElementById('modalFatura').classList.remove('aberto'); }
-async function marcarRecebido(id){
-  let r = await db.from('pedidos').update({status:'Recebido'}).eq('id', id);
-  if(r.error){ let r2 = await db.from('pedidos').update({estado:'Recebido'}).eq('id', id); if(r2.error){ aviso('❌ '+r2.error.message,'erro'); return; } }
-  aviso('💙 Recebido! Cliente avisado que recebemos o pagamento.');
-  listaAtual = listaAtual.map(p=> p.id===id ? {...p, status:'Recebido'} : p);
-  atualizarContador(); carregar();
-}
-async function marcarPreparacao(id){
-  let r = await db.from('pedidos').update({status:'Em Preparação'}).eq('id', id);
-  if(r.error){ let r2 = await db.from('pedidos').update({estado:'Em Preparação'}).eq('id', id); if(r2.error){ aviso('❌ '+r2.error.message,'erro'); return; } }
-  aviso('🔥 Em Preparação! Cliente avisado.');
-  listaAtual = listaAtual.map(p=> p.id===id ? {...p, status:'Em Preparação'} : p);
-  atualizarContador(); carregar();
-}
-async function cancelarPedido(id){
-  if(!confirm('Cancelar este pedido?')) return;
-  let r = await db.from('pedidos').update({status:'Cancelado'}).eq('id', id);
-  if(r.error){ let r2 = await db.from('pedidos').update({estado:'Cancelado'}).eq('id', id); if(r2.error){ aviso('❌ '+r2.error.message,'erro'); return; } }
-  aviso('❌ Pedido cancelado'); carregar();
-}
-function abrirModalCodigo(id, codigo){
-  pedidoParaFinalizar = {id: id, codigo: codigo};
-  document.getElementById('codigoPedidoModal').textContent = codigo || '(sem código)';
-  document.getElementById('inputCodigoConfirmar').value = '';
-  document.getElementById('erroCodigo').style.display = 'none';
-  document.getElementById('modalCodigo').classList.add('aberto');
-  setTimeout(()=>document.getElementById('inputCodigoConfirmar').focus(), 200);
-}
-function fecharModalCodigo(){ document.getElementById('modalCodigo').classList.remove('aberto'); pedidoParaFinalizar = null; }
-async function confirmarComCodigo(){
-  if(!pedidoParaFinalizar) return;
-  let digitado = document.getElementById('inputCodigoConfirmar').value.trim().toUpperCase();
-  let certo = (pedidoParaFinalizar.codigo||'').toUpperCase();
-  if(!digitado){ document.getElementById('erroCodigo').textContent = '⚠️ Escreve o código que o cliente apresentou!'; document.getElementById('erroCodigo').style.display='block'; return; }
-  if(digitado !== certo){
-    document.getElementById('erroCodigo').textContent = '❌ Código errado! Não entregues. Pede o código certo.';
-    document.getElementById('erroCodigo').style.display='block';
-    return;
-  }
-  let r = await db.from('pedidos').update({status:'Entregue'}).eq('id', pedidoParaFinalizar.id);
-  if(r.error){ let r2 = await db.from('pedidos').update({estado:'Entregue'}).eq('id', pedidoParaFinalizar.id); if(r2.error){ aviso('❌ '+r2.error.message,'erro'); return; } }
-  fecharModalCodigo();
-  aviso('✅ Entregue automático! Código certo. Entrega a fatura ao cliente.');
-  carregar();
-}
-carregarLogoTopo(); carregar();
+carregar();
+setInterval(carregar, 10000);
+atualizarEnvelope();
 </script></body></html>

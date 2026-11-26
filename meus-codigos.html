@@ -11,26 +11,11 @@ body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px;padding-bottom:1
 .topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
 .topo.tem-logo .logo-text{display:none}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
-@keyframes logoZoom{
-  0%{transform:scale(0.7) translateY(0) rotate(0deg)}
-  25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
-  40%{transform:scale(1.45) translateY(0) rotate(0deg)}
-  48%{transform:scale(1.45) translateY(0) rotate(-6deg)}
-  56%{transform:scale(1.45) translateY(0) rotate(6deg)}
-  64%{transform:scale(1.45) translateY(0) rotate(-5deg)}
-  72%{transform:scale(1.45) translateY(0) rotate(4deg)}
-  80%{transform:scale(1.25) translateY(4px) rotate(0deg)}
-  88%{transform:scale(1.08) translateY(-3px) rotate(0deg)}
-  94%{transform:scale(0.96) translateY(2px) rotate(0deg)}
-  100%{transform:scale(1) translateY(0) rotate(0deg)}
-}
+@keyframes logoZoom{0%{transform:scale(0.7)}25%{transform:scale(1.15)}40%{transform:scale(1.45)}48%{transform:scale(1.45) rotate(-6deg)}56%{transform:scale(1.45) rotate(6deg)}64%{transform:scale(1.45) rotate(-5deg)}72%{transform:scale(1.45) rotate(4deg)}80%{transform:scale(1.25)}88%{transform:scale(1.08)}94%{transform:scale(0.96)}100%{transform:scale(1)}}
 .caixa{background:#fff;padding:16px;border-radius:12px;margin-top:12px}
 .caixa h3{background:#eff6ff;border:2px solid #0b5ed7;border-radius:999px;padding:10px 14px;text-align:center;margin:0 0 8px}
 .btn-sair{background:#dc2626;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer}
 .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin-top:10px;line-height:1.7;font-size:14px}
-.msg-prep{background:#dcfce7;border:2px solid #16a34a;padding:14px;border-radius:12px;text-align:center;margin-top:12px;font-weight:800}
-.msg-recebido{background:#e0e7ff;border:2px solid #4338ca;padding:14px;border-radius:12px;text-align:center;margin-top:12px;font-weight:800}
-.msg-entregue{background:#dcfce7;border:2px solid #16a34a;padding:14px;border-radius:12px;text-align:center;margin-top:12px;font-weight:800}
 .badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700}
 .badge-novo{background:#dbeafe;color:#1e40af}
 .badge-prep{background:#fef3c7;color:#92400e}
@@ -47,212 +32,117 @@ body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px;padding-bottom:1
 </style></head>
 <body>
 <div class="topo" id="topoSite"><div class="logo"><img id="logoTopo" class="logo-img" src=""><span class="logo-text"><b>🔖 Meus Códigos</b></span></div><div style="display:flex;gap:8px"><a href="index.html">Loja →</a><button class="btn-sair" onclick="sairCliente()">🚪 Sair</button></div></div>
-
 <div class="caixa">
   <h3>Os teus códigos ficam aqui 5 minutos</h3>
   <p style="color:#666;font-size:13px;text-align:center">Depois de 5 minutos o código some sozinho.<br>Aponta o código antes.</p>
-
-  <!-- PROCURAR CÓDIGO - FUNCIONA EM QUALQUER TELEFONE -->
   <div style="background:#fff3cd;border:2px solid #f59e0b;padding:12px;border-radius:12px;margin-bottom:12px;text-align:center">
-    <b>🔍 Não estás a ver o teu pedido?</b><br>
-    <small>Escreve o teu código aqui, funciona em qualquer telefone:</small><br><br>
+    <b>🔍 Não estás a ver o teu pedido?</b><br><small>Escreve o teu código aqui, funciona em qualquer telefone:</small><br><br>
     <input id="inputBuscarCodigo" placeholder="Ex: CN-436625" style="padding:12px;width:70%;border:2px solid #0b5ed7;border-radius:10px;font-size:16px;text-align:center;text-transform:uppercase">
     <button onclick="buscarCodigoDigitado()" style="background:#0b5ed7;color:#fff;border:0;padding:12px 16px;border-radius:10px;font-weight:800;margin-top:8px;width:100%">🔍 VER O MEU PEDIDO</button>
   </div>
-
-  <div id="areaMensagemPreparacao"></div>
   <div id="listaCodigos"></div>
 </div>
-
-<!-- ENVELOPE -->
 <button id="btnEnvelope" onclick="abrirEnvelope()">✉️<span id="badgeEnvelope">0</span></button>
 <div id="modalEnvelope" onclick="if(event.target.id==='modalEnvelope') fecharEnvelope()"><div class="modal-env">
 <div class="env-topo"><div style="font-size:36px">✉️</div><h3 style="margin:4px 0">Mensagens da Loja</h3></div>
 <div id="listaMensagens"></div>
 <div style="padding:14px"><button onclick="fecharEnvelope()" style="background:#dc2626;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800">❌ Fechar (X)</button><p style="font-size:12px;color:#666;text-align:center">Se fechares, o envelope volta em 2 minutos.</p></div>
 </div></div>
-
 <script>
-if(performance.getEntriesByType('navigation')[0]?.type === 'reload'){
-  localStorage.removeItem('cliente_casa_nova');
-}
-function sairCliente(){
-  if(!confirm('Queres mesmo sair?')) return;
-  localStorage.removeItem('cliente_casa_nova');
-  localStorage.removeItem('meus_codigos');
-  location.href = 'index.html';
-}
-let statusPorCodigo = {};
-let canaisAbertos = {};
-
-// ===== ENVELOPE =====
-let notificacoes = [];
-try{ notificacoes = JSON.parse(localStorage.getItem('notificacoes_casa_nova')||'[]'); }catch(e){ notificacoes=[]; }
-let timerReaparecer = null;
+if(performance.getEntriesByType('navigation')[0]?.type === 'reload'){ localStorage.removeItem('cliente_casa_nova'); }
+function sairCliente(){ if(!confirm('Queres mesmo sair?')) return; localStorage.removeItem('cliente_casa_nova'); localStorage.removeItem('meus_codigos'); localStorage.removeItem('notificacoes_casa_nova'); location.href='index.html'; }
+let statusPorCodigo={}; let canaisAbertos={};
+let notificacoes=[]; try{ notificacoes=JSON.parse(localStorage.getItem('notificacoes_casa_nova')||'[]'); }catch(e){ notificacoes=[]; }
+let timerReaparecer=null; let escondidoTemporario=false;
 function salvarNotif(){ localStorage.setItem('notificacoes_casa_nova', JSON.stringify(notificacoes)); }
-function textoEnvelope(status, codigo, nome){
-  nome = nome || 'Cliente';
-  if(status === 'Recebido') return `Olá ${nome}, nós recebemos o teu pagamento e agradecemos por você na nossa loja. Obrigado! ❤️`;
-  if(status === 'Em Preparação' || status === 'Aceite') return `Olá ${nome}, o teu pedido foi recebido e está a ser preparado.`;
-  if(status === 'Entregue') return `Olá ${nome}, o teu pedido foi finalizado. Já pagaste 100%. Obrigado por comprar na Casa Nova! 🎉`;
+// REGRA DO ADMIN: Entrega -> Em Preparação | Loja -> Recebido
+function textoEnvelope(status,codigo,nome,tipo){
+  nome=nome||'Cliente';
+  if(status==='Recebido') return `Olá ${nome}, nós recebemos o teu pagamento e agradecemos por você na nossa loja. Obrigado! ❤️`;
+  if(status==='Em Preparação'||status==='Aceite') return `Olá ${nome}, o teu pedido foi recebido e está a ser preparado.`;
   return `Olá ${nome}, recebemos o teu pedido ${codigo}.`;
 }
 function atualizarEnvelope(){
-  let naoLidas = notificacoes.filter(n=>!n.lida);
-  let btn = document.getElementById('btnEnvelope');
-  if(!naoLidas.length){ btn.style.display='none'; return; }
-  btn.style.display='flex';
-  document.getElementById('badgeEnvelope').textContent = naoLidas.length;
+  // Se foi fechado com X há menos de 2 min, não mostra
+  if(escondidoTemporario){ document.getElementById('btnEnvelope').style.display='none'; return; }
+  let n=notificacoes.filter(x=>!x.lida);
+  let b=document.getElementById('btnEnvelope');
+  if(!n.length){ b.style.display='none'; return; }
+  b.style.display='flex';
+  document.getElementById('badgeEnvelope').textContent=n.length;
 }
+// SÓ ABRE QUANDO CLICA NO ENVELOPE - NUNCA SOZINHO
 function abrirEnvelope(){
-  let box = document.getElementById('listaMensagens');
-  if(!notificacoes.length) box.innerHTML = '<p style="text-align:center;color:#666;padding:20px">Sem mensagens.</p>';
-  else box.innerHTML = notificacoes.slice().reverse().map(n=>`<div class="env-msg"><b>📦 Pedido ${n.codigo} - ${n.status}</b><br><span style="font-size:14px">${n.mensagem}</span><br><small style="color:#888">${new Date(n.quando).toLocaleString('pt-PT')}</small></div>`).join('');
+  let box=document.getElementById('listaMensagens');
+  box.innerHTML=!notificacoes.length?'<p style="text-align:center;color:#666;padding:20px">Sem mensagens.</p>':notificacoes.slice().reverse().map(n=>`<div class="env-msg"><b>📦 Pedido ${n.codigo} - ${n.status}</b><br><span style="font-size:14px">${n.mensagem}</span><br><small style="color:#888">${new Date(n.quando).toLocaleString('pt-PT')}</small></div>`).join('');
   document.getElementById('modalEnvelope').classList.add('aberto');
+  // Abrir NÃO apaga. Só o X apaga.
 }
+// FECHAR COM X: some, volta em 2 min SÓ O ENVELOPE A FLUTUAR, não abre a caixa
 function fecharEnvelope(){
   document.getElementById('modalEnvelope').classList.remove('aberto');
-  notificacoes = notificacoes.map(n=>({...n, lida:true}));
-  salvarNotif(); atualizarEnvelope();
+  notificacoes=notificacoes.map(n=>({...n,lida:true}));
+  salvarNotif();
+  escondidoTemporario=true; atualizarEnvelope();
   clearTimeout(timerReaparecer);
-  timerReaparecer = setTimeout(()=>{
-    if(notificacoes.length){
-      notificacoes = notificacoes.map(n=>({...n, lida:false}));
-      salvarNotif(); atualizarEnvelope();
-    }
-  }, 120000);
+  timerReaparecer=setTimeout(()=>{ escondidoTemporario=false; notificacoes=notificacoes.map(n=>({...n,lida:false})); salvarNotif(); atualizarEnvelope(); },120000);
 }
-function criarNotificacao(status, codigo, nome){
-  if(!['Recebido','Em Preparação','Aceite','Entregue'].includes(status)) return;
-  let ja = notificacoes.find(n=>n.codigo===codigo && n.status===status);
-  if(ja) return;
-  notificacoes.push({codigo:codigo, status:status, mensagem:textoEnvelope(status, codigo, nome), quando:new Date().toISOString(), lida:false});
+function criarNotificacao(status,codigo,nome,tipo){
+  // SE ADMIN FINALIZOU, APAGA TUDO DESTE PEDIDO E NÃO CRIA NADA
+  if(status==='Entregue'){
+    notificacoes=notificacoes.filter(n=>n.codigo!==codigo);
+    salvarNotif(); atualizarEnvelope(); return;
+  }
+  if(!['Recebido','Em Preparação','Aceite'].includes(status)) return;
+  if(notificacoes.find(n=>n.codigo===codigo&&n.status===status)) return;
+  notificacoes.push({codigo,status,mensagem:textoEnvelope(status,codigo,nome,tipo),quando:new Date().toISOString(),lida:false});
   salvarNotif(); atualizarEnvelope();
 }
-
-// ===== PROCURAR CÓDIGO EM QUALQUER TELEFONE =====
 async function buscarCodigoDigitado(){
-  let codigo = document.getElementById('inputBuscarCodigo').value.trim().toUpperCase();
+  let codigo=document.getElementById('inputBuscarCodigo').value.trim().toUpperCase();
   if(!codigo){ alert('Escreve o código primeiro. Ex: CN-436625'); return; }
-  let r = await db.from('pedidos').select('*').eq('codigo', codigo).maybeSingle();
-  if(!r.data){ alert('Código não encontrado: '+codigo+'\nVerifica se escreveste bem.'); return; }
-  let p = r.data;
-  let st = p.status || p.estado || 'Novo';
-  statusPorCodigo[codigo] = st;
-  let meus = [];
-  try{ meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]'); }catch(e){}
-  if(!meus.find(m=>m.codigo===codigo)){
-    meus.push({codigo:codigo, nome:p.nome_cliente||p.nome||'', itens:p.itens||'', total:p.total||0, pago:p.pago||0, falta:p.falta||0, tipo:p.tipo_entrega||'loja', criado_em:Date.now(), buscado:true});
-    localStorage.setItem('meus_codigos', JSON.stringify(meus));
-  }
+  let r=await db.from('pedidos').select('*').eq('codigo',codigo).maybeSingle();
+  if(!r.data){ alert('Código não encontrado: '+codigo); return; }
+  let p=r.data; let st=p.status||p.estado||'Novo';
+  // Se já foi finalizado, não mostra envelope
+  if(st==='Entregue'){ notificacoes=notificacoes.filter(n=>n.codigo!==codigo); salvarNotif(); atualizarEnvelope(); alert('✅ Este pedido já foi finalizado.'); return; }
+  statusPorCodigo[codigo]=st;
+  let meus=[]; try{ meus=JSON.parse(localStorage.getItem('meus_codigos')||'[]'); }catch(e){}
+  if(!meus.find(m=>m.codigo===codigo)){ meus.push({codigo,nome:p.nome_cliente||p.nome||'',itens:p.itens||'',total:p.total||0,pago:p.pago||0,falta:p.falta||0,tipo:p.tipo_entrega||'loja',criado_em:Date.now(),buscado:true}); localStorage.setItem('meus_codigos',JSON.stringify(meus)); }
   renderizar();
-  mostrarMensagem(st, codigo);
-  criarNotificacao(st, codigo, p.nome_cliente||p.nome||'');
+  criarNotificacao(st,codigo,p.nome_cliente||p.nome||'',p.tipo_entrega||'loja');
   ligarTempoReal();
   alert('✅ Pedido encontrado: '+codigo+' - '+st);
 }
-
-function badgeStatus(status){
-  let s=(status||'Novo').toLowerCase();
-  if(s.includes('entregue')) return '<span class="badge badge-entregue">✅ Entregue - Fatura recebida</span>';
-  if(s.includes('recebido')) return '<span class="badge badge-recebido">💙 Recebido - Pagamento Recebido</span>';
-  if(s.includes('prepar')||s.includes('aceite')) return '<span class="badge badge-prep">🔥 Em Preparação / Aceite</span>';
-  return '<span class="badge badge-novo">🆕 Novo - Aguarda resposta</span>';
-}
-function mostrarMensagem(status, codigo){
-  let area = document.getElementById('areaMensagemPreparacao');
-  let texto = '';
-  let classe = 'msg-prep';
-  let tituloBarra = '';
-  if(status === 'Recebido'){
-    classe = 'msg-recebido';
-    texto = `💙 Recebemos o teu pagamento - Pedido ${codigo}<br><small style="font-weight:400">Pagaste 100%. Só falta vires com o código para levantares e levares a fatura.</small>`;
-    tituloBarra = 'Recebemos o teu pagamento - Pedido '+codigo;
-  } else if(status === 'Em Preparação' || status === 'Aceite'){
-    classe = 'msg-prep';
-    texto = `🔥 Teu pedido ${codigo} está em Preparação / Aceite!<br><small style="font-weight:400">A loja já está a preparar.</small>`;
-    tituloBarra = 'Teu pedido '+codigo+' está em Preparação / Aceite!';
-  } else if(status === 'Entregue'){
-    classe = 'msg-entregue';
-    texto = `✅ Teu pedido ${codigo} foi Entregue!<br><small style="font-weight:400">Obrigado! Recebeste a tua fatura.</small>`;
-    tituloBarra = 'Teu pedido '+codigo+' foi Entregue!';
-  } else {
-    return;
-  }
-  area.innerHTML = `<div class="${classe}">${texto}</div>`;
-  if("Notification" in window && Notification.permission === "granted"){
-    try{ new Notification('✅ Casa Nova', {body: tituloBarra}); }catch(e){}
-  }
-}
+function badgeStatus(s){ s=(s||'Novo').toLowerCase(); if(s.includes('entregue')) return '<span class="badge badge-entregue">✅ Entregue - Fatura recebida</span>'; if(s.includes('recebido')) return '<span class="badge badge-recebido">💙 Recebido - Pagamento Recebido</span>'; if(s.includes('prepar')||s.includes('aceite')) return '<span class="badge badge-prep">🔥 Em Preparação / Aceite</span>'; return '<span class="badge badge-novo">🆕 Novo - Aguarda resposta</span>'; }
 function renderizar(){
-  let meus = [];
-  try{ meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]'); }catch(e){}
-  let agora = Date.now();
-  // Códigos buscados manualmente NÃO somem em 5 min, ficam 24h
-  meus = meus.filter(m => m.buscado ? (agora - (m.criado_em||0)) < 24*60*60*1000 : (agora - (m.criado_em||0)) < 5*60*1000);
-  localStorage.setItem('meus_codigos', JSON.stringify(meus));
-  let div = document.getElementById('listaCodigos');
-  if(!meus.length){
-    div.innerHTML = `<p style="color:#666;text-align:center">Nenhum código.<br>Escreve o teu código em cima na caixa amarela.<br><a href="index.html" style="color:#0b5ed7;font-weight:700">Fazer um pedido →</a></p>`;
-    return;
-  }
-  div.innerHTML = meus.map(m => {
-    let falta = m.buscado ? 0 : 5*60*1000 - (agora - (m.criado_em||0));
-    let mm = Math.floor(falta/60000);
-    let ss = Math.floor((falta%60000)/1000);
-    let tempo = m.buscado ? 'Guardado neste telefone' : '0'+mm+':'+(ss<10?'0'+ss:ss);
-    let st = statusPorCodigo[m.codigo] || 'Novo';
-    return `
-    <div class="card">
-      <div style="text-align:center;background:#111;color:#fff;padding:12px;border-radius:10px"><small>TEU CÓDIGO</small><br><b style="font-size:24px;letter-spacing:2px">${m.codigo}</b><br><small style="color:#fbbf24">⏰ ${tempo}</small></div>
-      <div style="text-align:center;margin-top:8px">${badgeStatus(st)}</div>
-      <div style="margin-top:10px">👤 ${m.nome||''}<br>📦 ${m.itens||''}<br>💰 Total: ${Number(m.total||0).toLocaleString()} Kz<br>✅ Pago: ${Number(m.pago||0).toLocaleString()} Kz<br>❗ Falta: ${Number(m.falta||0).toLocaleString()} Kz<br>🚚 ${m.tipo==='loja' ? 'Receber na Loja' : 'Entrega a Domicílio'}</div>
-    </div>
-  `}).join('');
+  let meus=[]; try{ meus=JSON.parse(localStorage.getItem('meus_codigos')||'[]'); }catch(e){}
+  let agora=Date.now();
+  meus=meus.filter(m=>m.buscado?(agora-(m.criado_em||0))<24*60*60*1000:(agora-(m.criado_em||0))<5*60*1000);
+  localStorage.setItem('meus_codigos',JSON.stringify(meus));
+  let div=document.getElementById('listaCodigos');
+  if(!meus.length){ div.innerHTML=`<p style="color:#666;text-align:center">Nenhum código.<br>Escreve o teu código em cima na caixa amarela.<br><a href="index.html" style="color:#0b5ed7;font-weight:700">Fazer um pedido →</a></p>`; return; }
+  div.innerHTML=meus.map(m=>{ let falta=m.buscado?0:5*60*1000-(agora-(m.criado_em||0)); let mm=Math.floor(falta/60000); let ss=Math.floor((falta%60000)/1000); let tempo=m.buscado?'Guardado neste telefone':'0'+mm+':'+(ss<10?'0'+ss:ss); let st=statusPorCodigo[m.codigo]||'Novo'; return `<div class="card"><div style="text-align:center;background:#111;color:#fff;padding:12px;border-radius:10px"><small>TEU CÓDIGO</small><br><b style="font-size:24px;letter-spacing:2px">${m.codigo}</b><br><small style="color:#fbbf24">⏰ ${tempo}</small></div><div style="text-align:center;margin-top:8px">${badgeStatus(st)}</div><div style="margin-top:10px">👤 ${m.nome||''}<br>📦 ${m.itens||''}<br>💰 Total: ${Number(m.total||0).toLocaleString()} Kz<br>✅ Pago: ${Number(m.pago||0).toLocaleString()} Kz<br>❗ Falta: ${Number(m.falta||0).toLocaleString()} Kz<br>🚚 ${m.tipo==='loja'?'Receber na Loja':'Entrega a Domicílio'}</div></div>`; }).join('');
 }
 function ligarTempoReal(){
   try{
-    let meus = JSON.parse(localStorage.getItem('meus_codigos')||'[]');
+    let meus=JSON.parse(localStorage.getItem('meus_codigos')||'[]');
     if(!meus.length) return;
-    if("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied"){
-      Notification.requestPermission();
-    }
     meus.forEach(m=>{
-      if(canaisAbertos[m.codigo]) return;
-      canaisAbertos[m.codigo]=true;
-      db.channel('meu-pedido-'+m.codigo)
-      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'pedidos',filter:'codigo=eq.'+m.codigo}, payload=>{
-        let novo = payload.new.status || payload.new.estado || '';
-        statusPorCodigo[m.codigo] = novo;
-        renderizar();
-        if(novo === 'Recebido' || novo === 'Em Preparação' || novo === 'Aceite' || novo === 'Entregue'){
-          mostrarMensagem(novo, m.codigo);
-          criarNotificacao(novo, m.codigo, m.nome);
-        }
+      if(canaisAbertos[m.codigo]) return; canaisAbertos[m.codigo]=true;
+      db.channel('meu-pedido-'+m.codigo).on('postgres_changes',{event:'UPDATE',schema:'public',table:'pedidos',filter:'codigo=eq.'+m.codigo},payload=>{
+        let novo=payload.new.status||payload.new.estado||'';
+        statusPorCodigo[m.codigo]=novo; renderizar();
+        criarNotificacao(novo,m.codigo,m.nome,payload.new.tipo_entrega||m.tipo||'loja');
+        // Se finalizou, tira o código da lista também
+        if(novo==='Entregue'){ setTimeout(renderizar,500); }
       }).subscribe();
     });
     meus.forEach(async m=>{
-      try{
-        let r = await db.from('pedidos').select('status,estado').eq('codigo', m.codigo).maybeSingle();
-        if(r.data){
-          let st = r.data.status || r.data.estado || 'Novo';
-          statusPorCodigo[m.codigo] = st;
-          renderizar();
-          if(st === 'Recebido' || st === 'Em Preparação' || st === 'Aceite' || st === 'Entregue'){
-            mostrarMensagem(st, m.codigo);
-            criarNotificacao(st, m.codigo, m.nome);
-          }
-        }
-      }catch(e){}
+      try{ let r=await db.from('pedidos').select('status,estado,tipo_entrega').eq('codigo',m.codigo).maybeSingle(); if(r.data){ let st=r.data.status||r.data.estado||'Novo'; statusPorCodigo[m.codigo]=st; renderizar(); criarNotificacao(st,m.codigo,m.nome,r.data.tipo_entrega||m.tipo||'loja'); } }catch(e){}
     });
   }catch(e){ console.log(e); }
 }
-async function carregarLogoTopo(){
-  try{ let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle(); let logo=r.data?.logo_url; if(logo){ let img=document.getElementById('logoTopo'); img.src=logo; img.style.display='block'; document.getElementById('topoSite').classList.add('tem-logo'); } }catch(e){}
-}
-carregarLogoTopo();
-renderizar();
-ligarTempoReal();
-setInterval(renderizar, 1000);
-atualizarEnvelope();
+async function carregarLogoTopo(){ try{ let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle(); let logo=r.data?.logo_url; if(logo){ let img=document.getElementById('logoTopo'); img.src=logo; img.style.display='block'; document.getElementById('topoSite').classList.add('tem-logo'); } }catch(e){} }
+carregarLogoTopo(); renderizar(); ligarTempoReal(); setInterval(renderizar,1000); atualizarEnvelope();
 </script></body></html>

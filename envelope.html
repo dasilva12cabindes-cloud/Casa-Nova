@@ -3,96 +3,58 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Notificações - Casa Nova</title>
+<title>Notificações</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f5f6f8}
 .topo{background:#0b5ed7;color:#fff;padding:15px;display:flex;align-items:center;gap:10px}
-.topo button{background:#fff;color:#111;border:0;padding:8px 12px;border-radius:20px;font-weight:bold;cursor:pointer}
+.topo button{background:#fff;color:#111;border:0;padding:8px 12px;border-radius:20px;font-weight:bold}
 .topo h2{margin:0;font-size:18px;flex:1}
 .caixa{max-width:480px;margin:15px auto;padding:0 12px}
 .card{background:#fff;border-radius:14px;padding:15px;margin-bottom:12px}
 .codigo{background:#eef7ff;border:1px dashed #2196f3;color:#0b6fc2;padding:10px;border-radius:10px;margin-top:10px;font-weight:bold;text-align:center}
 .badge{display:inline-block;background:#ffecb3;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:bold;margin-top:8px}
-.btn{width:100%;background:#111;color:#fff;border:0;padding:13px;border-radius:12px;font-weight:bold;margin-top:10px;cursor:pointer}
+.btn{width:100%;background:#111;color:#fff;border:0;padding:13px;border-radius:12px;font-weight:bold;margin-top:10px}
 </style>
 </head>
 <body>
-<div class="topo"><button onclick="location.href='index.html'">← Voltar</button><h2>📩 Notificações</h2><span>✉️</span></div>
-<div class="caixa" id="conteudo"></div>
+<div class="topo"><button onclick="location.href='index.html'">← Voltar</button><h2>📩 Notificações</h2></div>
+<div class="caixa" id="conteudo"><p>A carregar...</p></div>
 <script>
-function lerJSON(chave){ try{ return JSON.parse(localStorage.getItem(chave)||'[]'); }catch(e){ return []; } }
-function clienteLogado(){ try{ return JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){ return null; } }
-function norm(s){ return (s||'').toLowerCase(); }
-function eEntregue(st){
-  let s=norm(st);
-  return s.includes('entregue') || s.includes('conclu') || s.includes('finaliz') || s.includes('cancelado');
-}
-function eAtivo(st){
-  let s=norm(st);
-  return s.includes('prepara') || s.includes('recebido') || s.includes('pagamento') || s.includes('recebimento') || s.includes('a ser') || s.includes('pendente') || s.includes('confirmado') && !s.includes('entregue');
-}
+const SUPABASE_URL = "COLA_AQUI_TUA_URL";
+const SUPABASE_KEY = "COLA_AQUI_TUA_ANON_KEY";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 1. Monta mapa CODIGO -> STATUS lendo TODOS os sítios onde o Admin guarda
-var mapaStatus = {};
-var mapaPedido = {};
-['pedidos_casa_nova','pedidos','meus_pedidos','meus_codigos','lista_pedidos'].forEach(ch=>{
-  lerJSON(ch).forEach(p=>{
-    let cod = typeof p==='string' ? p : (p.codigo||p.codigo_pedido||p.id||p.code||'');
-    let st = typeof p==='string' ? '' : (p.status||p.estado||p.situacao||'');
-    if(cod){ if(st) mapaStatus[cod]=st; mapaPedido[cod]=p; }
+async function carregar(){
+  let cliente=null;
+  try{ cliente = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
+  let div=document.getElementById('conteudo');
+  if(!cliente){ div.innerHTML='<div class="card">Faz login para veres as notificações.<button class="btn" onclick="location.href=\'cadastro.html\'">Ir para Login</button></div>'; return; }
+
+  // 1. Busca os pedidos do cliente no Supabase
+  let { data, error } = await supabase.from('pedidos_casa_nova').select('*').order('created_at',{ascending:false});
+  if(error){ div.innerHTML='<div class="card">Erro: '+error.message+'</div>'; return; }
+
+  // 2. Filtra só os do cliente (pelo nome ou telefone) e TIRA os Entregues = APAGA AUTOMÁTICO
+  let meus = data.filter(p=>{
+    let eNome = (p.cliente_nome||'').toLowerCase() === (cliente.nome||'').toLowerCase();
+    let eTel = cliente.telefone && p.cliente_telefone && p.cliente_telefone.includes(cliente.telefone.slice(-9));
+    return eNome || eTel;
   });
-});
-try{ Object.assign(mapaStatus, JSON.parse(localStorage.getItem('casanova_status_pedidos')||'{}')); }catch(e){}
-try{ Object.assign(mapaStatus, JSON.parse(localStorage.getItem('status_pedidos')||'{}')); }catch(e){}
+  let ativos = meus.filter(p=> !/entregue|conclu|finaliz|cancelado/i.test(p.status||''));
 
-var cliente = clienteLogado();
-var div = document.getElementById('conteudo');
-if(!cliente){
-  div.innerHTML='<div class="card"><h3>Sem login</h3><p>Faz login para veres as tuas notificações.</p><button class="btn" onclick="location.href=\'cadastro.html\'">Ir para Login</button></div>';
-} else {
-  var notifs = lerJSON('notificacoes_casa_nova');
-  // Tira duplicadas
-  notifs=[...new Map(notifs.map(n=>[(n.mensagem||n.texto||'')+'|'+(n.codigo||n.pedido||''),n])).values()];
-
-  // 2. Se o Admin já pôs Entregue -> APAGA da caixa
-  notifs = notifs.filter(n=>{
-    let cod = n.codigo||n.pedido||n.codigo_pedido||'';
-    let st = n.status || mapaStatus[cod] || '';
-    return !eEntregue(st);
-  });
-
-  // 3. Se há pedido novo em Preparação / Pagamento Recebido mas sem mensagem -> CRIA mensagem
-  Object.keys(mapaStatus).forEach(cod=>{
-    let st = mapaStatus[cod]||'';
-    if(eAtivo(st) && !eEntregue(st)){
-      let ja = notifs.some(n=>(n.codigo||n.pedido||'')===cod);
-      if(!ja) notifs.push({mensagem:'Olá '+(cliente.nome||'Cliente')+', o teu pedido foi recebido e está a ser preparado.', codigo:cod, status:st});
-    }
-  });
-
-  // 4. Atualiza status das mensagens com o status real do Admin
-  notifs.forEach(n=>{
-    let cod=n.codigo||n.pedido||'';
-    if(mapaStatus[cod]) n.status=mapaStatus[cod];
-  });
-
-  localStorage.setItem('notificacoes_casa_nova', JSON.stringify(notifs));
-
-  var html='<p>Olá, <b>'+(cliente.nome||cliente.nome_cliente||'Cliente')+'</b></p>';
-  if(notifs.length){
-    html+=notifs.map(n=>{
-      let cod=n.codigo||n.pedido||'';
-      let st=n.status||mapaStatus[cod]||'Em Preparação';
-      return '<div class="card">📩 '+(n.mensagem||n.texto||'O teu pedido foi atualizado')+
-      '<br><span class="badge">📌 Pedido Nº: '+cod+'</span>'+
-      '<div class="codigo">'+st+'</div></div>';
-    }).join('');
+  let html='<p>Olá, <b>'+(cliente.nome||'Cliente')+'</b></p>';
+  if(ativos.length){
+    html+=ativos.map(p=>'<div class="card">📩 '+(p.mensagem||'O teu pedido foi atualizado')+'<br><span class="badge">📌 Pedido Nº: '+p.codigo+'</span><div class="codigo">'+p.status+'</div></div>').join('');
   } else {
-    html+='<div class="card">Não tens notificações pendentes. Os pedidos entregues são apagados automaticamente.</div>';
+    html+='<div class="card">Não tens notificações pendentes. Os pedidos entregues foram apagados automaticamente.</div>';
   }
-  html+='<button class="btn" onclick="location.href=\'meus-pedidos.html\'">Ver Meus Códigos / Pedidos</button>';
+  html+='<button class="btn" onclick="location.href=\'meus-pedidos.html\'">Ver Meus Códigos</button>';
   div.innerHTML=html;
+  // Atualiza o número do envelope no localStorage para o index ler
+  localStorage.setItem('notificacoes_casa_nova', JSON.stringify(ativos));
 }
+carregar();
 </script>
 </body>
 </html>

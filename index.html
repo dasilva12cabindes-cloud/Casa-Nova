@@ -926,6 +926,8 @@ function abrirEnvelopeLoja(){
     lista.innerHTML = `<div>Sem notificações. Vai a Meus Códigos e escreve teu código.</div>`;
   }
   document.getElementById('modalEnvelopeLoja').style.display='flex';
+  document.getElementById('modalEnvelopeLoja').style.alignItems='center';
+document.getElementById('modalEnvelopeLoja').style.justifyContent='center';
   let badge = document.getElementById('badgeEnvelopeLoja');
   if(badge) badge.style.display='none';
 }

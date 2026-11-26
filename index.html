@@ -894,6 +894,11 @@ function pegarCodigosLoja(){
   return [...new Set(codigos.filter(Boolean))];
 }
 function mostrarEnvelopeLoja(){
+  if(!clienteLogado()){
+  let b = document.getElementById('btnEnvelopeLoja');
+  if(b) b.style.display = 'none';
+  return;
+}
   let btn = document.getElementById('btnEnvelopeLoja');
   if(!btn) return;
   let notifs = [];
@@ -908,6 +913,12 @@ function mostrarEnvelopeLoja(){
   }
 }
 function abrirEnvelopeLoja(){
+  if(!clienteLogado()){
+    document.getElementById('listaEnvelopeLoja').innerHTML = '<div style="background:#f0f7ff;padding:12px;border-radius:10px">Faz login para veres as tuas notificações.</div>';
+    document.getElementById('modalEnvelopeLoja').style.display = 'flex';
+    return;
+  }
+  let notifs = [];
   let notifs = [];
   try{ notifs = JSON.parse(localStorage.getItem('notificacoes_casa_nova')||'[]'); }catch(e){}
   let cliente = null;

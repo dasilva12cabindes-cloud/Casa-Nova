@@ -20,64 +20,75 @@
 <div class="topo"><button onclick="location.href='index.html'">← Voltar</button><h2>📩 Notificações</h2><span>✉️</span></div>
 <div class="caixa" id="conteudo"></div>
 <script>
+function lerJSON(chave){ try{ return JSON.parse(localStorage.getItem(chave)||'[]'); }catch(e){ return []; } }
 function clienteLogado(){ try{ return JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){ return null; } }
-function pegarCodigos(){
-  let c=[];
-  try{ c=c.concat(JSON.parse(localStorage.getItem('meus_pedidos')||'[]')); }catch(e){}
-  try{ c=c.concat(JSON.parse(localStorage.getItem('meus_codigos')||'[]')); }catch(e){}
-  try{ let u=localStorage.getItem('ultimo_pedido_codigo'); if(u) c.push(u); }catch(e){}
-  try{ c=c.concat(Object.keys(JSON.parse(localStorage.getItem('casanova_status_pedidos')||'{}'))); }catch(e){}
-  return [...new Set(c.filter(Boolean))];
+function norm(s){ return (s||'').toLowerCase(); }
+function eEntregue(st){
+  let s=norm(st);
+  return s.includes('entregue') || s.includes('conclu') || s.includes('finaliz') || s.includes('cancelado');
 }
-function normalizar(s){ return (s||'').toLowerCase().trim(); }
-function eFinal(status){
-  let s=normalizar(status);
-  return s.includes('entregue') || s.includes('conclu') || s.includes('finaliz') || s.includes('confirmado tudo') || s.includes('confirmado - tudo') || s==='confirmado';
+function eAtivo(st){
+  let s=norm(st);
+  return s.includes('prepara') || s.includes('recebido') || s.includes('pagamento') || s.includes('recebimento') || s.includes('a ser') || s.includes('pendente') || s.includes('confirmado') && !s.includes('entregue');
 }
-var cliente=clienteLogado();
-var div=document.getElementById('conteudo');
+
+// 1. Monta mapa CODIGO -> STATUS lendo TODOS os sítios onde o Admin guarda
+var mapaStatus = {};
+var mapaPedido = {};
+['pedidos_casa_nova','pedidos','meus_pedidos','meus_codigos','lista_pedidos'].forEach(ch=>{
+  lerJSON(ch).forEach(p=>{
+    let cod = typeof p==='string' ? p : (p.codigo||p.codigo_pedido||p.id||p.code||'');
+    let st = typeof p==='string' ? '' : (p.status||p.estado||p.situacao||'');
+    if(cod){ if(st) mapaStatus[cod]=st; mapaPedido[cod]=p; }
+  });
+});
+try{ Object.assign(mapaStatus, JSON.parse(localStorage.getItem('casanova_status_pedidos')||'{}')); }catch(e){}
+try{ Object.assign(mapaStatus, JSON.parse(localStorage.getItem('status_pedidos')||'{}')); }catch(e){}
+
+var cliente = clienteLogado();
+var div = document.getElementById('conteudo');
 if(!cliente){
   div.innerHTML='<div class="card"><h3>Sem login</h3><p>Faz login para veres as tuas notificações.</p><button class="btn" onclick="location.href=\'cadastro.html\'">Ir para Login</button></div>';
 } else {
-  var notifs=[]; try{ notifs=JSON.parse(localStorage.getItem('notificacoes_casa_nova')||'[]'); }catch(e){}
-  var status={}; try{ status=JSON.parse(localStorage.getItem('casanova_status_pedidos')||'{}'); }catch(e){}
-  var codigos=pegarCodigos();
-
-  // 1. Tira duplicadas
+  var notifs = lerJSON('notificacoes_casa_nova');
+  // Tira duplicadas
   notifs=[...new Map(notifs.map(n=>[(n.mensagem||n.texto||'')+'|'+(n.codigo||n.pedido||''),n])).values()];
 
-  // 2. Só apaga automaticamente se o Admin confirmou TUDO / Entregue
-  // Enquanto estiver em Preparação ou Pagamento Recebido, MANTÉM
-  var ativas = notifs.filter(n=>{
-    let cod = n.codigo || n.pedido || n.codigo_pedido || '';
-    let st = n.status || status[cod] || '';
-    return !eFinal(st);
+  // 2. Se o Admin já pôs Entregue -> APAGA da caixa
+  notifs = notifs.filter(n=>{
+    let cod = n.codigo||n.pedido||n.codigo_pedido||'';
+    let st = n.status || mapaStatus[cod] || '';
+    return !eEntregue(st);
   });
-  // Guarda só as ativas - as finalizadas desaparecem sozinhas
-  localStorage.setItem('notificacoes_casa_nova', JSON.stringify(ativas));
+
+  // 3. Se há pedido novo em Preparação / Pagamento Recebido mas sem mensagem -> CRIA mensagem
+  Object.keys(mapaStatus).forEach(cod=>{
+    let st = mapaStatus[cod]||'';
+    if(eAtivo(st) && !eEntregue(st)){
+      let ja = notifs.some(n=>(n.codigo||n.pedido||'')===cod);
+      if(!ja) notifs.push({mensagem:'Olá '+(cliente.nome||'Cliente')+', o teu pedido foi recebido e está a ser preparado.', codigo:cod, status:st});
+    }
+  });
+
+  // 4. Atualiza status das mensagens com o status real do Admin
+  notifs.forEach(n=>{
+    let cod=n.codigo||n.pedido||'';
+    if(mapaStatus[cod]) n.status=mapaStatus[cod];
+  });
+
+  localStorage.setItem('notificacoes_casa_nova', JSON.stringify(notifs));
 
   var html='<p>Olá, <b>'+(cliente.nome||cliente.nome_cliente||'Cliente')+'</b></p>';
-  if(ativas.length){
-    html+=ativas.map(n=>{
-      let cod = n.codigo || n.pedido || n.codigo_pedido || codigos[0] || '';
-      let st = n.status || status[cod] || 'Está a ser preparado';
-      // Se a mensagem não tem código, usa o último código
-      return '<div class="card">📩 '+(n.mensagem||n.texto||'Teu pedido foi atualizado')+
-      '<br><span class="badge">📌 Pedido Nº: '+(cod||'---')+'</span>'+
+  if(notifs.length){
+    html+=notifs.map(n=>{
+      let cod=n.codigo||n.pedido||'';
+      let st=n.status||mapaStatus[cod]||'Em Preparação';
+      return '<div class="card">📩 '+(n.mensagem||n.texto||'O teu pedido foi atualizado')+
+      '<br><span class="badge">📌 Pedido Nº: '+cod+'</span>'+
       '<div class="codigo">'+st+'</div></div>';
     }).join('');
-  } else if(codigos.length){
-    // Se não há mensagem do admin mas há pedido, mostra o pedido com nº no fim
-    html+=codigos.map(c=>{
-      let st=status[c]||'Está a ser preparado';
-      if(eFinal(st)) return '';
-      return '<div class="card">📩 O teu pedido está a ser preparado'+
-      '<br><span class="badge">📌 Pedido Nº: '+c+'</span>'+
-      '<div class="codigo">'+st+'</div></div>';
-    }).join('');
-  }
-  if(!ativas.length && !codigos.filter(c=>!eFinal(status[c]||'')).length){
-    html+='<div class="card">Não tens notificações pendentes. Quando o Admin confirmar tudo, as mensagens são apagadas automaticamente.</div>';
+  } else {
+    html+='<div class="card">Não tens notificações pendentes. Os pedidos entregues são apagados automaticamente.</div>';
   }
   html+='<button class="btn" onclick="location.href=\'meus-pedidos.html\'">Ver Meus Códigos / Pedidos</button>';
   div.innerHTML=html;

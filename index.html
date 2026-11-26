@@ -866,11 +866,28 @@ verificarStatusCliente();
 setInterval(verificarStatusCliente, 10000);
 </script>
 <a class="btn-whatsapp-flutuante" onclick="falarWhatsApp()"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp"><small>WhatsApp</small></a>
-<a class="btn-whatsapp-flutuante" onclick="falarWhatsApp()"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp"><small>WhatsApp</small></a>
 
 <style>
-#btnEnvelopeLoja{position:fixed !important;left:15px !important;bottom:15px !important;width:60px;height:60px;background:#2563eb;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;cursor:pointer;z-index:2000 !important;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.35);border:3px solid #fff}
+#btnEnvelopeLoja{
+  position:fixed !important;
+  left:15px !important;
+  bottom:15px !important;
+  width:60px;height:60px;
+  background:#2563eb;color:#fff;
+  border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:26px;cursor:pointer;z-index:2000 !important;
+  text-decoration:none;
+  box-shadow:0 4px 14px rgba(0,0,0,.35);
+  border:3px solid #fff;
+  animation: flutuarEnvelope 2s ease-in-out infinite;
+}
+#btnEnvelopeLoja small{font-size:9px;font-weight:bold;margin-top:1px}
+@keyframes flutuarEnvelope{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-8px)}
+}
 </style>
-<a id="btnEnvelopeLoja" href="envelope.html">✉️</a>
+<a id="btnEnvelopeLoja" href="envelope.html">✉️<small>Mensagens</small></a>
 </body>
 </html>

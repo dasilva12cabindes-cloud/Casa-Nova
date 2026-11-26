@@ -866,5 +866,58 @@ verificarStatusCliente();
 setInterval(verificarStatusCliente, 10000);
 </script>
 <a class="btn-whatsapp-flutuante" onclick="falarWhatsApp()"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp"><small>WhatsApp</small></a>
+<!-- ENVELOPE NA TELA PRINCIPAL -->
+<style>
+#btnEnvelopeLoja{position:fixed;left:15px;bottom:15px;width:60px;height:60px;background:#2563eb;color:#fff;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:30px;cursor:pointer;z-index:9999;box-shadow:0 4px 15px rgba(0,0,0,.3)}
+#badgeEnvelopeLoja{position:absolute;top:-5px;right:-5px;background:red;color:#fff;width:22px;height:22px;border-radius:50%;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:bold}
+#modalEnvelopeLoja{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:10000;padding:15px}
+#caixaEnvelopeLoja{background:#fff;border-radius:15px;padding:20px;max-width:400px;width:100%}
+</style>
+
+<div id="btnEnvelopeLoja" onclick="abrirEnvelopeLoja()">✉️<span id="badgeEnvelopeLoja">1</span></div>
+
+<div id="modalEnvelopeLoja" onclick="if(event.target==this)this.style.display='none'">
+  <div id="caixaEnvelopeLoja">
+    <h3>📩 Notificações</h3>
+    <div id="listaEnvelopeLoja"></div>
+    <button onclick="document.getElementById('modalEnvelopeLoja').style.display='none'" style="width:100%;padding:12px;margin-top:15px;background:#2563eb;color:#fff;border:none;border-radius:10px">Fechar</button>
+  </div>
+</div>
+
+<script>
+function mostrarEnvelopeLoja(){
+  // Vê se tem notificação guardada
+  let notifs = JSON.parse(localStorage.getItem('notificacoes_casa_nova')||'[]');
+  let cliente = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null');
+  // Se tem cliente com código, mostra envelope
+  if(cliente && cliente.codigo){
+    document.getElementById('btnEnvelopeLoja').style.display='flex';
+    document.getElementById('badgeEnvelopeLoja').textContent = notifs.length || 1;
+  }
+  // Se tem notificação do servidor, mostra também
+  if(notifs.length>0){
+    document.getElementById('btnEnvelopeLoja').style.display='flex';
+  }
+}
+function abrirEnvelopeLoja(){
+  let notifs = JSON.parse(localStorage.getItem('notificacoes_casa_nova')||'[]');
+  let cliente = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null');
+  let lista = document.getElementById('listaEnvelopeLoja');
+  if(notifs.length>0){
+    lista.innerHTML = notifs.map(n=>`<div style="background:#f0f7ff;padding:12px;border-radius:10px;margin-bottom:10px">📩 ${n.mensagem||n.texto||'Teu pedido foi atualizado'}</div>`).join('');
+  } else if(cliente){
+    lista.innerHTML = `<div style="background:#f0f7ff;padding:12px;border-radius:10px">Olá ${cliente.nome||''}, o teu pedido ${cliente.codigo} foi recebido e está a ser preparado.</div>`;
+  } else {
+    lista.innerHTML = `<div>Sem notificações. Vai a Meus Códigos e escreve teu código.</div>`;
+  }
+  document.getElementById('modalEnvelopeLoja').style.display='flex';
+  // Tira o número depois de abrir
+  document.getElementById('badgeEnvelopeLoja').style.display='none';
+}
+// Mostra ao abrir a loja e de 3 em 3 segundos
+mostrarEnvelopeLoja();
+setInterval(mostrarEnvelopeLoja, 3000);
+</script>
+<!-- FIM ENVELOPE -->
 </body>
 </html>

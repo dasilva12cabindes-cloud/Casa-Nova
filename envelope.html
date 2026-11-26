@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notificações - Casa Nova</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f4f4}
+.topo{background:#111;color:#fff;padding:15px;display:flex;align-items:center;gap:10px}
+.topo button{background:#fff;color:#111;border:0;padding:8px 12px;border-radius:20px;font-weight:bold;cursor:pointer}
+.topo h2{margin:0;font-size:18px;flex:1}
+.caixa{max-width:480px;margin:15px auto;padding:0 12px}
+.card{background:#fff;border-radius:14px;padding:15px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.card b{font-size:15px}
+.card p{margin:6px 0 0;color:#444;font-size:14px;line-height:1.4}
+.codigo{background:#eef7ff;border:1px dashed #2196f3;color:#0b6fc2;padding:10px;border-radius:10px;margin-top:10px;font-weight:bold;text-align:center;letter-spacing:1px}
+.sem{ background:#fff;padding:30px 15px;text-align:center;border-radius:14px;color:#666}
+.btn{width:100%;background:#111;color:#fff;border:0;padding:13px;border-radius:12px;font-weight:bold;margin-top:10px;cursor:pointer}
+.btn2{width:100%;background:#e53935;color:#fff;border:0;padding:12px;border-radius:12px;font-weight:bold;margin-top:10px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <button onclick="location.href='index.html'">← Voltar</button>
+  <h2>🔔 Notificações</h2>
+  <span>✉️</span>
+</div>
+
+<div class="caixa" id="conteudo"></div>
+
+<script>
+function clienteLogado(){
+  try{ return JSON.parse(localStorage.getItem('cliente_casa_nova') || 'null'); }
+  catch(e){ return null; }
+}
+
+var cliente = clienteLogado();
+var div = document.getElementById('conteudo');
+
+if(!cliente){
+  div.innerHTML = '<div class="sem"><h3>Sem login</h3><p>Faz login para veres as tuas notificações e códigos.</p><button class="btn" onclick="location.href=\'index.html\'">Ir para Login</button></div>';
+} else {
+  // tenta ler as chaves que já usas no index
+  var notas = [];
+  try{ notas = JSON.parse(localStorage.getItem('notificacoes_casa_nova') || '[]'); }catch(e){ notas = []; }
+  try{
+    var codigos = JSON.parse(localStorage.getItem('codigos_casa_nova') || '[]');
+    if(codigos && codigos.length){
+      codigos.forEach(function(c){
+        notas.unshift({titulo:'Código de compra', texto:'Usa este código na loja:', codigo: c.codigo || c});
+      });
+    }
+  }catch(e){}
+
+  // filtra só as do cliente logado, se tiverem email/telefone
+  var minhas = notas.filter(function(n){
+    if(!n.para) return true; // sem dono = mostra
+    return n.para == cliente.email || n.para == cliente.telefone || n.para == cliente.nome;
+  });
+
+  if(!minhas.length){
+    div.innerHTML = '<div class="sem"><h3>Olá, '+ (cliente.nome||'Cliente') +'</h3><p>Não tens notificações novas.</p><button class="btn" onclick="location.href=\'index.html\'">Voltar à Loja</button></div>';
+  } else {
+    var html = '<p style="color:#666;font-size:13px">Olá, <b>'+ (cliente.nome||'Cliente') +'</b> - tens '+ minhas.length +' notificação(ões)</p>';
+    minhas.forEach(function(n){
+      html += '<div class="card"><b>'+ (n.titulo||'Notificação') +'</b><p>'+ (n.texto||n.mensagem||'') +'</p>';
+      if(n.codigo) html += '<div class="codigo">'+ n.codigo +'</div>';
+      html += '</div>';
+    });
+    html += '<button class="btn2" onclick="limpar()">Marcar todas como lidas</button>';
+    div.innerHTML = html;
+  }
+}
+
+function limpar(){
+  localStorage.removeItem('notificacoes_casa_nova');
+  // zera o contador que o index usa para o badge
+  localStorage.setItem('notificacoes_lidas_casa_nova','1');
+  location.reload();
+}
+</script>
+</body>
+</html>

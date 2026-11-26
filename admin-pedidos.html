@@ -24,20 +24,24 @@
 <div class="topo"><b>🏠 Casa Nova</b><a href="index.html">← Voltar à Loja</a></div>
 <div class="caixa"><h3 style="text-align:center;margin:0">🔖 Meus Códigos / Pedidos</h3><p style="text-align:center;color:#666;font-size:13px">O teu código fica visível só 5 minutos. Aponta num caderno!</p></div>
 <div id="lista"><p style="text-align:center;color:#888">A carregar...</p></div>
+
+<!-- ENVELOPE - SÓ NO CLIENTE - CANTO ESQUERDO A FLUTUAR -->
 <button id="btnEnvelope" onclick="abrirEnvelope()">✉️<span id="badgeEnvelope">0</span></button>
 <div id="modalEnvelope" onclick="if(event.target.id==='modalEnvelope') fecharEnvelope()"><div class="modal-env">
 <div class="env-topo"><div style="font-size:36px">✉️</div><h3 style="margin:4px 0">Mensagens da Loja</h3></div>
 <div id="listaMensagens"></div>
-<div style="padding:14px"><button onclick="fecharEnvelope()" style="background:#dc2626;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800">❌ Fechar (X)</button><p style="font-size:12px;color:#666;text-align:center">Se fechares, o envelope volta em 2 minutos para te lembrar.</p></div>
+<div style="padding:14px"><button onclick="fecharEnvelope()" style="background:#dc2626;color:#fff;border:0;padding:14px;border-radius:12px;width:100%;font-weight:800">❌ Fechar (X)</button><p style="font-size:12px;color:#666;text-align:center">Se fechares, o envelope volta em 2 minutos.</p></div>
 </div></div>
+
 <script>
-let meusPedidos = [];
 let notificacoes = [];
 try{ notificacoes = JSON.parse(localStorage.getItem('notificacoes_casa_nova')||'[]'); }catch(e){ notificacoes=[]; }
 let ultimoStatus = {};
 try{ ultimoStatus = JSON.parse(localStorage.getItem('casanova_status_pedidos')||'{}'); }catch(e){ ultimoStatus={}; }
 let timerReaparecer = null;
+
 function salvarNotif(){ localStorage.setItem('notificacoes_casa_nova', JSON.stringify(notificacoes)); }
+
 function getMeusCodigos(){
   let arr = [];
   try{ arr = JSON.parse(localStorage.getItem('meus_codigos')||'[]'); }catch(e){}
@@ -45,46 +49,60 @@ function getMeusCodigos(){
   let ult = localStorage.getItem('ultimo_pedido_codigo'); if(ult) arr.push({codigo:ult});
   return arr;
 }
+
+// MENSAGENS EXATAS COMO PEDISTE
 function textoMensagem(p){
   let nome = p.nome_cliente||p.nome||'Cliente';
   let tipo = (p.tipo_entrega||'').toLowerCase();
   let status = (p.status||'').toLowerCase();
-  if(status.includes('recebido')) return `Olá ${nome}, nós recebemos o teu pagamento e agradecemos por você na nossa loja. Obrigado! ❤️`;
+  // QUEM COMPROU NA LOJA / PAGAMENTO RECEBIDO
+  if(status.includes('recebido')){
+    return `Olá ${nome}, nós recebemos o teu pagamento e agradecemos por você na nossa loja. Obrigado! ❤️`;
+  }
+  // QUEM COMPROU POR ENTREGA / EM PREPARAÇÃO
   if(status.includes('prepar') || status.includes('aceite')){
     if(tipo==='loja') return `Olá ${nome}, nós recebemos o teu pagamento e agradecemos por você na nossa loja. O teu pedido está a ser preparado para levantamento.`;
-    return `Olá ${nome}, o teu pedido foi recebido e está a ser preparado. Vamos avisar quando sair para entrega. 🛵`;
+    return `Olá ${nome}, o teu pedido foi recebido e está a ser preparado.`;
   }
-  if(status.includes('entregue')) return `Olá ${nome}, o teu pedido foi entregue. Obrigado por comprar na Casa Nova! Já pagaste 100%. 🎉`;
+  if(status.includes('entregue')) return `Olá ${nome}, o teu pedido foi finalizado. Já pagaste 100%. Obrigado por comprar na Casa Nova! 🎉`;
   if(status.includes('cancel')) return `Olá ${nome}, o teu pedido foi cancelado. Fala connosco no WhatsApp.`;
-  return `Olá ${nome}, recebemos o teu pedido ${p.codigo||''}. Estamos a verificar.`;
+  return `Olá ${nome}, recebemos o teu pedido ${p.codigo||''}.`;
 }
+
 function atualizarEnvelope(){
   let naoLidas = notificacoes.filter(n=>!n.lida);
   let btn = document.getElementById('btnEnvelope');
   let badge = document.getElementById('badgeEnvelope');
+  // SE O CLIENTE NÃO ABRIU, NUNCA SOME - fica sempre visível
   if(!naoLidas.length){ btn.style.display='none'; return; }
   btn.style.display='flex';
   badge.textContent = naoLidas.length;
 }
+
 function abrirEnvelope(){
   let box = document.getElementById('listaMensagens');
   if(!notificacoes.length) box.innerHTML = '<p style="text-align:center;color:#666;padding:20px">Sem mensagens.</p>';
   else box.innerHTML = notificacoes.slice().reverse().map(n=>`<div class="env-msg"><b>📦 Pedido ${n.codigo} - ${n.status}</b><br><span style="font-size:14px">${n.mensagem}</span><br><small style="color:#888">${new Date(n.quando).toLocaleString('pt-PT')}</small></div>`).join('');
   document.getElementById('modalEnvelope').classList.add('aberto');
+  // NÃO marca como lida aqui. Só some quando carregar no X.
 }
+
 function fecharEnvelope(){
+  // Cliente abriu e carregou no X -> envelope desaparece
   document.getElementById('modalEnvelope').classList.remove('aberto');
   notificacoes = notificacoes.map(n=>({...n, lida:true}));
   salvarNotif();
   atualizarEnvelope();
+  // SÓ NESTE CASO volta em 2 minutos
   clearTimeout(timerReaparecer);
   timerReaparecer = setTimeout(()=>{
     if(notificacoes.length){
       notificacoes = notificacoes.map(n=>({...n, lida:false}));
       salvarNotif(); atualizarEnvelope();
     }
-  }, 120000);
+  }, 120000); // 2 minutos
 }
+
 async function carregar(){
   let codigos = getMeusCodigos().map(c=>c.codigo||c);
   let cliente = null; try{ cliente = JSON.parse(localStorage.getItem('cliente_casa_nova')||'null'); }catch(e){}
@@ -99,8 +117,7 @@ async function carregar(){
     }
     return false;
   });
-  meusPedidos = meus;
-  // CORRIGIDO: cria envelope mesmo na primeira vez, se já está Recebido / Em Preparação
+  // Cria notificação quando o Admin muda o status
   meus.forEach(p=>{
     let antigo = ultimoStatus[p.codigo];
     let s = (p.status||'').toLowerCase();
@@ -125,6 +142,7 @@ async function carregar(){
     let badgeCls = s.includes('entregue')?'badge-ent':s.includes('recebido')?'badge-rec':s.includes('prepar')||s.includes('aceite')?'badge-prep':s.includes('cancel')?'badge-canc':'badge-novo';
     let agora = Date.now();
     let criado = new Date(p.created_at||Date.now()).getTime();
+    // NÚMERO DO PEDIDO SOME DEPOIS DE 5 MIN - SÓ NO CLIENTE
     let mostraCodigo = (agora-criado) < 5*60*1000;
     return `<div class="card-pedido">
       <div style="display:flex;justify-content:space-between"><b>${p.nome_cliente||'Cliente'}</b><span class="badge ${badgeCls}">${p.status}</span></div>

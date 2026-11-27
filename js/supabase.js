@@ -1,4 +1,5 @@
-var db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var SUPABASE_CHAVE = typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : SUPABASE_KEY;
+var db = supabase.createClient(SUPABASE_URL, SUPABASE_CHAVE);
 
 function kz(valor){
   return Number(valor || 0).toLocaleString('pt-AO') + ' Kz';

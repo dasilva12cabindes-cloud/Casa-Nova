@@ -10,7 +10,6 @@
 .topo .logo-img{height:56px;width:auto;max-width:200px;object-fit:contain;background:transparent;border-radius:0;padding:0;display:none;transform-origin:center;animation:logoZoom 4s ease-in-out infinite}
 .topo.tem-logo .logo-text{display:none}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
-/* LOGOTIPO EM TODO O SITE - ZOOM GRANDE + AGITA + AMORTECEDOR */
 @keyframes logoZoom{
   0%{transform:scale(0.7) translateY(0) rotate(0deg)}
   25%{transform:scale(1.15) translateY(-3px) rotate(0deg)}
@@ -57,10 +56,8 @@ input{width:100%;padding:11px;border:1px solid #cfd5df;border-radius:8px;font-si
 </div></div>
 
 <script>
-// 🛑 EU SOU ADMIN - NÃO SOU VISITANTE / CLIENTE ONLINE
 localStorage.setItem('eu_sou_admin','1');
 localStorage.setItem('admin_casa_nova','1');
-// Tira-me logo da lista de quem está online se eu já lá estava como Visitante
 (async function limparAdminDoOnline(){
   try{
     let meuId = localStorage.getItem('meu_id_online');
@@ -74,7 +71,7 @@ function aviso(m,t){let x=document.getElementById('toast');x.textContent=m;x.cla
 async function carregarLogoTopo(){try{let r=await db.from('loja_config').select('logo_url').eq('id',1).maybeSingle();let l=r.data?.logo_url;if(l){let i=document.getElementById('logoTopo');i.src=l;i.style.display='block';document.getElementById('topoSite').classList.add('tem-logo');}}catch(e){}}
 async function carregar(){
   let r=await db.from('clientes').select('*').order('id',{ascending:false});
-  if(r.error) return document.getElementById('lista').innerHTML='<p style="color:red">❌ '+r.error.message+'<br><br>Vai ao Supabase > SQL e cria a tabela clientes.</p>';
+  if(r.error) return document.getElementById('lista').innerHTML='<p style="color:red">❌ '+r.error.message+'</p>';
   todos=r.data||[];
   let termo=document.getElementById('busca').value.toLowerCase();
   let lista=todos.filter(c=>((c.nome_cliente||c.nome||'')+' '+(c.email||'')+' '+(c.telefone||'')).toLowerCase().includes(termo));
@@ -82,7 +79,12 @@ async function carregar(){
   document.getElementById('lista').innerHTML=lista.length?lista.map(c=>{
     let nome=c.nome_cliente||c.nome||'Sem nome';
     let inicial=nome.charAt(0).toUpperCase();
-    <div class="item"><div><b>${c.nome}</b><br><small>${c.email} - ${c.telefone}</small></div><div><button class="btn-azul" onclick="verDetalhe(${c.id})">👁️ Detalhe</button><button class="btn-vermelho" onclick="excluirCliente(${c.id})">❌</button></div></div>
+    return `<div class="card-cli">
+      <div class="avatar">${inicial}</div>
+      <div style="flex:1"><b>${nome}</b><br><small>${c.email||''} - ${c.telefone||''}</small></div>
+      <button class="btn-azul" onclick="verDetalhe(${c.id})">👁️ Detalhe</button>
+      <button class="btn-vermelho" onclick="excluirCliente(${c.id})">❌</button>
+    </div>`;
   }).join(''):'<p>Nenhum cliente encontrado.</p>';
 }
 function verDetalhe(id){

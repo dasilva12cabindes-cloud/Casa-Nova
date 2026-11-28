@@ -22,29 +22,35 @@
 <div class="caixa"><div id="chat"></div>
 <div class="enviar"><input id="texto" placeholder="Escreve a tua mensagem..." autocomplete="off"><button onclick="enviar()">Enviar</button></div></div>
 <script>
-// ID FIXO - nunca mais muda!
-let meuId = localStorage.getItem('cliente_id') || localStorage.getItem('meu_id_online') || localStorage.getItem('id_cliente') || localStorage.getItem('clienteId');
-if(!meuId){
-  meuId = 'cli_' + Date.now() + '_' + Math.floor(Math.random()*9999);
+// 👇 ID AGORA É DA CONTA LOGADA (cliente_casa_nova) - NÃO DO TELEFONE
+function pegarConta(){
+  let raw = localStorage.getItem('cliente_casa_nova');
+  if(!raw) return null;
+  try{ return JSON.parse(raw); }catch(e){ return { nome: raw }; }
 }
+let conta = pegarConta();
+if(!conta){
+  document.body.innerHTML = '<div style="padding:30px;text-align:center;font-family:Arial"><h3>🔒 Faz login primeiro</h3><p>Para veres as tuas mensagens, entra na tua conta.</p><a href="index.html" style="background:#0b5ed7;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:700">Voltar para Loja e Entrar</a></div>';
+  throw new Error('Sem login');
+}
+// 👇 USA EMAIL OU TELEFONE COMO IDENTIFICADOR ÚNICO
+let chaveConta = conta.email || conta.telefone || conta.phone || conta.id || conta.nome || '';
+let meuId = 'cli_' + String(chaveConta).toLowerCase().replace(/[^a-z0-9]+/g,'_');
 localStorage.setItem('cliente_id', meuId);
 localStorage.setItem('meu_id_online', meuId);
 
-// 👇 PEGA O NOME DE TODOS OS LUGARES POSSÍVEIS
+// 👇 NOME VEM DA CONTA
 function pegarNome(){
-  return localStorage.getItem('cliente_nome') || localStorage.getItem('nome_cliente') || localStorage.getItem('nome') || localStorage.getItem('nomeCliente') || localStorage.getItem('nome_completo') || '';
+  return conta.nome || conta.name || localStorage.getItem('cliente_nome') || localStorage.getItem('nome') || '';
 }
 let meuNome = pegarNome();
-
-// 👇 SE NÃO TEM NOME OU ESTÁ COMO "Cliente", PEDE O NOME UMA VEZ
 if(!meuNome || meuNome=='Cliente' || meuNome=='Visitante'){
   let n = prompt('Qual é o teu nome completo?\nEx: Cosme Bento');
   if(n && n.trim()){
     meuNome = n.trim();
     localStorage.setItem('cliente_nome', meuNome);
-    localStorage.setItem('nome_cliente', meuNome);
-    localStorage.setItem('nome', meuNome);
-    // 👇 CORRIGE AS MENSAGENS ANTIGAS QUE ESTAVAM COMO "Cliente"
+    conta.nome = meuNome;
+    localStorage.setItem('cliente_casa_nova', JSON.stringify(conta));
     setTimeout(async ()=>{
       await db.from('mensagens').update({cliente_nome: meuNome}).eq('cliente_id', String(meuId));
     }, 500);
@@ -57,7 +63,6 @@ let ultimoTotal = 0;
 let primeiraVez = true;
 
 function marcarComoLido(msgs){
-  // 👇 GUARDA QUANTAS DO ADMIN JÁ VIU - O ENVELOPE NA LOJA VAI SUMIR
   let totalAdmin = (msgs||[]).filter(m=>m.remetente=='admin').length;
   localStorage.setItem('msg_admin_vistas', String(totalAdmin));
   document.getElementById('badgeCli').style.display='none';
@@ -86,21 +91,18 @@ async function carregar(){
   }
   primeiraVez = false;
   ultimoTotal = msgs.length;
-  // 👇 AO CLICAR NA CONVERSA, LIMPA O ENVELOPE
   document.getElementById('chat').onclick = ()=>{ marcarComoLido(msgs); };
 }
 async function enviar(){
   let t = document.getElementById('texto').value.trim();
   if(!t) return;
   document.getElementById('texto').value='';
-  // Atualiza o nome antes de enviar
   meuNome = pegarNome() || meuNome;
   let r = await db.from('mensagens').insert({cliente_id: String(meuId), cliente_nome: meuNome, remetente:'cliente', texto:t});
   if(r.error) alert('Erro: '+r.error.message);
   carregar();
 }
 carregar(); setInterval(carregar, 2000);
-// 👇 AO ABRIR A PÁGINA, DEPOIS DE 2 SEGUNDOS JÁ CONTA COMO LIDO
 setTimeout(async()=>{
   let r = await db.from('mensagens').select('id').eq('cliente_id', String(meuId)).eq('remetente','admin');
   localStorage.setItem('msg_admin_vistas', String((r.data||[]).length));

@@ -919,19 +919,32 @@ setInterval(verificarStatusCliente, 10000);
 </style>
 <a id="btnEnvelopeLoja" href="mensagens.html">✉️<small>Mensagens</small></a>
 <script>
-// Badge de número no envelope
-(function(){
+// 👇 Badge do envelope - conta do Supabase
+async function atualizarEnvelopeLoja(){
   try{
-    var n = JSON.parse(localStorage.getItem('notificacoes_casa_nova')||'[]').length;
-    var btn = document.getElementById('btnEnvelopeLoja');
-    if(btn && n>0){
-      var b=document.createElement('span');
-      b.textContent=n;
-      b.style.cssText='position:absolute;top:-5px;right:-5px;background:red;color:#fff;font-size:12px;font-weight:bold;min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff';
-      btn.style.position='fixed'; btn.appendChild(b);
+    let meuId = localStorage.getItem('cliente_id') || localStorage.getItem('meu_id_online');
+    if(!meuId) return;
+    let vistas = Number(localStorage.getItem('msg_admin_vistas')||0);
+    let r = await db.from('mensagens').select('id').eq('cliente_id', String(meuId)).eq('remetente','admin');
+    let total = (r.data||[]).length;
+    let naoLidas = total - vistas;
+    if(naoLidas < 0) naoLidas = 0;
+    let btn = document.getElementById('btnEnvelopeLoja');
+    if(!btn) return;
+    let velho = document.getElementById('badgeEnvelopeLoja');
+    if(velho) velho.remove();
+    if(naoLidas > 0){
+      let b = document.createElement('span');
+      b.id = 'badgeEnvelopeLoja';
+      b.textContent = naoLidas;
+      b.style.cssText = 'position:absolute;top:-5px;right:-5px;background:red;color:#fff;font-weight:bold;font-size:12px;min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff';
+      btn.style.position = 'relative';
+      btn.appendChild(b);
     }
   }catch(e){}
-})();
+}
+setInterval(atualizarEnvelopeLoja, 3000);
+setTimeout(atualizarEnvelopeLoja, 1000);
 </script>
 </body>
 </html>

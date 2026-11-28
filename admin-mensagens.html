@@ -8,9 +8,10 @@
 .topo{background:#0b5ed7;color:#fff;padding:12px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
 .topo a{color:#fff;text-decoration:none;font-weight:700}
 .caixa{background:#fff;border-radius:12px;padding:12px;margin-top:12px}
-.cli{padding:16px;border-bottom:1px solid #eee;cursor:pointer;font-weight:700;font-size:16px;display:flex;justify-content:space-between;align-items:center;background:#fff}
-.cli:active{background:#eff6ff}
-.cli small{color:#0b5ed7;font-weight:800}
+.cli{padding:14px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;background:#fff;gap:8px}
+.cli .nome{font-weight:700;font-size:16px;cursor:pointer;flex:1}
+.cli .abrir{color:#0b5ed7;font-weight:800;cursor:pointer}
+.btn-x{background:#dc2626;color:#fff;border:0;width:38px;height:38px;border-radius:50%;font-size:16px;font-weight:900;cursor:pointer}
 #telaChat{display:none}
 #chat{height:60vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:10px 0}
 .msg{max-width:80%;padding:10px 12px;border-radius:12px;font-size:15px}
@@ -27,7 +28,7 @@
 <div class="topo"><a href="admin.html">← Voltar</a><b>💬 Mensagens</b><span id="totalMsg" style="background:#dc2626;padding:4px 10px;border-radius:999px;font-size:13px;display:none">0</span></div>
 
 <div id="telaLista" class="caixa">
-  <h3 style="margin:0 0 10px">Clientes que conversaram 👇<br><small style="color:#666;font-weight:400">Clica num nome para abrir a conversa</small></h3>
+  <h3 style="margin:0 0 10px">Clientes que conversaram 👇<br><small style="color:#666;font-weight:400">Clica no nome para abrir • Clica no ❌ para apagar</small></h3>
   <div id="listaCli"><p>A carregar...</p></div>
   <button onclick="carregarLista()" style="width:100%;padding:12px;margin-top:10px;background:#0b5ed7;color:#fff;border:0;border-radius:10px;font-weight:800">🔄 Atualizar lista</button>
 </div>
@@ -48,7 +49,6 @@ let atual = null;
 let atualNome = '';
 let ultimoTotal = 0;
 
-// 👇 FORMATA O NOME: Cosme Bento -> Cosme B. | Arnaldo -> Arnaldo
 function formatarNome(nomeCompleto){
   if(!nomeCompleto || nomeCompleto=='Cliente') return 'Cliente';
   let partes = nomeCompleto.trim().split(/\s+/);
@@ -57,7 +57,7 @@ function formatarNome(nomeCompleto){
 }
 
 async function carregarLista(){
-  let r = await db.from('mensagens').select('cliente_id,cliente_nome,texto').order('id',{ascending:false});
+  let r = await db.from('mensagens').select('cliente_id,cliente_nome').order('id',{ascending:false});
   if(r.error){ document.getElementById('listaCli').innerHTML = '<p style="color:red">Erro: '+r.error.message+'</p>'; return; }
   let unicos = [];
   (r.data||[]).forEach(m=>{
@@ -65,16 +65,27 @@ async function carregarLista(){
   });
   let badge = document.getElementById('totalMsg');
   if(unicos.length>0){ badge.style.display='block'; badge.textContent = unicos.length + ' conversas'; } else badge.style.display='none';
-  if(unicos.length===0){ document.getElementById('listaCli').innerHTML='<p>Nenhuma conversa ainda.</p>'; return; }
-  document.getElementById('listaCli').innerHTML = unicos.map((u,i)=>{
+  if(unicos.length===0){ document.getElementById('listaCli').innerHTML='<p style="color:#16a34a;font-weight:700">✅ Nenhuma conversa. Lista limpa!</p>'; return; }
+  document.getElementById('listaCli').innerHTML = unicos.map(u=>{
     let bonito = formatarNome(u.cliente_nome||'Cliente');
-    return `<div class="cli" data-id="${String(u.cliente_id)}" data-nome="${(u.cliente_nome||'Cliente').replace(/"/g,'')}">
-      <span>👤 ${bonito}</span><small>ABRIR →</small>
+    return `<div class="cli">
+      <span class="nome" onclick="abrir('${String(u.cliente_id)}','${(u.cliente_nome||'Cliente').replace(/'/g,'')}')">👤 ${bonito}</span>
+      <span class="abrir" onclick="abrir('${String(u.cliente_id)}','${(u.cliente_nome||'Cliente').replace(/'/g,'')}')">ABRIR →</span>
+      <button class="btn-x" onclick="apagarDaLista('${String(u.cliente_id)}','${bonito}')">✕</button>
     </div>`;
   }).join('');
-  document.querySelectorAll('.cli').forEach(el=>{
-    el.onclick = function(){ abrir(el.getAttribute('data-id'), el.getAttribute('data-nome')); };
-  });
+}
+
+// 👇 APAGAR DIRETO DA LISTA, SEM PRECISAR ABRIR!
+async function apagarDaLista(id, nome){
+  if(!confirm('Apagar a conversa de '+nome+'? Vai apagar no Admin E no telefone do cliente!')) return;
+  let r = await db.from('mensagens').delete().eq('cliente_id', String(id));
+  if(r.error){
+    alert('❌ O Supabase bloqueou! Vai no Supabase > SQL e corre:\ncreate policy "apagar mensagens" on mensagens for delete using (true); \nErro: '+r.error.message);
+    return;
+  }
+  alert('✅ Apagado!');
+  carregarLista();
 }
 
 function abrir(id,nome){
@@ -100,17 +111,10 @@ async function carregarChat(){
   if(r.error){ document.getElementById('chat').innerHTML='<p style="color:red">Erro: '+r.error.message+'</p>'; return; }
   let msgs = r.data || [];
   let chat = document.getElementById('chat');
-  if(msgs.length===0){ chat.innerHTML='<p style="color:#888;text-align:center">Sem mensagens</p>'; }
+  if(msgs.length===0){ chat.innerHTML='<p style="color:#888;text-align:center">Sem mensagens - conversa vazia.<br>Clica em Voltar e no ❌ para apagar da lista.</p>'; }
   else {
     chat.innerHTML = msgs.map(m=>`<div class="msg ${m.remetente=='admin'?'eu':'outro'}">${m.texto}<br><small style="opacity:.7;font-size:11px">${new Date(m.created_at).toLocaleString('pt-PT')}</small></div>`).join('');
     chat.scrollTop = chat.scrollHeight;
-  }
-  if(msgs.length > ultimoTotal && ultimoTotal!==0){
-    let ultima = msgs[msgs.length-1];
-    if(ultima.remetente=='cliente'){
-      let t=document.getElementById('toastMsg'); t.style.display='block';
-      setTimeout(()=>{t.style.display='none';},4000);
-    }
   }
   ultimoTotal = msgs.length;
 }
@@ -126,9 +130,7 @@ async function enviar(){
 
 async function apagarConversa(){
   if(!atual) return;
-  if(!confirm('Apagar TODA esta conversa? Vai apagar no teu Admin E no telefone do cliente!')) return;
-  await db.from('mensagens').delete().eq('cliente_id', String(atual));
-  alert('Conversa apagada dos dois lados!');
+  await apagarDaLista(atual, formatarNome(atualNome));
   voltarLista();
 }
 

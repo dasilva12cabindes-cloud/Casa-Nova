@@ -672,6 +672,10 @@ function confirmarSair(){
   marcarSaiu();
   localStorage.removeItem('cliente_casa_nova');
   localStorage.removeItem('carrinho');
+  // 👇 LIMPA A CONVERSA AO SAIR
+  localStorage.removeItem('cliente_id');
+  localStorage.removeItem('meu_id_online');
+  localStorage.removeItem('msg_admin_vistas');
   fecharConfirmarSair();
   fecharCliente();
   mostrarToast('👋 Saíste da tua conta. Até já!');

@@ -36,8 +36,10 @@
 .card-zonas{border:2px solid #7c3aed;background:#f5f3ff}.card-zonas b{color:#5b21b6}
 .card-online{border:2px solid #22c55e;background:#f0fdf4;grid-column:1 / -1}
 .card-online b{color:#15803d;font-size:17px}
+.card-mensagens{border:2px solid #0b5ed7;background:#eff6ff}.card-mensagens b{color:#0b5ed7}
 .badge-pedidos{position:absolute;top:8px;right:8px;background:#dc2626;color:#fff;min-width:26px;height:26px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:13px;font-weight:900;padding:0 6px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .badge-online{position:absolute;top:8px;right:8px;background:#22c55e;color:#fff;min-width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;padding:0 7px;box-shadow:0 2px 6px rgba(0,0,0,.3);border:2px solid #fff}
+.badge-msg{position:absolute;top:8px;right:8px;background:#dc2626;color:#fff;min-width:26px;height:26px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:13px;font-weight:900;padding:0 6px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .btn-sair{background:#dc2626;color:#fff;border:0;padding:10px 16px;border-radius:10px;font-weight:800;cursor:pointer;font-size:14px;transition:transform .15s ease}.btn-sair:active{transform:scale(1.1)}
 #telaLogin{position:fixed;inset:0;background:#0b5ed7;z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}#telaLogin.aberto{display:flex}
 .login-box{background:#fff;width:100%;max-width:340px;border-radius:20px;padding:24px;text-align:center}
@@ -91,6 +93,7 @@
 <div id="avisoNovoPedido" style="padding:0 14px"></div>
 <div class="grid">
   <a class="card card-online" href="admin-online.html"><span id="badgeOnline" class="badge-online">0</span><span>👀</span><b>Quem Está Online Agora</b><small id="textoOnline">A carregar... • Clica para ver nomes, telefone e onde estão</small></a>
+  <a class="card card-mensagens" href="admin-mensagens.html"><span id="badgeMsg" class="badge-msg">0</span><span>💬</span><b>Mensagens</b><small>Conversar com clientes dentro da plataforma • Clica para ver quem te escreveu</small></a>
   <a class="card card-verificar" href="verificar-novo.html"><span>🔍</span><b>Verificar Comprovativo e Código</b><small>Nome, e-mail, o que comprou, o que pagou, o que falta + comprovativo</small></a>
   <a class="card card-pedidos" href="admin-pedidos.html"><span id="badgePedidos" class="badge-pedidos">0</span><span>📦</span><b>Pedidos</b><small>Pedidos recebidos</small></a>
   <a class="card card-logo" href="admin-logo.html"><span>🖼️</span><b>Logotipo & Banner</b><small>Logo da loja + publicidade</small></a>
@@ -105,10 +108,8 @@
 </div>
 <div id="toast"></div>
 <script>
-// 🛑 EU SOU ADMIN - NÃO SOU VISITANTE / CLIENTE ONLINE
 localStorage.setItem('eu_sou_admin','1');
 localStorage.setItem('admin_casa_nova','1');
-// Tira-me logo da lista de quem está online se eu já lá estava como Visitante
 (async function limparAdminDoOnline(){
   try{
     let meuId = localStorage.getItem('meu_id_online');
@@ -137,7 +138,6 @@ function entrarAdmin(){
   if(email===conta.email.toLowerCase() && senha===conta.senha){
     localStorage.setItem('admin_logado','sim');
     localStorage.setItem('admin_email',email);
-    // 🛑 Confirma que sou Admin quando entro
     localStorage.setItem('eu_sou_admin','1');
     localStorage.setItem('admin_casa_nova','1');
     esconderLogin();
@@ -199,10 +199,9 @@ async function atualizarOnline(){
   try{
     let r = await db.from('presenca').select('*').eq('online', true).order('ultima_vez',{ascending:false}).limit(50);
     let agora = new Date();
-    // 🛑 FILTRO: Admin nunca conta como online
     let meuId = localStorage.getItem('meu_id_online');
     let on = (r.data||[]).filter(p=>{
-      if(p.cliente_id === meuId) return false; // Eu mesmo
+      if(p.cliente_id === meuId) return false;
       if((p.nome||'').toLowerCase().includes('admin')) return false;
       if((p.pagina||'').toLowerCase().includes('admin')) return false;
       let diff = p.ultima_vez ? (agora - new Date(p.ultima_vez))/1000 : 9999;
@@ -216,6 +215,14 @@ async function atualizarOnline(){
       else if(on.length===1) texto.textContent = '🟢 1 pessoa online agora: ' + (on[0].nome||'Visitante') + ' • Clica para controlar';
       else texto.textContent = '🟢 ' + on.length + ' pessoas online: ' + on.slice(0,2).map(p=>p.nome||'Visitante').join(', ') + ' • Clica para ver todos';
     }
+  }catch(e){}
+}
+async function atualizarBadgeMsg(){
+  try{
+    let r = await db.from('mensagens').select('id', {count:'exact'}).eq('remetente','cliente');
+    let b = document.getElementById('badgeMsg');
+    let q = r.count || 0;
+    if(b){ if(q>0){ b.style.display='flex'; b.textContent=q; } else b.style.display='none'; }
   }catch(e){}
 }
 let totalNovos = 0;
@@ -371,5 +378,7 @@ verificarNovosPorPolling();
 setInterval(verificarNovosPorPolling, 10000);
 atualizarOnline();
 setInterval(atualizarOnline, 10000);
+atualizarBadgeMsg();
+setInterval(atualizarBadgeMsg, 10000);
 </script>
 </body></html>

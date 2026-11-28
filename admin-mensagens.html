@@ -68,24 +68,36 @@ async function carregarLista(){
   if(unicos.length===0){ document.getElementById('listaCli').innerHTML='<p style="color:#16a34a;font-weight:700">✅ Nenhuma conversa. Lista limpa!</p>'; return; }
   document.getElementById('listaCli').innerHTML = unicos.map(u=>{
     let bonito = formatarNome(u.cliente_nome||'Cliente');
+    let idSeguro = String(u.cliente_id).replace(/'/g,'');
     return `<div class="cli">
-      <span class="nome" onclick="abrir('${String(u.cliente_id)}','${(u.cliente_nome||'Cliente').replace(/'/g,'')}')">👤 ${bonito}</span>
-      <span class="abrir" onclick="abrir('${String(u.cliente_id)}','${(u.cliente_nome||'Cliente').replace(/'/g,'')}')">ABRIR →</span>
-      <button class="btn-x" onclick="apagarDaLista('${String(u.cliente_id)}','${bonito}')">✕</button>
+      <span class="nome" onclick="abrir('${idSeguro}','${(u.cliente_nome||'Cliente').replace(/'/g,'')}')">👤 ${bonito}</span>
+      <span class="abrir" onclick="abrir('${idSeguro}','${(u.cliente_nome||'Cliente').replace(/'/g,'')}')">ABRIR →</span>
+      <button class="btn-x" onclick="apagarDaLista('${idSeguro}','${bonito}')">✕</button>
     </div>`;
   }).join('');
 }
 
-// 👇 APAGAR DIRETO DA LISTA, SEM PRECISAR ABRIR!
+// 👇 APAGAR FORÇADO: busca os IDs reais e apaga um por um!
 async function apagarDaLista(id, nome){
-  if(!confirm('Apagar a conversa de '+nome+'? Vai apagar no Admin E no telefone do cliente!')) return;
-  let r = await db.from('mensagens').delete().eq('cliente_id', String(id));
-  if(r.error){
-    alert('❌ O Supabase bloqueou! Vai no Supabase > SQL e corre:\ncreate policy "apagar mensagens" on mensagens for delete using (true); \nErro: '+r.error.message);
+  if(!confirm('Apagar a conversa de '+nome+'?')) return;
+  // 1. Busca todas as mensagens desse cliente
+  let busca = await db.from('mensagens').select('id').eq('cliente_id', String(id));
+  let lista = busca.data || [];
+  // Se não achou como texto, tenta como número
+  if(lista.length===0 && !isNaN(Number(id))){
+    busca = await db.from('mensagens').select('id').eq('cliente_id', Number(id));
+    lista = busca.data || [];
+  }
+  if(lista.length===0){
+    alert('Não achei mensagens para apagar. ID: '+id+'\nVai no Supabase > Table Editor > mensagens e apaga manualmente a linha.');
     return;
   }
-  alert('✅ Apagado!');
-  carregarLista();
+  let ids = lista.map(m=>m.id);
+  let r = await db.from('mensagens').delete().in('id', ids);
+  if(r.error){ alert('❌ Erro: '+r.error.message); return; }
+  alert('✅ Apagado! Foram '+ids.length+' mensagens.');
+  // Força recarregar depois de 500ms
+  setTimeout(carregarLista, 500);
 }
 
 function abrir(id,nome){
@@ -108,10 +120,13 @@ function voltarLista(){
 async function carregarChat(){
   if(!atual) return;
   let r = await db.from('mensagens').select('*').eq('cliente_id', String(atual)).order('id',{ascending:true});
+  if(!r.data || r.data.length===0 && !isNaN(Number(atual))){
+    r = await db.from('mensagens').select('*').eq('cliente_id', Number(atual)).order('id',{ascending:true});
+  }
   if(r.error){ document.getElementById('chat').innerHTML='<p style="color:red">Erro: '+r.error.message+'</p>'; return; }
   let msgs = r.data || [];
   let chat = document.getElementById('chat');
-  if(msgs.length===0){ chat.innerHTML='<p style="color:#888;text-align:center">Sem mensagens - conversa vazia.<br>Clica em Voltar e no ❌ para apagar da lista.</p>'; }
+  if(msgs.length===0){ chat.innerHTML='<p style="color:#888;text-align:center">Sem mensagens - conversa vazia.<br>Volta e clica no ❌ para apagar da lista.</p>'; }
   else {
     chat.innerHTML = msgs.map(m=>`<div class="msg ${m.remetente=='admin'?'eu':'outro'}">${m.texto}<br><small style="opacity:.7;font-size:11px">${new Date(m.created_at).toLocaleString('pt-PT')}</small></div>`).join('');
     chat.scrollTop = chat.scrollHeight;

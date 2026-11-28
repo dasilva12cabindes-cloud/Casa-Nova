@@ -56,6 +56,13 @@ if(!meuNome || meuNome=='Cliente' || meuNome=='Visitante'){
 let ultimoTotal = 0;
 let primeiraVez = true;
 
+function marcarComoLido(msgs){
+  // 👇 GUARDA QUANTAS DO ADMIN JÁ VIU - O ENVELOPE NA LOJA VAI SUMIR
+  let totalAdmin = (msgs||[]).filter(m=>m.remetente=='admin').length;
+  localStorage.setItem('msg_admin_vistas', String(totalAdmin));
+  document.getElementById('badgeCli').style.display='none';
+}
+
 async function carregar(){
   let r = await db.from('mensagens').select('*').eq('cliente_id', meuId).order('id',{ascending:true});
   let msgs = r.data || [];
@@ -79,7 +86,8 @@ async function carregar(){
   }
   primeiraVez = false;
   ultimoTotal = msgs.length;
-  document.getElementById('chat').onclick = ()=>{ document.getElementById('badgeCli').style.display='none'; };
+  // 👇 AO CLICAR NA CONVERSA, LIMPA O ENVELOPE
+  document.getElementById('chat').onclick = ()=>{ marcarComoLido(msgs); };
 }
 async function enviar(){
   let t = document.getElementById('texto').value.trim();
@@ -92,4 +100,9 @@ async function enviar(){
   carregar();
 }
 carregar(); setInterval(carregar, 2000);
+// 👇 AO ABRIR A PÁGINA, DEPOIS DE 2 SEGUNDOS JÁ CONTA COMO LIDO
+setTimeout(async()=>{
+  let r = await db.from('mensagens').select('id').eq('cliente_id', String(meuId)).eq('remetente','admin');
+  localStorage.setItem('msg_admin_vistas', String((r.data||[]).length));
+}, 2000);
 </script></body></html>

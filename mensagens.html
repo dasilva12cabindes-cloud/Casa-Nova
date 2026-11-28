@@ -15,25 +15,60 @@
 .enviar{display:flex;gap:8px;margin-top:10px}
 .enviar input{flex:1;padding:12px;border:1px solid #ccc;border-radius:10px}
 .enviar button{background:#0b5ed7;color:#fff;border:0;padding:12px 16px;border-radius:10px;font-weight:700}
+#toastMsg{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 16px;border-radius:12px;font-weight:800;display:none;z-index:9999}
 </style></head><body>
-<div class="topo"><a href="index.html">← Loja</a><b>💬 Conversa com Admin</b><span></span></div>
+<div id="toastMsg">💬 Nova mensagem do Admin!</div>
+<div class="topo"><a href="index.html">← Loja</a><b>💬 Conversa com Admin</b><span id="badgeCli" style="background:#dc2626;color:#fff;padding:4px 10px;border-radius:999px;display:none">1 nova</span></div>
 <div class="caixa"><div id="chat"></div>
 <div class="enviar"><input id="texto" placeholder="Escreve a tua mensagem..."><button onclick="enviar()">Enviar</button></div></div>
 <script>
-let meuId = localStorage.getItem('cliente_id') || localStorage.getItem('meu_id_online');
-let meuNome = localStorage.getItem('cliente_nome') || localStorage.getItem('nome_cliente') || 'Cliente';
-if(!meuId){ alert('Faz login primeiro para conversar!'); location.href='index.html'; }
+// ID FIXO - nunca mais muda!
+let meuId = localStorage.getItem('cliente_id') || localStorage.getItem('meu_id_online') || localStorage.getItem('id_cliente') || localStorage.getItem('clienteId');
+if(!meuId){
+  meuId = 'cli_' + Date.now() + '_' + Math.floor(Math.random()*9999);
+}
+localStorage.setItem('cliente_id', meuId);
+localStorage.setItem('meu_id_online', meuId);
+
+let meuNome = localStorage.getItem('cliente_nome') || localStorage.getItem('nome_cliente') || localStorage.getItem('nome') || localStorage.getItem('nomeCliente') || 'Cliente';
+let ultimoTotal = 0;
+let primeiraVez = true;
+
 async function carregar(){
   let r = await db.from('mensagens').select('*').eq('cliente_id', meuId).order('id',{ascending:true});
+  let msgs = r.data || [];
   let chat = document.getElementById('chat');
-  chat.innerHTML = (r.data||[]).map(m=>`<div class="msg ${m.remetente=='cliente'?'eu':'admin'}">${m.texto}<br><small style="opacity:.7;font-size:11px">${new Date(m.created_at).toLocaleString('pt-PT')}</small></div>`).join('') || '<p style="text-align:center;color:#888">Nenhuma mensagem. Escreve a primeira!</p>';
-  chat.scrollTop = chat.scrollHeight;
+  if(msgs.length===0){
+    chat.innerHTML = '<p style="text-align:center;color:#888">Nenhuma mensagem. Escreve a primeira!</p>';
+  } else {
+    chat.innerHTML = msgs.map(m=>`<div class="msg ${m.remetente=='cliente'?'eu':'admin'}">${m.texto}<br><small style="opacity:.7;font-size:11px">${new Date(m.created_at).toLocaleString('pt-PT')}</small></div>`).join('');
+    chat.scrollTop = chat.scrollHeight;
+  }
+  // NOTIFICAÇÃO: se chegou mensagem nova do Admin
+  if(!primeiraVez && msgs.length > ultimoTotal){
+    let ultima = msgs[msgs.length-1];
+    if(ultima.remetente=='admin'){
+      let t = document.getElementById('toastMsg');
+      t.style.display='block';
+      document.getElementById('badgeCli').style.display='block';
+      document.getElementById('badgeCli').textContent = 'Nova mensagem!';
+      setTimeout(()=>{ t.style.display='none'; }, 4000);
+      try{ if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){}
+    }
+  }
+  primeiraVez = false;
+  ultimoTotal = msgs.length;
+  // Se cliente clicar na caixa, tira a notificação
+  document.getElementById('chat').onclick = ()=>{ document.getElementById('badgeCli').style.display='none'; };
 }
 async function enviar(){
   let t = document.getElementById('texto').value.trim();
   if(!t) return;
   document.getElementById('texto').value='';
-  await db.from('mensagens').insert({cliente_id: Number(meuId), cliente_nome: meuNome, remetente:'cliente', texto:t});
+  // Guarda o nome atualizado
+  meuNome = localStorage.getItem('cliente_nome') || localStorage.getItem('nome_cliente') || localStorage.getItem('nome') || meuNome;
+  let r = await db.from('mensagens').insert({cliente_id: String(meuId), cliente_nome: meuNome, remetente:'cliente', texto:t});
+  if(r.error) alert('Erro: '+r.error.message);
   carregar();
 }
 carregar(); setInterval(carregar, 2000);

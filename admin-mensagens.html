@@ -26,129 +26,108 @@
 </style></head><body>
 <div id="toastMsg">💬 Nova mensagem de cliente!</div>
 <div class="topo"><a href="admin.html">← Voltar</a><b>💬 Mensagens</b><span id="totalMsg" style="background:#dc2626;padding:4px 10px;border-radius:999px;font-size:13px;display:none">0</span></div>
-
 <div id="telaLista" class="caixa">
   <h3 style="margin:0 0 10px">Clientes que conversaram 👇<br><small style="color:#666;font-weight:400">Clica no nome para abrir • Clica no ❌ para apagar</small></h3>
   <div id="listaCli"><p>A carregar...</p></div>
   <button onclick="carregarLista()" style="width:100%;padding:12px;margin-top:10px;background:#0b5ed7;color:#fff;border:0;border-radius:10px;font-weight:800">🔄 Atualizar lista</button>
 </div>
-
 <div id="telaChat" class="caixa">
   <div style="display:flex;justify-content:space-between;align-items:center">
     <button class="btn-voltar" onclick="voltarLista()">← Voltar</button>
-    <b id="nomeCli">Cliente</b>
-    <span></span>
+    <b id="nomeCli">Cliente</b><span></span>
   </div>
   <div id="chat"></div>
   <div class="enviar"><input id="texto" placeholder="Responder..."><button onclick="enviar()">Enviar</button></div>
   <button class="btn-del" onclick="apagarConversa()">🗑️ Apagar TODA conversa deste cliente</button>
 </div>
-
 <script>
 let atual = null;
 let atualNome = '';
 let ultimoTotal = 0;
-
-function formatarNome(nomeCompleto){
-  if(!nomeCompleto || nomeCompleto=='Cliente') return 'Cliente';
-  let partes = nomeCompleto.trim().split(/\s+/);
-  if(partes.length===1) return partes[0];
-  return partes[0] + ' ' + partes[1].charAt(0).toUpperCase() + '.';
+function formatarNome(n){
+  if(!n || n=='Cliente' || n=='null') return 'Cliente';
+  let p=n.trim().split(/\s+/);
+  if(p.length===1) return p[0];
+  return p[0]+' '+p[1].charAt(0).toUpperCase()+'.';
 }
-
 async function carregarLista(){
   let r = await db.from('mensagens').select('cliente_id,cliente_nome').order('id',{ascending:false});
-  if(r.error){ document.getElementById('listaCli').innerHTML = '<p style="color:red">Erro: '+r.error.message+'</p>'; return; }
-  let unicos = [];
+  if(r.error){ document.getElementById('listaCli').innerHTML='<p style="color:red">Erro: '+r.error.message+'</p>'; return; }
+  // 👇 Ignora linhas com cliente_id vazio na lista, mas mostra 1 vez para poder apagar
+  let unicos=[];
   (r.data||[]).forEach(m=>{
-    if(!unicos.find(u=>String(u.cliente_id)==String(m.cliente_id))) unicos.push(m);
+    let chave = (m.cliente_id==null?'null':String(m.cliente_id));
+    if(!unicos.find(u=>u.chave==chave)) unicos.push({...m, chave});
   });
-  let badge = document.getElementById('totalMsg');
-  if(unicos.length>0){ badge.style.display='block'; badge.textContent = unicos.length + ' conversas'; } else badge.style.display='none';
+  let badge=document.getElementById('totalMsg');
+  if(unicos.length>0){ badge.style.display='block'; badge.textContent=unicos.length+' conversas'; } else badge.style.display='none';
   if(unicos.length===0){ document.getElementById('listaCli').innerHTML='<p style="color:#16a34a;font-weight:700">✅ Nenhuma conversa. Lista limpa!</p>'; return; }
-  document.getElementById('listaCli').innerHTML = unicos.map(u=>{
-    let bonito = formatarNome(u.cliente_nome||'Cliente');
-    let idSeguro = String(u.cliente_id).replace(/'/g,'');
-    return `<div class="cli">
-      <span class="nome" onclick="abrir('${idSeguro}','${(u.cliente_nome||'Cliente').replace(/'/g,'')}')">👤 ${bonito}</span>
-      <span class="abrir" onclick="abrir('${idSeguro}','${(u.cliente_nome||'Cliente').replace(/'/g,'')}')">ABRIR →</span>
-      <button class="btn-x" onclick="apagarDaLista('${idSeguro}','${bonito}')">✕</button>
-    </div>`;
+  document.getElementById('listaCli').innerHTML=unicos.map(u=>{
+    let bonito=formatarNome(u.cliente_nome||'Cliente');
+    return `<div class="cli"><span class="nome" onclick="abrir('${u.chave}','${(u.cliente_nome||'Cliente').replace(/'/g,'')}')">👤 ${bonito} ${u.chave=='null'?'<small style="color:#dc2626">(vazio)</small>':''}</span><span class="abrir" onclick="abrir('${u.chave}','${(u.cliente_nome||'Cliente').replace(/'/g,'')}')">ABRIR →</span><button class="btn-x" onclick="apagarDaLista('${u.chave}','${bonito}')">✕</button></div>`;
   }).join('');
 }
-
-// 👇 APAGAR FORÇADO: busca os IDs reais e apaga um por um!
-async function apagarDaLista(id, nome){
+async function apagarDaLista(id,nome){
   if(!confirm('Apagar a conversa de '+nome+'?')) return;
-  // 1. Busca todas as mensagens desse cliente
-  let busca = await db.from('mensagens').select('id').eq('cliente_id', String(id));
-  let lista = busca.data || [];
-  // Se não achou como texto, tenta como número
-  if(lista.length===0 && !isNaN(Number(id))){
-    busca = await db.from('mensagens').select('id').eq('cliente_id', Number(id));
-    lista = busca.data || [];
-  }
-  if(lista.length===0){
-    alert('Não achei mensagens para apagar. ID: '+id+'\nVai no Supabase > Table Editor > mensagens e apaga manualmente a linha.');
+  let r;
+  // 👇 SE FOR NULL, APAGA COM is(null)
+  if(id=='null' || id=='undefined'){
+    r = await db.from('mensagens').delete().is('cliente_id', null);
+    if(r.error){ alert('❌ Erro: '+r.error.message+'\nCorre no SQL: delete from mensagens where cliente_id is null;'); return; }
+    alert('✅ Fantasma apagado!');
+    setTimeout(carregarLista,500);
     return;
   }
-  let ids = lista.map(m=>m.id);
-  let r = await db.from('mensagens').delete().in('id', ids);
+  let busca = await db.from('mensagens').select('id').eq('cliente_id', String(id));
+  let lista = busca.data||[];
+  if(lista.length===0 && !isNaN(Number(id))){
+    busca = await db.from('mensagens').select('id').eq('cliente_id', Number(id));
+    lista = busca.data||[];
+  }
+  if(lista.length===0){ alert('Não achei. ID: '+id); return; }
+  r = await db.from('mensagens').delete().in('id', lista.map(m=>m.id));
   if(r.error){ alert('❌ Erro: '+r.error.message); return; }
-  alert('✅ Apagado! Foram '+ids.length+' mensagens.');
-  // Força recarregar depois de 500ms
-  setTimeout(carregarLista, 500);
+  alert('✅ Apagado! Foram '+lista.length+' mensagens.');
+  setTimeout(carregarLista,500);
 }
-
 function abrir(id,nome){
-  atual = String(id);
-  atualNome = nome;
-  document.getElementById('nomeCli').textContent = '💬 ' + formatarNome(nome);
+  atual=String(id); atualNome=nome;
+  document.getElementById('nomeCli').textContent='💬 '+formatarNome(nome);
   document.getElementById('telaLista').style.display='none';
   document.getElementById('telaChat').style.display='block';
-  ultimoTotal = 0;
-  carregarChat();
+  ultimoTotal=0; carregarChat();
 }
-
 function voltarLista(){
-  atual = null;
+  atual=null;
   document.getElementById('telaChat').style.display='none';
   document.getElementById('telaLista').style.display='block';
   carregarLista();
 }
-
 async function carregarChat(){
   if(!atual) return;
-  let r = await db.from('mensagens').select('*').eq('cliente_id', String(atual)).order('id',{ascending:true});
-  if(!r.data || r.data.length===0 && !isNaN(Number(atual))){
-    r = await db.from('mensagens').select('*').eq('cliente_id', Number(atual)).order('id',{ascending:true});
-  }
+  let r;
+  if(atual=='null'){ r = await db.from('mensagens').select('*').is('cliente_id', null).order('id',{ascending:true}); }
+  else { r = await db.from('mensagens').select('*').eq('cliente_id', String(atual)).order('id',{ascending:true}); if(!r.data||r.data.length===0 && !isNaN(Number(atual))){ r = await db.from('mensagens').select('*').eq('cliente_id', Number(atual)).order('id',{ascending:true}); } }
   if(r.error){ document.getElementById('chat').innerHTML='<p style="color:red">Erro: '+r.error.message+'</p>'; return; }
-  let msgs = r.data || [];
-  let chat = document.getElementById('chat');
-  if(msgs.length===0){ chat.innerHTML='<p style="color:#888;text-align:center">Sem mensagens - conversa vazia.<br>Volta e clica no ❌ para apagar da lista.</p>'; }
-  else {
-    chat.innerHTML = msgs.map(m=>`<div class="msg ${m.remetente=='admin'?'eu':'outro'}">${m.texto}<br><small style="opacity:.7;font-size:11px">${new Date(m.created_at).toLocaleString('pt-PT')}</small></div>`).join('');
-    chat.scrollTop = chat.scrollHeight;
-  }
-  ultimoTotal = msgs.length;
+  let msgs=r.data||[];
+  let chat=document.getElementById('chat');
+  if(msgs.length===0){ chat.innerHTML='<p style="color:#888;text-align:center">Sem mensagens - conversa vazia.<br>Volta e clica no ❌ para apagar.</p>'; }
+  else { chat.innerHTML=msgs.map(m=>`<div class="msg ${m.remetente=='admin'?'eu':'outro'}">${m.texto}<br><small style="opacity:.7;font-size:11px">${new Date(m.created_at).toLocaleString('pt-PT')}</small></div>`).join(''); chat.scrollTop=chat.scrollHeight; }
+  ultimoTotal=msgs.length;
 }
-
 async function enviar(){
   if(!atual) return alert('Escolhe um cliente primeiro!');
-  let t = document.getElementById('texto').value.trim(); if(!t) return;
+  let t=document.getElementById('texto').value.trim(); if(!t) return;
   document.getElementById('texto').value='';
   let r = await db.from('mensagens').insert({cliente_id: String(atual), cliente_nome: atualNome, remetente:'admin', texto:t});
   if(r.error) alert('Erro: '+r.error.message);
   carregarChat();
 }
-
 async function apagarConversa(){
   if(!atual) return;
   await apagarDaLista(atual, formatarNome(atualNome));
   voltarLista();
 }
-
 carregarLista();
-setInterval(()=>{ if(atual) carregarChat(); }, 2500);
+setInterval(()=>{ if(atual) carregarChat(); },2500);
 </script></body></html>

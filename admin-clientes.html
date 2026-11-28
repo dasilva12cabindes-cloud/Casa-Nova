@@ -82,7 +82,7 @@ async function carregar(){
   document.getElementById('lista').innerHTML=lista.length?lista.map(c=>{
     let nome=c.nome_cliente||c.nome||'Sem nome';
     let inicial=nome.charAt(0).toUpperCase();
-    return `<div class="card-cli"><div class="avatar">${inicial}</div><div style="flex:1"><b>${nome}</b><br><small>${c.email||'-'}</small><br><small>📞 ${c.telefone||'-'}</small></div><button class="btn-azul" onclick="verDetalhe(${c.id})">👁️ Detalhe</button></div>`;
+    <div class="item"><div><b>${c.nome}</b><br><small>${c.email} - ${c.telefone}</small></div><div><button class="btn-azul" onclick="verDetalhe(${c.id})">👁️ Detalhe</button><button class="btn-vermelho" onclick="excluirCliente(${c.id})">❌</button></div></div>
   }).join(''):'<p>Nenhum cliente encontrado.</p>';
 }
 function verDetalhe(id){
@@ -96,6 +96,13 @@ function verDetalhe(id){
   let num=(c.telefone||'').replace(/\D/g,'');
   document.getElementById('btnWpp').onclick=()=>{ if(num) window.open('https://wa.me/'+num+'?text=Olá '+encodeURIComponent(c.nome_cliente||'')); };
   document.getElementById('modal').classList.add('aberto');
+}
+async function excluirCliente(id){
+  if(!confirm("Apagar este cliente?")) return;
+  let {error} = await db.from("clientes").delete().eq("id", id);
+  if(error){ alert("Erro: " + error.message); return; }
+  alert("Apagado!");
+  carregar();
 }
 function fechar(){document.getElementById('modal').classList.remove('aberto');}
 carregarLogoTopo(); carregar();

@@ -30,7 +30,29 @@ if(!meuId){
 localStorage.setItem('cliente_id', meuId);
 localStorage.setItem('meu_id_online', meuId);
 
-let meuNome = localStorage.getItem('cliente_nome') || localStorage.getItem('nome_cliente') || localStorage.getItem('nome') || localStorage.getItem('nomeCliente') || 'Cliente';
+// 👇 PEGA O NOME DE TODOS OS LUGARES POSSÍVEIS
+function pegarNome(){
+  return localStorage.getItem('cliente_nome') || localStorage.getItem('nome_cliente') || localStorage.getItem('nome') || localStorage.getItem('nomeCliente') || localStorage.getItem('nome_completo') || '';
+}
+let meuNome = pegarNome();
+
+// 👇 SE NÃO TEM NOME OU ESTÁ COMO "Cliente", PEDE O NOME UMA VEZ
+if(!meuNome || meuNome=='Cliente' || meuNome=='Visitante'){
+  let n = prompt('Qual é o teu nome completo?\nEx: Cosme Bento');
+  if(n && n.trim()){
+    meuNome = n.trim();
+    localStorage.setItem('cliente_nome', meuNome);
+    localStorage.setItem('nome_cliente', meuNome);
+    localStorage.setItem('nome', meuNome);
+    // 👇 CORRIGE AS MENSAGENS ANTIGAS QUE ESTAVAM COMO "Cliente"
+    setTimeout(async ()=>{
+      await db.from('mensagens').update({cliente_nome: meuNome}).eq('cliente_id', String(meuId));
+    }, 500);
+  } else {
+    meuNome = 'Cliente';
+  }
+}
+
 let ultimoTotal = 0;
 let primeiraVez = true;
 
@@ -44,7 +66,6 @@ async function carregar(){
     chat.innerHTML = msgs.map(m=>`<div class="msg ${m.remetente=='cliente'?'eu':'admin'}">${m.texto}<br><small style="opacity:.7;font-size:11px">${new Date(m.created_at).toLocaleString('pt-PT')}</small></div>`).join('');
     chat.scrollTop = chat.scrollHeight;
   }
-  // NOTIFICAÇÃO: se chegou mensagem nova do Admin
   if(!primeiraVez && msgs.length > ultimoTotal){
     let ultima = msgs[msgs.length-1];
     if(ultima.remetente=='admin'){
@@ -58,15 +79,14 @@ async function carregar(){
   }
   primeiraVez = false;
   ultimoTotal = msgs.length;
-  // Se cliente clicar na caixa, tira a notificação
   document.getElementById('chat').onclick = ()=>{ document.getElementById('badgeCli').style.display='none'; };
 }
 async function enviar(){
   let t = document.getElementById('texto').value.trim();
   if(!t) return;
   document.getElementById('texto').value='';
-  // Guarda o nome atualizado
-  meuNome = localStorage.getItem('cliente_nome') || localStorage.getItem('nome_cliente') || localStorage.getItem('nome') || meuNome;
+  // Atualiza o nome antes de enviar
+  meuNome = pegarNome() || meuNome;
   let r = await db.from('mensagens').insert({cliente_id: String(meuId), cliente_nome: meuNome, remetente:'cliente', texto:t});
   if(r.error) alert('Erro: '+r.error.message);
   carregar();

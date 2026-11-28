@@ -937,7 +937,7 @@ async function atualizarEnvelopeLoja(){
     try{ conta = JSON.parse(conta); }catch(e){ conta = { nome: raw }; }
     let chave = conta.email || conta.telefone || conta.phone || conta.id || conta.nome || '';
     let meuId = 'cli_' + String(chave).toLowerCase().replace(/[^a-z0-9]+/g,'_');
-    let vistas = Number(localStorage.getItem('msg_admin_vistas')||0);
+    let vistas = Number(localStorage.getItem('msg_admin_vistas_' + meuId)
     let r = await db.from('mensagens').select('id').eq('cliente_id', String(meuId)).eq('remetente','admin');
     let total = (r.data||[]).length;
     let naoLidas = total - vistas;
@@ -945,7 +945,7 @@ async function atualizarEnvelopeLoja(){
     let velho = document.getElementById('badgeEnvelopeLoja');
     if(velho) velho.remove();
     if(naoLidas === 0){
-      btn.style.display = 'none';
+  btn.style.display = 'flex';
       return;
     }
     btn.style.display = 'flex';

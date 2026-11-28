@@ -22,7 +22,6 @@
 <div class="caixa"><div id="chat"></div>
 <div class="enviar"><input id="texto" placeholder="Escreve a tua mensagem..." autocomplete="off"><button onclick="enviar()">Enviar</button></div></div>
 <script>
-// 👇 ID AGORA É DA CONTA LOGADA (cliente_casa_nova) - NÃO DO TELEFONE
 function pegarConta(){
   let raw = localStorage.getItem('cliente_casa_nova');
   if(!raw) return null;
@@ -33,13 +32,10 @@ if(!conta){
   document.body.innerHTML = '<div style="padding:30px;text-align:center;font-family:Arial"><h3>🔒 Faz login primeiro</h3><p>Para veres as tuas mensagens, entra na tua conta.</p><a href="index.html" style="background:#0b5ed7;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:700">Voltar para Loja e Entrar</a></div>';
   throw new Error('Sem login');
 }
-// 👇 USA EMAIL OU TELEFONE COMO IDENTIFICADOR ÚNICO
 let chaveConta = conta.email || conta.telefone || conta.phone || conta.id || conta.nome || '';
 let meuId = 'cli_' + String(chaveConta).toLowerCase().replace(/[^a-z0-9]+/g,'_');
 localStorage.setItem('cliente_id', meuId);
 localStorage.setItem('meu_id_online', meuId);
-
-// 👇 NOME VEM DA CONTA
 function pegarNome(){
   return conta.nome || conta.name || localStorage.getItem('cliente_nome') || localStorage.getItem('nome') || '';
 }
@@ -58,16 +54,13 @@ if(!meuNome || meuNome=='Cliente' || meuNome=='Visitante'){
     meuNome = 'Cliente';
   }
 }
-
 let ultimoTotal = 0;
 let primeiraVez = true;
-
 function marcarComoLido(msgs){
   let totalAdmin = (msgs||[]).filter(m=>m.remetente=='admin').length;
-  localStorage.setItem('msg_admin_vistas', String(totalAdmin));
+  localStorage.setItem('msg_admin_vistas_' + meuId, String(totalAdmin));
   document.getElementById('badgeCli').style.display='none';
 }
-
 async function carregar(){
   let r = await db.from('mensagens').select('*').eq('cliente_id', meuId).order('id',{ascending:true});
   let msgs = r.data || [];
@@ -105,6 +98,6 @@ async function enviar(){
 carregar(); setInterval(carregar, 2000);
 setTimeout(async()=>{
   let r = await db.from('mensagens').select('id').eq('cliente_id', String(meuId)).eq('remetente','admin');
-  localStorage.setItem('msg_admin_vistas', String((r.data||[]).length));
+  localStorage.setItem('msg_admin_vistas_' + meuId, String((r.data||[]).length));
 }, 2000);
 </script></body></html>

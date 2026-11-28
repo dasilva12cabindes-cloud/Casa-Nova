@@ -923,42 +923,62 @@ setInterval(verificarStatusCliente, 10000);
 </style>
 <a id="btnEnvelopeLoja" href="mensagens.html">✉️<small>Mensagens</small></a>
 <script>
-// 👇 Envelope só aparece se estiver logado E tiver mensagem
+// 👇 Envelope: escondido se desconectado, visível se conectado
 async function atualizarEnvelopeLoja(){
   try{
     let btn = document.getElementById('btnEnvelopeLoja');
     if(!btn) return;
+
     let conta = localStorage.getItem('cliente_casa_nova');
     if(!conta){
       btn.style.display = 'none';
       return;
     }
+
+    // 👇 LOGADO = MOSTRA SEMPRE
+    btn.style.display = 'flex';
+    btn.style.position = 'relative';
+
     let raw = conta;
     try{ conta = JSON.parse(conta); }catch(e){ conta = { nome: raw }; }
     let chave = conta.email || conta.telefone || conta.phone || conta.id || conta.nome || '';
     let meuId = 'cli_' + String(chave).toLowerCase().replace(/[^a-z0-9]+/g,'_');
-    let vistas = Number(localStorage.getItem('msg_admin_vistas_' + meuId)
+
+    // 👇 MESMA CHAVE DO MENSAGENS.HTML
+    let vistas = Number(localStorage.getItem('msg_admin_vistas_' + meuId)||0);
     let r = await db.from('mensagens').select('id').eq('cliente_id', String(meuId)).eq('remetente','admin');
     let total = (r.data||[]).length;
     let naoLidas = total - vistas;
     if(naoLidas < 0) naoLidas = 0;
+
     let velho = document.getElementById('badgeEnvelopeLoja');
     if(velho) velho.remove();
-    if(naoLidas === 0){
-  btn.style.display = 'flex';
-      return;
-    }
-    btn.style.display = 'flex';
+
+    if(naoLidas === 0) return;
+
     let b = document.createElement('span');
     b.id = 'badgeEnvelopeLoja';
     b.textContent = naoLidas;
     b.style.cssText = 'position:absolute;top:-5px;right:-5px;background:red;color:#fff;font-weight:bold;font-size:12px;min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff';
-    btn.style.position = 'relative';
     btn.appendChild(b);
   }catch(e){}
 }
 setInterval(atualizarEnvelopeLoja, 3000);
 setTimeout(atualizarEnvelopeLoja, 1000);
+</script>
+<script>
+// 👇 TESTE - mostra o que o telefone está a ver
+setTimeout(async ()=>{
+  try{
+    let raw = localStorage.getItem('cliente_casa_nova');
+    let conta = JSON.parse(raw);
+    let chave = conta.email || conta.telefone || conta.phone || conta.id || conta.nome || '';
+    let meuId = 'cli_' + String(chave).toLowerCase().replace(/[^a-z0-9]+/g,'_');
+    let vistas = localStorage.getItem('msg_admin_vistas_' + meuId);
+    let r = await db.from('mensagens').select('*').eq('cliente_id', String(meuId)).eq('remetente','admin');
+    alert('MEU ID: ' + meuId + '\nVISTAS: ' + vistas + '\nTOTAL ADMIN: ' + (r.data||[]).length + '\nCHAVE: ' + chave);
+  }catch(e){ alert('ERRO TESTE: ' + e.message); }
+}, 3000);
 </script>
 </body>
 </html>

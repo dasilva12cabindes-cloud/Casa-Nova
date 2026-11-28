@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mensagens - Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<style>*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f1f3f6;padding:12px}
+.topo{background:#0b5ed7;color:#fff;padding:12px;border-radius:10px;display:flex;justify-content:space-between}
+.topo a{color:#fff;text-decoration:none;font-weight:700}
+.wrap{display:flex;gap:12px;margin-top:12px}
+.lista{width:38%;background:#fff;border-radius:12px;padding:10px}
+.chatbox{flex:1;background:#fff;border-radius:12px;padding:12px;display:flex;flex-direction:column;height:70vh}
+.cli{padding:12px;border-bottom:1px solid #eee;cursor:pointer;font-weight:700}
+.cli.ativo{background:#eff6ff}
+#chat{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:80%;padding:10px;border-radius:12px}
+.eu{background:#0b5ed7;color:#fff;align-self:flex-end}
+.outro{background:#e5e7eb;align-self:flex-start}
+.enviar{display:flex;gap:8px;margin-top:10px}
+.enviar input{flex:1;padding:12px;border:1px solid #ccc;border-radius:10px}
+.enviar button{background:#0b5ed7;color:#fff;border:0;padding:10px 14px;border-radius:10px;font-weight:700}
+.btn-del{background:#dc2626;color:#fff;border:0;padding:10px;border-radius:10px;font-weight:700;width:100%;margin-top:8px}
+@media(max-width:700px){.wrap{flex-direction:column}.lista{width:100%}}
+</style></head><body>
+<div class="topo"><a href="admin.html">← Voltar</a><b>💬 Mensagens dos Clientes</b><span></span></div>
+<div class="wrap">
+<div class="lista"><h3 style="margin:0 0 10px">Clientes que conversaram</h3><div id="listaCli"></div></div>
+<div class="chatbox"><div id="nomeCli" style="font-weight:700;padding-bottom:10px">Escolhe um cliente à esquerda</div><div id="chat"></div>
+<div class="enviar"><input id="texto" placeholder="Responder..."><button onclick="enviar()">Enviar</button></div>
+<button class="btn-del" onclick="apagarConversa()">🗑️ Apagar TODA conversa deste cliente (Admin + Cliente)</button></div>
+</div>
+<script>
+let atual = null;
+async function carregarLista(){
+  let r = await db.from('mensagens').select('cliente_id,cliente_nome').order('id',{ascending:false});
+  let unicos = [];
+  (r.data||[]).forEach(m=>{ if(!unicos.find(u=>u.cliente_id==m.cliente_id)) unicos.push(m); });
+  document.getElementById('listaCli').innerHTML = unicos.length? unicos.map(u=>`<div class="cli ${u.cliente_id==atual?'ativo':''}" onclick="abrir(${u.cliente_id},'${(u.cliente_nome||'Cliente').replace(/'/g,'')}')">👤 ${u.cliente_nome||'Cliente'}</div>`).join('') : '<p>Nenhuma conversa ainda.</p>';
+}
+async function abrir(id,nome){
+  atual = id;
+  document.getElementById('nomeCli').textContent = '💬 ' + nome;
+  carregarLista(); carregarChat();
+}
+async function carregarChat(){
+  if(!atual) return;
+  let r = await db.from('mensagens').select('*').eq('cliente_id', atual).order('id',{ascending:true});
+  let chat = document.getElementById('chat');
+  chat.innerHTML = (r.data||[]).map(m=>`<div class="msg ${m.remetente=='admin'?'eu':'outro'}">${m.texto}<br><small style="opacity:.7;font-size:11px">${new Date(m.created_at).toLocaleString('pt-PT')}</small></div>`).join('');
+  chat.scrollTop = chat.scrollHeight;
+}
+async function enviar(){
+  if(!atual) return alert('Escolhe um cliente primeiro!');
+  let t = document.getElementById('texto').value.trim(); if(!t) return;
+  document.getElementById('texto').value='';
+  await db.from('mensagens').insert({cliente_id: atual, cliente_nome: document.getElementById('nomeCli').textContent.replace('💬 ',''), remetente:'admin', texto:t});
+  carregarChat();
+}
+async function apagarConversa(){
+  if(!atual) return;
+  if(!confirm('Apagar TODA esta conversa? Vai apagar no teu Admin E no telefone do cliente!')) return;
+  await db.from('mensagens').delete().eq('cliente_id', atual);
+  atual = null;
+  document.getElementById('nomeCli').textContent = 'Escolhe um cliente à esquerda';
+  document.getElementById('chat').innerHTML='';
+  carregarLista();
+  alert('Conversa apagada dos dois lados!');
+}
+carregarLista(); setInterval(()=>{ carregarLista(); carregarChat(); }, 3000);
+</script></body></html>
